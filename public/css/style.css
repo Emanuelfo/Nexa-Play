@@ -438,7 +438,9 @@ p {
     background: var(--navy);
     color: #fff;
     border-radius: 40px;
-    padding: clamp(1.5rem, 4vw, 3rem)
+    padding: clamp(1.5rem, 4vw, 3rem);
+    margin: 120px 0;
+    
 }
 
 .quest {
@@ -459,6 +461,7 @@ p {
     color: var(--cyan)
 }
 
+
 .quest-head h2 {
     font-size: clamp(1.5rem, 3vw, 2.1rem);
     font-weight: 800
@@ -470,12 +473,6 @@ p {
     color: var(--txt-dark);
     border-left: 1px solid rgba(255, 255, 255, .3);
     padding-left: 1.4rem
-}
-
-.quest-img {
-    border-radius: 24px;
-    border: 2px solid rgba(255, 255, 255, .25);
-    width: 100%
 }
 
 /* Seções */
@@ -1445,13 +1442,6 @@ dialog h2 {
     position: relative
 }
 
-.quest-img {
-    transition: transform .5s var(--ease), box-shadow .5s;
-    box-shadow: 0 30px 60px rgba(0, 0, 0, .35);
-    border-radius: 18px;
-    transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))
-}
-
 .quest-head small {
     color: var(--cyan)
 }
@@ -1513,10 +1503,6 @@ dialog h2 {
     html {
         scroll-behavior: auto
     }
-
-    .mline {
-        opacity: 1
-    }
 }
 
 /* ===== Redesign (2): todas as páginas ===== */
@@ -1546,10 +1532,6 @@ dialog h2 {
 
 .brand img {
     transition: transform .4s var(--ease)
-}
-
-.brand:hover img {
-    transform: rotate(-3deg) scale(1.05)
 }
 
 /* Página interna: Saiba mais em palco escuro */
@@ -1594,7 +1576,14 @@ dialog h2 {
     margin-top: 2rem;
     position: relative;
     z-index: 2;
-    box-shadow: 0 30px 60px rgba(5, 15, 51, .35)
+    box-shadow: 0 30px 60px rgba(5, 15, 51, .35);
+    
+}
+
+.quest-img {
+    margin: auto;
+    width: 100%;
+
 }
 
 .perks {
@@ -2208,248 +2197,354 @@ main {
     width: 100%
 }
 
-/* ---- Manifesto: faixa escura com partículas, ícones de jogo e mascote ---- */
+/* ---- Manifesto: três transformações, trilha de progresso e o golfinho como avatar ---- */
 .manifesto {
     position: relative;
     overflow: hidden;
     isolation: isolate;
-    margin-top: clamp(3rem, 6vw, 5rem);
-    padding: clamp(4rem, 8vw, 7rem) 0;
+    padding: clamp(4rem, 8vw, 7rem) 0 clamp(3.5rem, 7vw, 6rem);
     color: #fff;
     background: radial-gradient(90% 90% at 88% 15%, #1a3fb5 0, var(--night2) 45%, var(--night) 100%)
 }
 
+/* camada mais distante: a grade desloca um pouco no sentido contrário ao cursor */
 .m-fx {
     position: absolute;
-    inset: 0;
+    inset: -28px;
     z-index: -1;
-    pointer-events: none
+    pointer-events: none;
+    translate: calc(var(--px, 0) * 7px) calc(var(--py, 0) * 5px);
+    transition: translate .8s var(--ease)
 }
 
 .m-fx::before {
     content: "";
     position: absolute;
     inset: 0;
-    background-image: linear-gradient(rgba(76, 195, 255, .09) 1px, transparent 1px), linear-gradient(90deg, rgba(76, 195, 255, .09) 1px, transparent 1px);
+    background-image: linear-gradient(rgba(76, 195, 255, .07) 1px, transparent 1px), linear-gradient(90deg, rgba(76, 195, 255, .07) 1px, transparent 1px);
     background-size: 56px 56px;
-    -webkit-mask-image: radial-gradient(ellipse 75% 70% at 50% 50%, #000 25%, transparent 80%);
-    mask-image: radial-gradient(ellipse 75% 70% at 50% 50%, #000 25%, transparent 80%)
+    -webkit-mask-image: radial-gradient(ellipse 80% 85% at 72% 60%, #000 15%, transparent 78%);
+    mask-image: radial-gradient(ellipse 80% 85% at 72% 60%, #000 15%, transparent 78%)
 }
 
-.m-fx::after {
-    content: "";
-    position: absolute;
-    width: 44vw;
-    height: 44vw;
-    left: -14vw;
-    bottom: -22vw;
-    border-radius: 50%;
-    background: rgba(76, 195, 255, .22);
-    filter: blur(80px)
-}
-
-.pt {
-    position: absolute;
-    border-radius: 50%;
-    background: var(--c, #4cc3ff);
-    box-shadow: 0 0 10px 2px var(--c, #4cc3ff);
-    opacity: .2;
-    animation: twinkle var(--t, 5s) ease-in-out var(--dl, 0s) infinite
-}
-
-@keyframes twinkle {
-    50% {
-        opacity: 1;
-        transform: translateY(-16px) scale(1.4)
-    }
-}
-
-.gi {
-    position: absolute;
-    display: block;
-    color: rgba(76, 195, 255, .42);
-    animation: drift 9s ease-in-out infinite
-}
-
-.gi svg {
-    width: 100%;
-    height: 100%;
-    stroke-width: 1.1
-}
-
-.g1 {
-    width: 92px;
-    left: 3%;
-    top: 9%;
-    rotate: -14deg
-}
-
-.g2 {
-    width: 70px;
-    left: 44%;
-    top: 5%;
-    rotate: 10deg;
-    animation-delay: -2s
-}
-
-.g3 {
-    width: 58px;
-    right: 4%;
-    top: 11%;
-    rotate: 16deg;
-    animation-delay: -4s;
-    color: rgba(255, 255, 255, .28)
-}
-
-.g4 {
-    width: 80px;
-    left: 5%;
-    bottom: 7%;
-    rotate: 12deg;
-    animation-delay: -3s;
-    color: rgba(255, 255, 255, .26)
-}
-
-.g5 {
-    width: 54px;
-    left: 47%;
-    bottom: 9%;
-    rotate: -8deg;
-    animation-delay: -5s
-}
-
-.g6 {
-    width: 84px;
-    right: 6%;
-    bottom: 6%;
-    rotate: 24deg;
-    animation-delay: -1s
-}
-
-@keyframes drift {
-    50% {
-        translate: 0 -16px;
-        rotate: calc(var(--r, 0deg) + 6deg)
-    }
-}
-
-.m-grid {
-    position: relative;
-    display: grid;
-    grid-template-columns: 1.3fr .8fr;
-    gap: clamp(1.5rem, 4vw, 3.5rem);
-    align-items: center
-}
-
-.m-kicker {
-    display: inline-flex;
+.m-top {
+    display: flex;
     align-items: center;
-    gap: .6rem;
-    padding: .45rem 1rem;
-    border-radius: 999px;
-    border: 1.5px solid rgba(76, 195, 255, .65);
-    font: 800 .75rem var(--font);
-    letter-spacing: .14em;
-    color: var(--cyan);
-    background: rgba(76, 195, 255, .08)
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: clamp(1.2rem, 2.4vw, 2rem);
+    border-bottom: 1px solid rgba(255, 255, 255, .16)
 }
 
-.m-kicker::before {
+.m-label {
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    font: 800 .74rem var(--font);
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--cyan)
+}
+
+.m-label::before {
     content: "";
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
+    width: 28px;
+    height: 2px;
+    background: var(--cyan)
+}
+
+.m-count {
+    font: 700 .8rem var(--font);
+    letter-spacing: .14em;
+    color: rgba(255, 255, 255, .5);
+    font-variant-numeric: tabular-nums
+}
+
+.m-count b {
+    color: #fff;
+    font-weight: 800
+}
+
+/* container: todas as medidas da composição derivam da largura do palco */
+.m-stage {
+    position: relative;
+    container-type: inline-size
+}
+
+.m-stage > * {
+    --ic: clamp(2.5rem, 4.4cqi, 3rem);
+    --rail: clamp(3.4rem, 7.5cqi, 6rem);
+    --big: clamp(2.2rem, 11vw, 8.6rem);
+    --big: clamp(2.2rem, 11.4cqi, 8.6rem)
+}
+
+.m-list {
+    position: relative;
+    list-style: none;
+    margin: 0;
+    padding: 0
+}
+
+/* trilha: fio apagado + fio ciano que cresce com a rolagem (medidas vêm do JS) */
+.js .m-list::before,
+.js .m-list::after {
+    content: "";
+    position: absolute;
+    left: calc(var(--ic) / 2 - 1px);
+    top: var(--rt, 0);
+    height: var(--rh, 0);
+    width: 2px;
+    border-radius: 2px
+}
+
+.js .m-list::before {
+    background: rgba(255, 255, 255, .14)
+}
+
+.js .m-list::after {
     background: var(--cyan);
-    box-shadow: 0 0 10px var(--cyan);
-    animation: pulse 2.4s ease-in-out infinite
+    transform-origin: top;
+    transform: scaleY(var(--p, 0))
 }
 
 .mrow {
     display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0 1.2rem;
+    grid-template-columns: var(--rail) minmax(0, 1fr);
     align-items: start;
-    padding: 1.15rem 0;
+    padding: clamp(1.4rem, 2.6vw, 2.2rem) 0;
     border-bottom: 1px solid rgba(255, 255, 255, .16)
 }
 
-.mrow:last-child {
-    border-bottom: 0
+.mi {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: var(--ic);
+    height: var(--ic);
+    border-radius: 14px;
+    border: 1.5px solid rgba(255, 255, 255, .28);
+    background: #091a52;
+    color: rgba(255, 255, 255, .5);
+    transition: background .45s var(--ease), color .45s, border-color .45s, scale .5s var(--ease)
 }
 
-.mn {
-    padding-top: .55rem;
-    font: 800 .8rem var(--font);
-    letter-spacing: .1em;
-    color: var(--cyan)
+.mi svg {
+    width: 54%;
+    height: 54%
 }
 
 .mline {
-    font: 900 clamp(1.7rem, 3.6vw, 3.1rem)/1.14 var(--font);
-    letter-spacing: -.025em;
-    color: #fff;
-    opacity: .42;
-    transition: opacity .6s, translate .6s var(--ease);
-    translate: 0 8px;
     max-width: none !important
 }
 
-.mline.on {
-    opacity: 1;
-    translate: 0 0
-}
-
-.mline .hl {
-    color: var(--cyan);
-    text-shadow: 0 0 28px rgba(76, 195, 255, .55)
-}
-
-.mtag {
-    display: inline-flex;
+.m-pre {
+    display: flex;
     align-items: center;
-    gap: .4rem;
-    vertical-align: middle;
-    margin-left: .5rem;
-    padding: .38rem .8rem;
-    border-radius: 999px;
-    font: 800 .68rem/1 var(--font);
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    white-space: nowrap;
-    color: #fff;
-    border: 1.5px solid var(--cyan);
-    background: rgba(76, 195, 255, .12);
-    text-shadow: none
+    gap: clamp(.6rem, 1.4cqi, 1.1rem);
+    min-height: var(--ic)
 }
 
-.mtag.solid {
+.mw1 {
+    font: 800 clamp(1.05rem, 2.3cqi, 1.65rem)/1 var(--font);
+    letter-spacing: -.01em;
+    color: rgba(255, 255, 255, .5);
+    transition: color .5s
+}
+
+/* seta que se desenha: "aprendizado → aventura" */
+.m-op {
+    position: relative;
+    flex: 0 0 clamp(2.5rem, 9cqi, 7rem);
+    height: 2px;
+    color: rgba(76, 195, 255, .28);
+    background: linear-gradient(var(--cyan), var(--cyan)) 0 0/0% 100% no-repeat, rgba(76, 195, 255, .22);
+    transition: background-size .7s var(--ease), color .3s .55s
+}
+
+.m-op::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 50%;
+    width: 9px;
+    height: 9px;
+    border-top: 2px solid currentColor;
+    border-right: 2px solid currentColor;
+    transform: translateY(-50%) rotate(45deg) translate(-1px, 1px)
+}
+
+/* palavra de destino: "adesivo" azul-marinho com borda ciano (como o mascote) que ganha preenchimento ciano */
+.mw2 {
+    position: relative;
+    display: block;
+    width: fit-content;
+    padding-bottom: .1em;
+    font: 900 var(--big)/.98 var(--font);
+    letter-spacing: -.045em
+}
+
+.mw2-o {
+    display: block;
+    color: #07194d;
+    -webkit-text-stroke: max(2px, .022em) rgba(76, 195, 255, .55);
+    paint-order: stroke fill;
+    transition: -webkit-text-stroke-color .5s
+}
+
+.mw2-f {
+    position: absolute;
+    inset: 0;
+    display: block;
+    color: var(--cyan);
+    pointer-events: none;
+    clip-path: inset(-.2em 100% -.2em -.2em);
+    transition: clip-path .9s var(--ease) .12s
+}
+
+.mrow.on .mi {
     background: var(--cyan);
+    border-color: var(--cyan);
     color: var(--night)
 }
 
-.mtag svg {
-    width: 14px;
-    height: 14px
+.mrow.on .mw1 {
+    color: #fff
 }
 
+.mrow.on .m-op {
+    color: var(--cyan);
+    background-size: 100% 100%, 100% 100%
+}
+
+.mrow.on .mw2-o {
+    -webkit-text-stroke-color: var(--cyan)
+}
+
+.mrow.on .mw2-f {
+    clip-path: inset(-.2em -.2em -.2em -.2em)
+}
+
+/* avatar: o golfinho segue a fase atual (posição vertical vem do JS) */
 .m-art {
-    position: relative;
-    display: grid;
-    place-items: center;
-    max-width: 460px;
-    justify-self: center;
-    width: 100%
-}
-
-.m-art .halo {
-    inset: 8% 4%
+    --tilt: 0deg;
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    right: -2cqi;
+    width: clamp(6.5rem, 26cqi, 21rem);
+    pointer-events: none;
+    transform: translateY(var(--ty, 0px));
+    translate: calc(var(--px, 0) * -16px) calc(var(--py, 0) * -10px);
+    transition: transform 1.1s var(--ease), translate .6s var(--ease)
 }
 
 .m-art img {
-    position: relative;
     width: 100%;
-    filter: drop-shadow(0 24px 34px rgba(0, 0, 0, .45));
-    animation: float 6s ease-in-out infinite
+    scale: -1 1;
+    rotate: var(--tilt);
+    filter: drop-shadow(0 20px 26px rgba(0, 0, 0, .42));
+    animation: m-bob 5.5s ease-in-out infinite;
+    transition: rotate .7s var(--ease)
+}
+
+@keyframes m-bob {
+    50% {
+        translate: 0 -10px
+    }
+}
+
+.m-foot {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2rem 3rem;
+    align-items: end;
+    padding: clamp(1.8rem, 3.5vw, 2.8rem) 0 0 var(--rail)
+}
+
+.m-foot p {
+    max-width: 38ch;
+    font: 500 clamp(1rem, 1.5vw, 1.15rem)/1.55 var(--font);
+    color: rgba(255, 255, 255, .8)
+}
+
+.m-foot .btn {
+    margin-top: 1.4rem
+}
+
+.m-areas-box {
+    text-align: right
+}
+
+.m-areas-t {
+    display: block;
+    margin-bottom: .6rem;
+    font: 800 .68rem var(--font);
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, .5)
+}
+
+.m-areas {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: .4rem 1.1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font: 800 .82rem var(--font);
+    letter-spacing: .12em;
+    text-transform: uppercase
+}
+
+.m-areas li:not(:last-child)::after {
+    content: "/";
+    margin-left: 1.1rem;
+    color: var(--cyan)
+}
+
+@media (max-width:720px) {
+    .m-stage > * {
+        --ic: 2.4rem;
+        --rail: 3.2rem;
+        --big: clamp(2.2rem, 13.5vw, 8.6rem);
+        --big: clamp(2.2rem, 14cqi, 8.6rem)
+    }
+
+    .m-op {
+        flex-basis: clamp(1.6rem, 8cqi, 3rem)
+    }
+
+    .m-art {
+        width: clamp(6.5rem, 31cqi, 9rem);
+        right: -1cqi
+    }
+
+    .m-foot {
+        grid-template-columns: 1fr;
+        padding-left: 0
+    }
+
+    .m-areas-box {
+        text-align: left
+    }
+
+    .m-areas {
+        justify-content: flex-start
+    }
+}
+
+@media (prefers-reduced-motion:reduce) {
+
+    .m-art img {
+        animation: none
+    }
+
+    .m-art,
+    .m-fx {
+        transition: none
+    }
 }
 
 .chip {
@@ -2679,22 +2774,13 @@ main {
 
 @media (prefers-reduced-motion:reduce) {
 
-    .pt,
-    .gi,
     .chip,
-    .m-art img,
-    .pc-art img,
-    .m-kicker::before {
+    .pc-art img {
         animation: none !important
     }
 
     .fcard:hover {
         transform: none
-    }
-
-    .mline {
-        opacity: 1;
-        translate: 0 0
     }
 }
 
@@ -2727,26 +2813,12 @@ main {
         max-width: none
     }
 
-    .m-grid {
-        grid-template-columns: 1fr
-    }
-
-    .m-art {
-        max-width: 380px;
-        order: -1
-    }
-
     .c1 {
         left: 0
     }
 
     .c2 {
         right: 0
-    }
-
-    .g2,
-    .g5 {
-        display: none
     }
 
     .pcard {
@@ -2775,26 +2847,5 @@ main {
 
     .pc-stats {
         grid-template-columns: 1fr
-    }
-
-    .mtag {
-        margin-left: 0;
-        margin-top: .5rem
-    }
-
-    .mrow {
-        grid-template-columns: 1fr;
-        gap: .2rem
-    }
-
-    .mn {
-        padding: 0
-    }
-
-    .g1,
-    .g3,
-    .g4,
-    .g6 {
-        width: 52px
     }
 }

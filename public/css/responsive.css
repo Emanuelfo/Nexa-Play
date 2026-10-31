@@ -95,7 +95,7 @@
   }
 
   .auth-logo img {
-    height: 56px
+    height: 0px
   }
 
   .auth-copy {
@@ -207,6 +207,10 @@
     margin-inline: auto
   }
 
+  .stage .hero-art img {
+    width: min(70%, 340px)
+  }
+
   .ghost {
     font-size: 46vw;
     top: 30%
@@ -232,10 +236,6 @@
 
   .mini-feats {
     gap: 1rem
-  }
-
-  .mline {
-    font-size: clamp(1.7rem, 8.4vw, 2.2rem)
   }
 }
 

@@ -14,13 +14,9 @@
     }
 
     /* Revelação na rolagem */
-    const alvos = $$('.stage .kicker,.stage .lead,.stage .btn-row,.stage .mini-feats,.quest-head>*,.quest-img,.split>*,.convite .panel>*,.contato .panel>*,.stats .stat,.news>*,.perks>*,.about-hero>*,.f-head>*,.fcard,.pcard,.m-art');
+    const alvos = $$('.stage .kicker,.stage .lead,.stage .btn-row,.stage .mini-feats,.quest-head>*,.quest-img,.split>*,.convite .panel>*,.contato .panel>*,.stats .stat,.news>*,.perks>*,.about-hero>*,.f-head>*,.fcard,.pcard');
     const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .15, rootMargin: '0px 0px -6% 0px' });
     alvos.forEach((el, k) => { el.classList.add('rv'); el.style.setProperty('--d', (k % 4) * 90 + 'ms'); io.observe(el); });
-
-    /* Manifesto: a frase acende ao chegar no centro da tela */
-    const mio = new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('on', e.isIntersecting)), { rootMargin: '-38% 0px -38% 0px' });
-    $$('.mline').forEach(l => calm ? l.classList.add('on') : mio.observe(l));
 
     /* Barra de progresso, cabeçalho e parallax (um único rAF) */
     const bar = Object.assign(document.createElement('div'), { className: 'progress' }); bar.setAttribute('aria-hidden', 'true'); document.body.prepend(bar);
@@ -37,11 +33,50 @@
     const shot = $('.shot img');
     if (shot) { if (calm) shot.style.setProperty('--k', 1); else addEventListener('scroll', () => requestAnimationFrame(() => { const r = shot.getBoundingClientRect(); shot.style.setProperty('--k', Math.min(1, Math.max(0, 1 - (r.top - innerHeight * .35) / (innerHeight * .6)))); }), { passive: true }); }
 
-    /* Manifesto: partículas neon geradas aleatoriamente (estáticas com movimento reduzido) */
-    const fx = $('.m-fx');
-    if (fx) { const cores = ['#4cc3ff', '#ffffff', '#7c9bff'];
-      for (let k = 0; k < 34; k++) { const p = document.createElement('i'), s = 2 + Math.random() * 4; p.className = 'pt';
-        p.style.cssText = `left:${Math.random() * 100}%;top:${Math.random() * 100}%;width:${s}px;height:${s}px;--c:${cores[k % 3]};--t:${3 + Math.random() * 5}s;--dl:${-Math.random() * 6}s`; fx.append(p); } }
+    /* Manifesto: cada linha é uma "fase". Ao passar pela linha de leitura (60% da tela) ela acende,
+       a trilha cresce e o golfinho vai até a fase atual. Com movimento reduzido tudo já nasce aceso. */
+    const man = $('.manifesto');
+    if (man) {
+      const rows = $$('.mrow', man), list = $('.m-list', man), art = $('.m-art', man), cnt = $('.m-count b', man);
+      const icons = rows.map(r => $('.mi', r)), pad = n => String(n).padStart(2, '0'), small = matchMedia('(max-width:720px)');
+      let cur = -2, tiltT = 0;
+      const mid = el => { const b = el.getBoundingClientRect(); return b.top + b.height / 2; };
+      const place = i => {
+        const r = rows[Math.max(0, i)];
+        art.style.setProperty('--ty', (r.offsetTop + (small.matches ? -art.offsetHeight * .26 : (r.offsetHeight - art.offsetHeight) / 2)) + 'px');
+      };
+      const measure = () => {
+        const a = icons[0].getBoundingClientRect(), z = icons[icons.length - 1].getBoundingClientRect(), l = list.getBoundingClientRect();
+        list.style.setProperty('--rt', (a.top - l.top + a.height / 2) + 'px');
+        list.style.setProperty('--rh', (z.top - a.top) + 'px');
+        place(cur);
+      };
+      const update = () => {
+        const line = innerHeight * .6, c0 = mid(icons[0]), c1 = mid(icons[icons.length - 1]);
+        let idx = -1;
+        rows.forEach((r, i) => { const on = calm || mid(icons[i]) < line; r.classList.toggle('on', on); if (on) idx = i; });
+        list.style.setProperty('--p', calm ? 1 : Math.min(1, Math.max(0, (line - c0) / (c1 - c0))));
+        if (idx === cur) return;
+        if (cur !== -2 && !calm) { /* mergulha ao descer, sobe ao voltar */
+          art.style.setProperty('--tilt', (idx > cur ? -9 : 9) + 'deg');
+          clearTimeout(tiltT); tiltT = setTimeout(() => art.style.setProperty('--tilt', '0deg'), 650);
+        }
+        cur = idx; cnt.textContent = pad(idx + 1); place(idx);
+      };
+      let tk = false;
+      const sched = () => { if (tk) return; tk = true; requestAnimationFrame(() => { tk = false; update(); }); };
+      addEventListener('scroll', sched, { passive: true });
+      new ResizeObserver(() => { measure(); sched(); }).observe($('.m-stage', man));
+      document.fonts?.ready.then(() => { measure(); update(); });
+      measure(); update();
+
+      /* camadas com profundidade: grade ao fundo e golfinho à frente se movem em sentidos opostos */
+      if (!calm && matchMedia('(hover:hover) and (pointer:fine)').matches) {
+        man.addEventListener('pointermove', e => { const r = man.getBoundingClientRect();
+          man.style.setProperty('--px', ((e.clientX - r.left) / r.width - .5) * 2); man.style.setProperty('--py', ((e.clientY - r.top) / r.height - .5) * 2); });
+        man.addEventListener('pointerleave', () => { man.style.setProperty('--px', 0); man.style.setProperty('--py', 0); });
+      }
+    }
 
     /* Estatísticas dos parceiros: contagem ao entrar na tela */
     if (!calm) $$('[data-count]').forEach(el => {
