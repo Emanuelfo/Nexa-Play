@@ -14,7 +14,7 @@
     }
 
     /* Revelação na rolagem */
-    const alvos = $$('.stage .kicker,.stage .lead,.stage .btn-row,.stage .mini-feats,.quest-head>*,.quest-img,.split>*,.convite .panel>*,.contato .panel>*,.stats .stat,.news>*,.perks>*,.about-hero>*,.f-head>*,.fcard,.pcard');
+    const alvos = $$('.stage .kicker,.stage .lead,.stage .btn-row,.stage .mini-feats,.quest-head>*,.quest-img,.split>*,.convite .panel>*,.contato .panel>*,.stats .stat,.news>*,.perks>*,.about-hero>*,.f-head>*,.fcard,.ptn-art,.ptn-copy>*');
     const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .15, rootMargin: '0px 0px -6% 0px' });
     alvos.forEach((el, k) => { el.classList.add('rv'); el.style.setProperty('--d', (k % 4) * 90 + 'ms'); io.observe(el); });
 

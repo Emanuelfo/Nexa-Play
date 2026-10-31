@@ -288,3 +288,18 @@
     border-radius: 28px
   }
 }
+@media (max-width:860px) {
+  .sec.sobre {
+    min-height: 0;
+    --sw-h: clamp(250px, 40svh, 340px)
+  }
+
+  .sobre-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem
+  }
+
+  .sobre .sw-stage {
+    order: -1
+  }
+}

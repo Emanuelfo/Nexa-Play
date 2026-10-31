@@ -2615,149 +2615,182 @@ main {
     box-shadow: 0 0 10px var(--glow)
 }
 
-/* ---- Parceiros: cartão contêiner com relevo + estatísticas ---- */
+/* ---- Parceiros: composição editorial — imagem sangrando à esquerda, texto à direita ---- */
 .partners {
-    background: radial-gradient(rgba(31, 94, 255, .2) 1.3px, transparent 1.5px) 0 0/24px 24px, linear-gradient(180deg, #d4e5fb, #bcd6f6);
-    padding-block: clamp(3rem, 6vw, 5.5rem)
+    position: relative;
+    overflow: hidden;
+    padding-block: clamp(3.5rem, 8vw, 8rem)
 }
 
-.pcard {
+.ptn {
     display: grid;
-    grid-template-columns: 1.05fr 1.1fr .72fr;
-    gap: clamp(1.2rem, 2.5vw, 2.2rem);
+    grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr);
     align-items: center;
-    padding: clamp(1.4rem, 3.5vw, 2.6rem);
-    background: linear-gradient(160deg, #fff, #eaf3ff);
-    border: 2px solid var(--navy);
-    border-radius: 36px;
-    box-shadow: 10px 10px 0 var(--navy), 0 40px 70px rgba(10, 31, 92, .2)
+    column-gap: clamp(1.5rem, 3vw, 3.5rem);
+    padding-right: max(4vw, calc((100% - 1320px) / 2))
 }
 
-.pc-copy h2 {
-    font-size: clamp(1.7rem, 3vw, 2.4rem);
-    margin: 1.1rem 0 .8rem
+/* imagem: protagonista, sem card nem moldura, sangrando para fora da margem esquerda */
+.ptn-art {
+    margin: 0 0 0 -4vw
 }
 
-.pc-copy p {
-    font-size: .95rem;
+.ptn-stage {
+    position: relative;
+    aspect-ratio: 1000/619
+}
+
+.ptn-stage picture,
+.ptn-stage img {
+    display: block;
+    width: 100%;
+    max-width: none;
+    height: auto
+}
+
+.ptn-stage picture {
+    position: relative;
+    z-index: 1;
+    /* o brilho do cartão da Microsoft vem cortado na borda direita do PNG: suaviza só esses ~26px */
+    -webkit-mask-image: linear-gradient(90deg, #000 97.4%, transparent);
+    mask-image: linear-gradient(90deg, #000 97.4%, transparent)
+}
+
+/* pontos orbitais por cima da imagem; a máscara (gerada da própria imagem) os esconde atrás dos cartões e da esfera.
+   Os halos ficam por baixo, como luz de fundo. */
+.ptn-orbit {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    -webkit-mask: url(../assets/imagens/parceiros-orbita-mascara.png) center/100% 100% no-repeat;
+    mask: url(../assets/imagens/parceiros-orbita-mascara.png) center/100% 100% no-repeat
+}
+
+.ptn-halo {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: 50%;
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(76, 195, 255, .6), rgba(76, 195, 255, 0) 72%);
+    opacity: 0;
+    transition: opacity .7s var(--ease);
+    pointer-events: none
+}
+
+@media (hover:hover) {
+    .ptn:has(li[data-card="google"]:hover) .ptn-halo[data-card="google"],
+    .ptn:has(li[data-card="microsoft"]:hover) .ptn-halo[data-card="microsoft"],
+    .ptn:has(li[data-card="senai"]:hover) .ptn-halo[data-card="senai"] {
+        opacity: 1
+    }
+}
+
+/* texto */
+.ptn-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: .9rem;
+    max-width: none !important;
+    margin: 0 0 1.6rem;
+    font: 800 .76rem var(--font);
+    letter-spacing: .24em;
+    color: var(--azul)
+}
+
+.ptn-eyebrow::before {
+    content: "";
+    width: 2.6rem;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor
+}
+
+.sec .ptn-copy h2 {
+    margin: 0 0 1.5rem;
+    font-size: clamp(2.1rem, 3.55vw, 3.7rem);
+    line-height: 1.02;
+    letter-spacing: -.035em;
+    text-wrap: balance
+}
+
+.ptn-lead {
+    max-width: 36ch;
+    margin-bottom: clamp(1.8rem, 3vw, 2.8rem);
+    font-size: clamp(1rem, 1.15vw, 1.12rem);
+    line-height: 1.65;
     color: var(--ink)
 }
 
-.pc-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .5rem;
-    margin: 1.2rem 0 0;
-    padding: 0;
-    list-style: none
-}
-
-.pc-chips li {
-    display: inline-flex;
-    align-items: center;
-    gap: .4rem;
-    padding: .4rem .8rem;
-    border-radius: 999px;
-    border: 1.5px solid var(--navy);
-    font: 700 .74rem var(--font);
-    color: var(--navy);
-    background: #fff;
-    transition: background .25s, color .25s, translate .3s var(--ease)
-}
-
-.pc-chips li:hover {
-    background: var(--navy);
-    color: #fff;
-    translate: 0 -3px
-}
-
-.pc-chips svg {
-    width: 14px;
-    height: 14px;
-    color: var(--btn)
-}
-
-.pc-chips li:hover svg {
-    color: var(--cyan)
-}
-
-.pc-art {
-    padding: .4rem;
-    border-radius: 28px;
-    background: radial-gradient(circle at 50% 45%, #fff 0, #e3f0ff 70%);
-    border: 1.5px solid var(--line);
-    box-shadow: inset 0 0 40px rgba(31, 94, 255, .1)
-}
-
-.pc-art img {
-    width: 100%;
-    animation: float 8s ease-in-out infinite
-}
-
-.pc-stats {
-    display: grid;
-    gap: .8rem;
+.ptn-list {
     margin: 0;
     padding: 0;
-    list-style: none
+    list-style: none;
+    border-top: 1.5px solid var(--navy)
 }
 
-.pc-stats li {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    grid-template-areas: "i n" "i l";
+.ptn-list li {
+    display: flex;
     align-items: center;
-    gap: 0 .9rem;
-    padding: 1rem 1.1rem;
-    border-radius: 20px;
-    background: var(--navy);
-    color: #fff;
-    border: 2px solid var(--navy);
-    box-shadow: 4px 4px 0 var(--cyan);
-    transition: translate .35s var(--ease), box-shadow .35s
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 0 1.05rem;
+    border-bottom: 1px solid rgba(10, 31, 92, .22);
+    font: 700 clamp(1.2rem, 1.9vw, 1.7rem)/1.15 var(--font);
+    letter-spacing: -.02em;
+    color: var(--navy);
+    transition: color .3s
 }
 
-.pc-stats li:hover {
-    translate: -3px -3px;
-    box-shadow: 7px 7px 0 var(--cyan)
+.ptn-list li span {
+    transition: translate .5s var(--ease)
 }
 
-.pc-stats li.hot {
-    background: linear-gradient(135deg, var(--btn), #0f3fd6);
-    border-color: var(--btn)
+.ptn-list li b {
+    font-weight: 500
 }
 
-.pc-stats .si {
-    grid-area: i;
-    display: grid;
-    place-items: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 14px;
-    background: rgba(255, 255, 255, .14);
-    color: var(--cyan)
+/* marcador: um pequeno corpo em órbita, eco do desenho */
+.ptn-list li i {
+    flex: none;
+    width: .6em;
+    height: .6em;
+    border-radius: 50%;
+    border: 2px solid var(--azul);
+    transition: background .3s, border-color .3s, transform .5s var(--ease)
 }
 
-.pc-stats .hot .si {
-    color: #fff
+@media (hover:hover) {
+    .ptn-list li:hover {
+        color: var(--azul)
+    }
+
+    .ptn-list li:hover span {
+        translate: .5rem 0
+    }
+
+    .ptn-list li:hover i {
+        background: var(--cyan);
+        border-color: var(--cyan);
+        transform: scale(1.2)
+    }
 }
 
-.pc-stats svg {
-    width: 22px;
-    height: 22px
-}
+/* entrada: a imagem desliza da esquerda; o texto sobe em sequência (classes .rv/.in do motion.js) */
+@media (prefers-reduced-motion:no-preference) {
+    .js .ptn-art.rv {
+        translate: -3rem 0;
+        transition-duration: 1.3s
+    }
 
-.pc-stats b {
-    grid-area: n;
-    font: 900 clamp(1.7rem, 2.6vw, 2.2rem)/1 var(--font);
-    letter-spacing: -.02em
-}
-
-.pc-stats li>span:last-child {
-    grid-area: l;
-    font-size: .8rem;
-    font-weight: 600;
-    color: var(--txt-dark)
+    .js .ptn-art.rv.in {
+        translate: 0 0
+    }
 }
 
 .convite {
@@ -2774,8 +2807,7 @@ main {
 
 @media (prefers-reduced-motion:reduce) {
 
-    .chip,
-    .pc-art img {
+    .chip {
         animation: none !important
     }
 
@@ -2792,15 +2824,6 @@ main {
 
     .fcard {
         min-height: 340px
-    }
-
-    .pcard {
-        grid-template-columns: 1fr 1fr
-    }
-
-    .pc-stats {
-        grid-column: 1/-1;
-        grid-template-columns: repeat(3, 1fr)
     }
 }
 
@@ -2821,14 +2844,19 @@ main {
         right: 0
     }
 
-    .pcard {
+    .ptn {
         grid-template-columns: 1fr;
-        box-shadow: 6px 6px 0 var(--navy), 0 30px 50px rgba(10, 31, 92, .2);
-        border-radius: 28px
+        row-gap: clamp(1.2rem, 4vw, 2.2rem);
+        padding-right: 0
     }
 
-    .pc-art {
-        order: -1
+    .ptn-art {
+        margin: 0 -4vw
+    }
+
+    .ptn-copy {
+        width: var(--wrap);
+        margin-inline: auto
     }
 }
 
@@ -2844,8 +2872,162 @@ main {
     .fc-art {
         margin-top: .6rem
     }
+}
 
-    .pc-stats {
-        grid-template-columns: 1fr
+/* ===== Sobre nós: o símbolo vira um interruptor que liga a experiência ===== */
+.sec.sobre {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    min-height: min(100svh, 900px);
+    display: grid;
+    align-items: center;
+    padding: clamp(4rem, 8vw, 7rem) 0;
+    --r: 0px;
+    --ox: 50%;
+    --oy: 50%;
+    --k: 0;
+    --rim: 0;
+    --sw-h: clamp(300px, 58vh, 560px)
+}
+
+.sobre .sw-bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none
+}
+
+/* fundo escuro: revelado por um círculo que cresce a partir do símbolo */
+.sobre .sw-dark {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle farthest-corner at var(--ox) var(--oy), #1d44b8 0, var(--night2) 34%, var(--night) 100%);
+    clip-path: circle(var(--r) at var(--ox) var(--oy))
+}
+
+/* borda luminosa da onda, some quando ela termina de cobrir a seção */
+.sobre .sw-rim {
+    position: absolute;
+    inset: 0;
+    opacity: var(--rim);
+    background: radial-gradient(circle at var(--ox) var(--oy), transparent calc(var(--r) - 8px), rgba(76, 195, 255, .85) calc(var(--r) - 1px), rgba(76, 195, 255, 0) calc(var(--r) + 36px))
+}
+
+.sobre-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+    gap: clamp(2rem, 6vw, 5rem);
+    align-items: center
+}
+
+.sobre .sw-stage {
+    display: grid;
+    place-items: center
+}
+
+.sobre .sw {
+    position: relative;
+    display: block;
+    height: var(--sw-h);
+    aspect-ratio: 109/188;
+    padding: 0;
+    border: 0;
+    background: none;
+    border-radius: 999px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation
+}
+
+.sobre .sw:focus-visible {
+    outline: 3px solid var(--cyan);
+    outline-offset: 14px
+}
+
+.sobre .sw svg {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible
+}
+
+.sobre .sw-glow {
+    position: absolute;
+    inset: -30% -70%;
+    background: radial-gradient(closest-side, rgba(76, 195, 255, .34), rgba(76, 195, 255, .1) 48%, transparent 72%);
+    opacity: var(--k);
+    pointer-events: none
+}
+
+.sobre .sw-shadow {
+    position: absolute;
+    left: 6%;
+    right: 6%;
+    bottom: -5%;
+    height: 6%;
+    background: radial-gradient(closest-side, rgba(10, 31, 92, .34), transparent);
+    filter: blur(5px);
+    opacity: calc(1 - var(--k));
+    pointer-events: none
+}
+
+/* textos: a cor troca exatamente na frente da onda (gradiente recortado no texto) */
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+    .sobre [data-sweep] {
+        --on: #fff;
+        --off: var(--navy);
+        background-image: radial-gradient(circle at var(--ex, 0px) var(--ey, 0px), var(--on) calc(var(--r) - 3px), var(--off) var(--r));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        -webkit-text-fill-color: transparent
+    }
+
+    .sobre p[data-sweep] {
+        --on: #d6e4ff;
+        --off: var(--ink)
+    }
+
+    .sobre em[data-sweep],
+    .sobre .tags[data-sweep] {
+        --on: var(--cyan);
+        --off: var(--blue)
+    }
+
+    .sobre strong[data-sweep] {
+        --on: var(--cyan);
+        --off: var(--blue);
+        font-weight: 600
+    }
+}
+
+@media (prefers-reduced-motion:no-preference) {
+    .js .sobre.is-ready:not(.is-in) .sw-stage {
+        opacity: 0;
+        transform: translateY(26px) scale(.96)
+    }
+
+    .js .sobre.is-ready:not(.is-in) .sobre-copy>* {
+        opacity: 0;
+        translate: 0 30px
+    }
+
+    .js .sobre.is-ready .sw-stage {
+        transition: opacity .9s var(--ease), transform 1s var(--ease)
+    }
+
+    .js .sobre.is-ready .sobre-copy>* {
+        transition: opacity .8s var(--ease), translate .8s var(--ease)
+    }
+
+    .sobre .sobre-copy>:nth-child(2) {
+        transition-delay: .08s !important
+    }
+
+    .sobre .sobre-copy>:nth-child(n+3) {
+        transition-delay: .16s !important
     }
 }

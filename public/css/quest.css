@@ -1,0 +1,162 @@
+/* ==========================================================================
+   Nexa Quest — seção de apresentação (home)
+   Ideia: a câmera começa DENTRO do jogo (perfil do personagem) e, conforme a
+   rolagem avança, recua até revelar a tela inteira. Uma única cena, guiada por
+   três variáveis escritas por js/quest.js:
+     --e  revelação da tela (0 → 1)
+     --i  visibilidade do texto de abertura (1 → 0)
+     --c  visibilidade das três promessas (0 → 1)
+   Sem JS / movimento reduzido / celular: tudo aparece em seu estado final.
+   ========================================================================== */
+
+.qx {
+  --e: 1; --i: 1; --c: 1;
+  --qx-title: clamp(3.4rem, 12.4vw, 11.5rem);
+  --qx-aqua: #19b8f0;      /* água do jogo */
+  --qx-coral: #ff8a5c;     /* corais do jogo */
+  --qx-violet: #8a6cff;
+  position: relative;
+  isolation: isolate;
+  color: #fff;
+  overflow: clip;
+  --qx-r: clamp(28px, 5vw, 56px);
+  border-radius: var(--qx-r);
+  margin-top: calc(var(--qx-r) * -1);   /* assenta sobre o fim do hero */
+  z-index: 2;
+  box-shadow: inset 0 1px 0 rgba(120, 214, 255, .22);
+  background:
+    radial-gradient(80% 60% at 50% 62%, rgba(46, 74, 174, .55) 0, transparent 70%),
+    linear-gradient(180deg, var(--night, #050f33) 0, #081a55 46%, var(--night2, #0a1f5c) 100%);
+}
+
+/* ---------- fundo: mesma linguagem do manifesto (grade + brilhos) ---------- */
+.qx-bg { position: absolute; inset: 0; z-index: -1; pointer-events: none }
+.qx-grid {
+  position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(76, 195, 255, .08) 1px, transparent 1px), linear-gradient(90deg, rgba(76, 195, 255, .08) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 55%, #000 20%, transparent 78%);
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 55%, #000 20%, transparent 78%);
+}
+.qx-glow { position: absolute; border-radius: 50%; filter: blur(90px) }
+.qx-glow--a { width: 46vw; height: 46vw; left: -14vw; bottom: -18vw; background: rgba(76, 195, 255, .24) }
+.qx-glow--b { width: 30vw; height: 30vw; right: -8vw; bottom: -6vw; background: rgba(255, 138, 92, .16) }
+.qx-glow--c { width: 26vw; height: 26vw; right: 14vw; top: -10vw; background: rgba(138, 108, 255, .22) }
+
+.qx-bubble {
+  position: absolute; left: var(--x); top: var(--y);
+  width: var(--s); aspect-ratio: 1; border-radius: 50%;
+  border: 1.5px solid rgba(120, 214, 255, .35);
+  background: radial-gradient(circle at 30% 28%, rgba(255, 255, 255, .28), rgba(76, 195, 255, .05) 55%, transparent 70%);
+  translate: 0 calc(var(--e) * var(--v, 1) * -70px);
+}
+
+/* ---------- título: grande, atrás da tela, parcialmente encoberto por ela ---------- */
+.qx-title {
+  position: relative; z-index: 1;
+  margin: 0 0 calc(var(--qx-title) * -.3);
+  text-align: center;
+  font: 900 var(--qx-title)/.86 var(--font);
+  letter-spacing: -.045em;
+  color: transparent;
+  background: linear-gradient(180deg, #fff 8%, #a9e0ff 52%, rgba(76, 195, 255, .22) 100%);
+  -webkit-background-clip: text; background-clip: text;
+  padding-bottom: .04em;
+  translate: 0 calc(var(--e) * -1svh);
+}
+
+/* ---------- a tela do jogo ---------- */
+.qx-stage { position: relative; z-index: 2; width: min(1180px, 92vw); margin-inline: auto; container-type: inline-size }
+.qx-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1300 / 629;
+  margin-inline: auto;
+  transform:
+    translate3d(calc(-3.5% * (1 - var(--e))), calc(-10% * (1 - var(--e))), 0)
+    perspective(1600px)
+    rotateX(calc(12deg * (1 - var(--e))))
+    rotateY(calc(-9deg * (1 - var(--e))))
+    scale(calc(.9 + .1 * var(--e)));
+  will-change: transform;
+}
+.qx-halo {
+  position: absolute; inset: -10% -5%; z-index: -1;
+  background: radial-gradient(closest-side, rgba(25, 184, 240, .6), rgba(46, 74, 174, .25) 55%, transparent 72%);
+  filter: blur(26px);
+  opacity: calc(.5 + .4 * var(--e));
+  scale: calc(.6 + .4 * var(--e));
+}
+.qx-clip {
+  position: absolute; inset: 0; overflow: hidden;
+  /* janela inicial = cartão do personagem; abre até cobrir a tela toda */
+  clip-path: inset(
+    calc(20% * (1 - var(--e))) calc(24% * (1 - var(--e))) calc(4% * (1 - var(--e))) calc(30% * (1 - var(--e)))
+    round calc(44px * (1 - var(--e)))
+  );
+}
+.qx-shot {
+  display: block; width: 100%; height: 100%; max-width: 100%; object-fit: cover;
+  transform-origin: 53% 61%;
+  transform: scale(calc(1 + .34 * (1 - var(--e))));
+  will-change: transform;
+}
+
+/* ---------- barra inferior: texto + acesso ---------- */
+.qx-bar {
+  position: relative; z-index: 3;
+  width: min(1180px, 92vw); margin: clamp(1.4rem, 3vw, 2.4rem) auto 0;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1.4rem 2.5rem; align-items: center;
+}
+.qx-intro { margin: 0 0 1.4rem; max-width: 46ch; font-size: clamp(.98rem, 1.3vw, 1.12rem); line-height: 1.5; color: #d3e6ff }
+.qx-expect { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem clamp(1rem, 2.4vw, 2.2rem) }
+.qx-expect li { padding-left: .95rem; border-left: 2px solid rgba(76, 195, 255, .55) }
+.qx-expect strong { display: block; font: 800 1.02rem/1.25 var(--font); color: #fff }
+.qx-expect span { display: block; margin-top: .2rem; font-size: .88rem; line-height: 1.4; color: #b9d3f5 }
+.qx-cta { flex-wrap: nowrap; justify-content: flex-end }
+.qx-cta .btn { white-space: nowrap }
+.qx :focus-visible { outline-color: var(--cyan) }
+
+/* ---------- estado estático (sem JS, movimento reduzido): tudo visível ---------- */
+.qx-pin { padding: clamp(4.5rem, 9vw, 7rem) 0 clamp(2.5rem, 5vw, 4rem) }
+
+/* ---------- cena fixada ao rolar (desktop) ---------- */
+@media (min-width: 761px) {
+  .qx--live { height: 250svh; --qx-title: clamp(3.4rem, min(12.4vw, 17svh), 11.5rem) }
+  .qx--live .qx-pin {
+    position: sticky; top: 0; height: 100svh;
+    display: grid; grid-template-rows: auto minmax(0, 1fr) auto;
+    padding: 100px 0 clamp(1rem, 3svh, 1.8rem);
+  }
+  .qx--live .qx-stage { container-type: size; width: min(1180px, 92vw); display: grid; place-items: center }
+  .qx--live .qx-frame { width: min(100cqw, calc(100cqh * 1300 / 629)) }
+  .qx--live .qx-bar { margin-top: clamp(.6rem, 1.6svh, 1.2rem) }
+  /* abertura e promessas dividem a mesma célula e se alternam */
+  .qx--live .qx-copy { display: grid }
+  .qx--live .qx-copy > * { grid-area: 1 / 1; align-self: center; margin: 0 }
+  .qx--live .qx-intro { opacity: var(--i); translate: 0 calc((1 - var(--i)) * -10px) }
+  .qx--live .qx-expect li {
+    opacity: clamp(0, calc(var(--c) * 1.8 - .35 * var(--n)), 1);
+    translate: 0 calc((1 - clamp(0, calc(var(--c) * 1.8 - .35 * var(--n)), 1)) * 14px);
+  }
+  .qx--live .qx-expect { pointer-events: none }
+  .qx--live.qx--on .qx-expect { pointer-events: auto }
+}
+
+/* ---------- telas menores ---------- */
+@media (max-width: 1024px) {
+  .qx-bar { grid-template-columns: 1fr }
+  .qx-cta { justify-content: flex-start }
+}
+@media (max-width: 760px) {
+  .qx { --qx-title: clamp(3rem, 17vw, 5.4rem) }
+  .qx-pin { padding-top: 4.2rem }
+  .qx-title { translate: none; margin-bottom: calc(var(--qx-title) * -.18) }
+  .qx-expect { grid-template-columns: 1fr }
+  .qx-cta { flex-wrap: wrap }
+  .qx-glow--a, .qx-glow--b, .qx-glow--c { filter: blur(60px) }
+  .qx-bubble { display: none }
+}
+@media (prefers-reduced-motion: reduce) {
+  .qx-frame, .qx-clip, .qx-shot, .qx-halo, .qx-title, .qx-bubble { transform: none; clip-path: none; translate: none; scale: none; will-change: auto }
+}
