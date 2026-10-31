@@ -8,10 +8,12 @@
   <meta name="description" content="Plataforma que une educação, tecnologia e diversão.">
   <link rel="icon" href="assets/icones/favicon.svg">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/quest.css">
   <link rel="stylesheet" href="css/responsive.css">
   <script src="js/functions.js" defer></script>
   <script src="js/main.js" defer></script>
   <script src="js/motion.js" defer></script>
+  <script src="js/quest.js" defer></script>
   <script src="js/parceiros.js" defer></script>
   <script src="js/sobre.js" defer></script>
 </head>
@@ -34,20 +36,30 @@
         <div class="hero-art"><span class="halo" aria-hidden="true"></span><img src="assets/imagens/mascote-palco.svg"></div>
       </div>
     </section>
-    <section class="wrap quest" id="quest" aria-labelledby="quest-t">
-      <div class="panel">
-        <div class="quest-head">
-          <div><small>CONHEÇA O</small>
-            <h2 id="quest-t">NEXA QUEST</h2>
-          </div>
-          <p>O nosso jogo educativo, onde cada desafio é uma nova chance de aprender, evoluir e conquistar o seu futuro.
-          </p>
-          <div class="btn-row"><a class="btn btn-glow" href="#" data-game>Acessar o jogo</a><a class="btn btn-line"
-              href="paginas/saiba-mais.html">Saiba mais</a></div>
+    <section class="qm" id="quest" aria-labelledby="quest-t" data-qm>
+      <div class="wrap qm-inner">
+        <div class="qm-copy">
+          <h2 class="qm-title" id="quest-t">Aprender também pode ser uma <em>aventura.</em></h2>
+          <p class="qm-lead">Explore diferentes áreas do conhecimento, enfrente desafios e descubra novas formas de aprender com o Nexa Quest.</p>
+          <div class="btn-row"><a class="btn btn-glow" href="#" data-game>Jogar agora</a></div>
         </div>
-        <img class="quest-img" src="assets/imagens/jogo-educa-tech.png"
-          alt="Tela do jogo Educa Tech com as áreas Jogos, Design, Visual e Ads" width="1300" height="630"
-          loading="lazy">
+        <div class="qm-stage">
+          <span class="qm-dark" aria-hidden="true"><svg class="qm-arcs" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid slice"><circle cx="470" cy="400" r="300"/><circle cx="470" cy="400" r="420"/><path d="M120 800C260 560 420 470 800 440"/></svg></span>
+          <div class="qm-scene">
+            <div class="qm-device">
+              <div class="qm-monitor">
+                <div class="qm-screen">
+                  <img src="assets/imagens/jogo-educa-tech.png" alt="Tela do jogo Educa Tech com as áreas Jogos, Design, Visual e Ads" width="1300" height="629" loading="lazy" decoding="async">
+                  <span class="qm-glare" aria-hidden="true"></span>
+                </div>
+                <div class="qm-chin"><span class="qm-led" aria-hidden="true"></span></div>
+              </div>
+              <div class="qm-neck" aria-hidden="true"></div>
+              <div class="qm-base" aria-hidden="true"></div>
+              <span class="qm-floor" aria-hidden="true"></span>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 

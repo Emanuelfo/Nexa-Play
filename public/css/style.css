@@ -443,38 +443,6 @@ p {
     
 }
 
-.quest {
-    margin-block: 1rem
-}
-
-.quest-head {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 2rem;
-    align-items: center;
-    margin-bottom: 1.6rem
-}
-
-.quest-head small {
-    font: 600 .65rem var(--font);
-    letter-spacing: .1em;
-    color: var(--cyan)
-}
-
-
-.quest-head h2 {
-    font-size: clamp(1.5rem, 3vw, 2.1rem);
-    font-weight: 800
-}
-
-.quest-head p {
-    font-size: .9rem;
-    max-width: 40ch;
-    color: var(--txt-dark);
-    border-left: 1px solid rgba(255, 255, 255, .3);
-    padding-left: 1.4rem
-}
-
 /* Seções */
 section {
     position: relative
@@ -1434,18 +1402,6 @@ dialog h2 {
     }
 }
 
-/* Nexa Quest em destaque */
-.quest .panel {
-    background: linear-gradient(135deg, var(--night2), #1b3fae);
-    color: #fff;
-    overflow: hidden;
-    position: relative
-}
-
-.quest-head small {
-    color: var(--cyan)
-}
-
 /* Manifesto: frases acendem na rolagem */
 /* Revelação */
 @media (prefers-reduced-motion:no-preference) {
@@ -1578,12 +1534,6 @@ dialog h2 {
     z-index: 2;
     box-shadow: 0 30px 60px rgba(5, 15, 51, .35);
     
-}
-
-.quest-img {
-    margin: auto;
-    width: 100%;
-
 }
 
 .perks {

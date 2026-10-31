@@ -82,8 +82,18 @@
     raf = requestAnimationFrame(step);
   }
 
+  const AUTO_INTERVAL = 15000;
+  let autoTimer = 0;
+  const scheduleAutoToggle = () => {
+    clearInterval(autoTimer);
+    autoTimer = setInterval(() => go(T > .5 ? 0 : 1, 1500), AUTO_INTERVAL);
+  };
+
   /* interruptor de verdade: clique ou teclado alternam entre desligado e ligado */
-  sw.addEventListener('click', () => go(T > .5 ? 0 : 1, 1500));
+  sw.addEventListener('click', () => {
+    go(T > .5 ? 0 : 1, 1500);
+    scheduleAutoToggle();
+  });
 
   /* medidas e redimensionamento */
   let pending = false;
@@ -100,7 +110,12 @@
   /* movimento reduzido: já nasce ligado, sem animação */
   if (calm) { go(1, 0); sec.classList.add('is-in'); return; }
 
-  if (!('IntersectionObserver' in window)) { sec.classList.add('is-in'); go(1, 0); return; }
+  if (!('IntersectionObserver' in window)) {
+    sec.classList.add('is-in');
+    go(1, 0);
+    scheduleAutoToggle();
+    return;
+  }
 
   /* entrada dos textos e do símbolo quando a seção aparece */
   const ioIn = new IntersectionObserver(es => {
@@ -112,7 +127,7 @@
   const ioPlay = new IntersectionObserver(es => {
     if (!es.some(e => e.isIntersecting)) return;
     ioPlay.disconnect();
-    setTimeout(() => { measure(); go(1, 2000); }, 800);
+    setTimeout(() => { measure(); go(1, 2000); scheduleAutoToggle(); }, 800);
   }, { threshold: .55 });
   ioPlay.observe(sw);
 })();

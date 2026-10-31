@@ -4,15 +4,6 @@
     gap: 1.2rem
   }
 
-  .quest-head {
-    grid-template-columns: 1fr
-  }
-
-  .quest-head p {
-    border: 0;
-    padding: 0
-  }
-
   .site-footer .wrap {
     grid-template-columns: 1fr 1fr
   }
