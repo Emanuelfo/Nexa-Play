@@ -14,6 +14,22 @@ if (!process.env.JWT_SECRET) {
 }
 
 const app = express();
+const frontendOrigins = new Set(["https://nexaquest.netlify.app"]);
+
+app.use((req, res, next) => {
+  const origin = req.get("Origin");
+  if (origin && frontendOrigins.has(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+  }
+  res.vary("Origin");
+
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
+
 app.use(express.json({ limit: "1mb" }));
 
 // Site (HTML/CSS/JS/imagens)
@@ -24,6 +40,9 @@ app.use(express.static(path.join(__dirname, "..", "public")));
 app.use(usuarioRoutes);
 app.use(authRoutes);
 app.use(mensagemRoutes);
+app.use("/api", (req, res) => {
+  res.status(404).json({ mensagem: "Rota da API não encontrada." });
+});
 
 const PORT = process.env.PORT || 3000;
 

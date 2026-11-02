@@ -1,16 +1,20 @@
-# Nexa Play — site + API com banco de dados MySQL
+# Nexa Play — site + API com banco de dados PostgreSQL
 
-Site em HTML5/CSS3/JavaScript puro, agora com um backend **Node.js + Express + Sequelize + MySQL**
-(mesma arquitetura do projeto *limpeza*): contas, login com JWT e mensagens de contato ficam no banco.
+Site em HTML5/CSS3/JavaScript puro com backend **Node.js + Express + Sequelize + PostgreSQL**:
+contas, login com JWT e mensagens de contato ficam no banco.
 
 ## Como rodar
-1. Crie um banco vazio no MySQL: `CREATE DATABASE nexaplay CHARACTER SET utf8mb4;`
-2. Copie `.env.example` para `.env` e preencha (dados do banco e `JWT_SECRET`).
-3. `npm install`
-4. `npm start` e acesse **http://localhost:3000**
+1. Configure `DATABASE_URL` e `JWT_SECRET` no arquivo `.env`.
+2. Execute o schema de `db/schema.sql` no PostgreSQL.
+3. Execute `npm install` e depois `npm start`.
+4. Acesse **http://localhost:3000**. Não abra as páginas por `file://` ou por um servidor estático (como Live Server), pois o cadastro precisa da API Express na mesma origem.
 
-As tabelas (`Usuarios` e `Mensagems`) são criadas automaticamente na primeira execução (`sequelize.sync()`).
-O site precisa ser aberto pelo servidor Node (não mais por `file://` ou `http.server`), pois ele serve a API e as páginas juntos.
+O servidor Express serve os arquivos do site e a API na mesma origem. A aplicação não cria as tabelas automaticamente.
+
+## Deploy Netlify + Render
+- O frontend envia as chamadas da API para `https://nexaplay-prod.onrender.com`, configurado centralmente em `public/js/functions.js`.
+- O backend permite CORS para `https://nexaquest.netlify.app`, incluindo o header `Authorization` e credenciais para cookies.
+- Se o domínio do frontend ou da API mudar, atualize esses valores em `src/app.js` e `public/js/functions.js`, respectivamente.
 
 ## Estrutura
 ```

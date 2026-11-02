@@ -1,4 +1,5 @@
 /* Nexa Play — funções reutilizáveis (sem dependências) */
+const API_BASE_URL = 'https://nexa-play.onrender.com';
 const NP = {
   $: (s, r = document) => r.querySelector(s),
   $$: (s, r = document) => [...r.querySelectorAll(s)],
@@ -25,13 +26,30 @@ const NP = {
     input.setAttribute('aria-invalid', msg ? 'true' : 'false'); return !msg;
   },
   status(el, msg, ok) { if (el) { el.textContent = msg; el.className = 'status ' + (ok ? 'ok' : 'bad'); } },
-  /* API (backend Node/MySQL). O token JWT fica no localStorage ("lembrar de mim") ou no sessionStorage. */
+  /* API (backend Node/PostgreSQL). O token JWT fica no localStorage ("lembrar de mim") ou no sessionStorage. */
   async api(path, { method = 'GET', body } = {}) {
     const headers = { 'Content-Type': 'application/json' }, t = NP.token();
     if (t) headers.Authorization = 'Bearer ' + t;
     try {
-      const r = await fetch('/api' + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
-      const data = await r.json().catch(() => ({}));
+      const r = await fetch(`${API_BASE_URL}/api${path}`, {
+        method,
+        headers,
+        credentials: 'include',
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      const response = await r.text();
+      let data;
+      try {
+        data = response ? JSON.parse(response) : {};
+      } catch {
+        data = {
+          mensagem: r.status === 404
+            ? 'API não encontrada. Verifique a URL do serviço no Render.'
+            : `Resposta inválida da API (HTTP ${r.status}).`,
+        };
+      }
+      if (!data || typeof data !== 'object') data = {};
+      if (!r.ok && !data.mensagem) data.mensagem = `Falha na API (HTTP ${r.status}).`;
       return { ok: r.ok, status: r.status, data };
     } catch { return { ok: false, status: 0, data: { mensagem: 'Não foi possível conectar ao servidor. Tente novamente.' } }; }
   },
