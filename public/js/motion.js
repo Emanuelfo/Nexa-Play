@@ -2,6 +2,7 @@
 (() => {
   const root = document.documentElement, $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fine = matchMedia('(hover:hover) and (pointer:fine)').matches;
   root.classList.add('js');
 
   document.addEventListener('DOMContentLoaded', () => {

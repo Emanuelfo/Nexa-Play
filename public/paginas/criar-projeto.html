@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Criar projeto | Nexa Quest</title>
+  <meta name="description" content="Apresente seu projeto para a comunidade Nexa Quest.">
+  <link rel="icon" href="../assets/icones/favicon.svg">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+  <link rel="stylesheet" href="../css/area-logada.css">
+  <script src="../js/functions.js" defer></script>
+  <script src="../js/main.js" defer></script>
+</head>
+
+<body data-page="projeto-criar" data-root="../" data-protected="1">
+  <a class="sr-only" href="#conteudo">Ir para o conteúdo</a>
+  <header data-component="header"></header>
+  <main id="conteudo" class="projects-page project-form-page">
+    <header class="feed-page-header">
+      <p class="feed-eyebrow">DA IDEIA À COMUNIDADE</p>
+      <h1>Apresente seu projeto</h1>
+      <p>Conte o que você está criando. Você poderá convidar integrantes depois de publicar.</p>
+    </header>
+    <section class="project-form-card" aria-labelledby="create-project-title">
+      <h2 id="create-project-title">Informações do projeto</h2>
+      <form id="project-form" class="project-form">
+        <label>Título
+          <input name="titulo" type="text" maxlength="120" required placeholder="Um nome para sua ideia">
+        </label>
+        <label>Descrição
+          <textarea name="descricao" rows="6" maxlength="5000" required placeholder="O que o projeto faz? Como as pessoas podem participar?"></textarea>
+          <small>Até 5.000 caracteres.</small>
+        </label>
+        <div class="project-form-row">
+          <label>Categoria
+            <select name="categoria" required>
+              <option value="">Selecione</option>
+              <option>Jogos</option>
+              <option>Arte e design</option>
+              <option>Programação</option>
+              <option>Educação</option>
+              <option>Música</option>
+              <option>Outros</option>
+            </select>
+          </label>
+          <label>Formato
+            <select name="tipo" required>
+              <option value="individual">Individual</option>
+              <option value="equipe">Projeto em equipe</option>
+            </select>
+          </label>
+        </div>
+        <div class="project-form-row">
+          <label>Visibilidade
+            <select name="visibilidade" required>
+              <option value="publico">Público — aparece em Explorar</option>
+              <option value="privado">Privado — somente equipe e proprietário</option>
+            </select>
+          </label>
+          <label>Imagem de apresentação · URL HTTPS
+            <input name="imagem_url" type="url" inputmode="url" placeholder="https://…" autocomplete="url">
+          </label>
+        </div>
+        <label>Link externo do projeto · URL HTTPS
+          <input name="link_externo" type="url" inputmode="url" placeholder="Site, repositório ou demonstração">
+        </label>
+        <p id="project-form-status" class="feed-status" role="status" aria-live="polite"></p>
+        <div class="project-form-actions">
+          <a class="btn btn-line" href="explorar-projetos.html">Cancelar</a>
+          <button class="btn" type="submit">Publicar projeto</button>
+        </div>
+      </form>
+    </section>
+  </main>
+  <footer data-component="footer"></footer>
+</body>
+
+</html>

@@ -7,6 +7,8 @@ require("./models/Mensagem");
 const usuarioRoutes = require("./routes/usuarioRoutes");
 const authRoutes = require("./routes/authRoutes");
 const mensagemRoutes = require("./routes/mensagemRoutes");
+const publicacaoRoutes = require("./routes/publicacaoRoutes");
+const projetoRoutes = require("./routes/projetoRoutes");
 
 if (!process.env.JWT_SECRET) {
   console.error("JWT_SECRET não definido. Copie .env.example para .env e preencha.");
@@ -21,7 +23,7 @@ app.use((req, res, next) => {
   if (origin && frontendOrigins.has(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Access-Control-Allow-Credentials", "true");
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
   }
   res.vary("Origin");
@@ -40,6 +42,8 @@ app.use(express.static(path.join(__dirname, "..", "public")));
 app.use(usuarioRoutes);
 app.use(authRoutes);
 app.use(mensagemRoutes);
+app.use(publicacaoRoutes);
+app.use(projetoRoutes);
 app.use("/api", (req, res) => {
   res.status(404).json({ mensagem: "Rota da API não encontrada." });
 });

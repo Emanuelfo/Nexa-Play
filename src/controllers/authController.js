@@ -15,7 +15,7 @@ async function login(req, res) {
     const usuario = ehEmail(identificador)
       ? await Usuario.findOne({ where: { email: identificador.toLowerCase() } })
       : await Usuario.findOne({
-        where: where(fn("lower", col("nome_usuario")), identificador.toLowerCase()),
+        where: where(fn("lower", col("nome_usuario")), identificador.replace(/^@/, "").toLowerCase()),
       });
 
     if (usuario && await bcrypt.compare(String(senha), usuario.senha)) {

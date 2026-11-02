@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Projeto | Nexa Quest</title>
+  <meta name="description" content="Detalhes e atualizações de um projeto da comunidade Nexa Quest.">
+  <link rel="icon" href="../assets/icones/favicon.svg">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+  <link rel="stylesheet" href="../css/area-logada.css">
+  <script src="../js/functions.js" defer></script>
+  <script src="../js/main.js" defer></script>
+</head>
+
+<body data-page="projeto-detalhe" data-root="../" data-protected="1">
+  <a class="sr-only" href="#conteudo">Ir para o conteúdo</a>
+  <header data-component="header"></header>
+  <main id="conteudo" class="projects-page project-detail-page">
+    <a class="project-back-link" href="explorar-projetos.html">← Explorar projetos</a>
+    <p id="project-detail-status" class="feed-status" role="status" aria-live="polite"></p>
+    <article id="project-detail" class="project-detail-card" aria-busy="true">
+      <div class="project-detail-cover" data-project-cover>
+        <img data-project-image alt="" hidden>
+        <span class="project-placeholder">PROJETO NEXA QUEST</span>
+      </div>
+      <div class="project-detail-content">
+        <div class="project-detail-badges">
+          <span data-project-category></span>
+          <span data-project-visibility></span>
+          <span data-project-type></span>
+        </div>
+        <h1 data-project-title>Carregando projeto…</h1>
+        <p class="project-owner-line">Criado por <a data-project-owner href="#">—</a></p>
+        <p class="project-description" data-project-description></p>
+        <div class="project-detail-actions">
+          <a class="btn btn-line" data-project-external href="#" target="_blank" rel="noopener noreferrer" hidden>Abrir projeto</a>
+          <button class="btn" type="button" data-project-join hidden>Solicitar participação</button>
+          <button class="btn btn-line" type="button" data-project-cancel hidden>Cancelar solicitação</button>
+          <button class="btn btn-soft" type="button" data-project-edit-toggle aria-expanded="false" aria-controls="project-edit-panel" hidden>Editar projeto</button>
+        </div>
+      </div>
+    </article>
+
+    <section id="project-edit-panel" class="project-form-card" hidden aria-labelledby="edit-project-title">
+      <h2 id="edit-project-title">Editar informações</h2>
+      <form id="project-edit-form" class="project-form"></form>
+    </section>
+
+    <div class="project-detail-grid">
+      <section class="project-panel" aria-labelledby="participants-title">
+        <header class="project-panel-heading"><div><p class="feed-eyebrow">QUEM ESTÁ CRIANDO</p><h2 id="participants-title">Equipe</h2></div><strong data-project-member-count></strong></header>
+        <div data-project-participants class="project-people"></div>
+        <div data-project-invite-section hidden>
+          <form id="project-invite-form" class="project-invite-form">
+            <label for="project-invite-username">Convidar pelo nome de usuário</label>
+            <div><input id="project-invite-username" name="nome_usuario" required minlength="3" maxlength="30" pattern="[A-Za-z0-9_]{3,30}" placeholder="nome_de_usuario"><button class="btn btn-soft" type="submit">Convidar</button></div>
+          </form>
+          <p id="project-invite-status" class="feed-status" role="status" aria-live="polite"></p>
+          <div data-project-requests class="project-requests"></div>
+        </div>
+      </section>
+      <section class="project-panel project-updates" aria-labelledby="updates-title">
+        <header class="project-panel-heading"><div><p class="feed-eyebrow">DIÁRIO DE BORDO</p><h2 id="updates-title">Atualizações</h2></div></header>
+        <form id="project-update-form" class="project-update-form" hidden>
+          <label for="project-update-text">Compartilhe um avanço com a equipe</label>
+          <textarea id="project-update-text" name="texto" rows="3" maxlength="2000" required placeholder="O que mudou no projeto?"></textarea>
+          <button class="btn btn-soft" type="submit">Publicar atualização</button>
+          <p id="project-update-status" class="feed-status" role="status" aria-live="polite"></p>
+        </form>
+        <div data-project-updates class="project-update-list" aria-live="polite"></div>
+      </section>
+    </div>
+  </main>
+  <footer data-component="footer"></footer>
+</body>
+
+</html>

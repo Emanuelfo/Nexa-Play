@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Amigos | Nexa Quest</title>
+  <meta name="description" content="Encontre jogadores, gerencie solicitações e acompanhe suas amizades no Nexa Quest.">
+  <link rel="icon" href="../assets/icones/favicon.svg">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+  <link rel="stylesheet" href="../css/area-logada.css">
+  <script src="../js/functions.js" defer></script>
+  <script src="../js/main.js" defer></script>
+</head>
+
+<body data-page="amigos" data-root="../" data-protected="1">
+  <a class="sr-only" href="#conteudo">Ir para o conteúdo</a>
+  <header data-component="header"></header>
+  <main id="conteudo" class="friends-page">
+    <header class="friends-hero">
+      <p class="feed-eyebrow">JOGUE EM BOA COMPANHIA</p>
+      <h1>Amigos</h1>
+      <p>Encontre pessoas da comunidade e acompanhe seus relacionamentos em um só lugar.</p>
+    </header>
+    <p id="friends-page-status" class="friends-page-status" role="status" aria-live="polite"></p>
+
+    <section class="friends-panel friends-search-panel" aria-labelledby="friends-search-title">
+      <div class="friends-section-heading">
+        <div><p class="feed-eyebrow">DESCUBRA A COMUNIDADE</p><h2 id="friends-search-title">Encontrar pessoas</h2></div>
+      </div>
+      <form id="friends-search-form" class="friends-search" role="search">
+        <label for="friends-search-input">Nome ou nome de usuário</label>
+        <div>
+          <input id="friends-search-input" type="search" minlength="2" maxlength="100" placeholder="Ex.: Ana ou @ana_dev" autocomplete="off" required>
+          <button class="btn" type="submit">Pesquisar</button>
+        </div>
+      </form>
+      <p id="friends-search-status" class="friends-status" role="status" aria-live="polite"></p>
+      <div id="friend-search-results" class="friends-list" aria-live="polite" hidden></div>
+    </section>
+
+    <section class="friends-panel" aria-labelledby="friend-suggestions-title">
+      <div class="friends-section-heading">
+        <div><p class="feed-eyebrow">NOVAS CONEXÕES</p><h2 id="friend-suggestions-title">Sugestões para você</h2></div>
+      </div>
+      <p id="friend-suggestions-status" class="friends-status" role="status" aria-live="polite">Carregando sugestões…</p>
+      <div id="friend-suggestions" class="friends-list" aria-live="polite" aria-busy="true"></div>
+    </section>
+
+    <section id="friends-list" class="friends-panel" aria-labelledby="friends-list-title">
+      <div class="friends-section-heading">
+        <div><p class="feed-eyebrow">SUA REDE</p><h2 id="friends-list-title">Meus amigos</h2></div>
+        <span id="friends-count" class="friends-count" aria-label="Quantidade de amigos">—</span>
+      </div>
+      <p id="friends-list-status" class="friends-status" role="status" aria-live="polite">Carregando seus amigos…</p>
+      <div id="friends-list-content" class="friends-list" aria-live="polite" aria-busy="true"></div>
+    </section>
+
+    <div class="friends-requests-grid">
+      <section id="friend-requests-received" class="friends-panel" aria-labelledby="friend-requests-received-title">
+        <div class="friends-section-heading">
+          <div><p class="feed-eyebrow">PRECISAM DA SUA RESPOSTA</p><h2 id="friend-requests-received-title">Solicitações recebidas</h2></div>
+          <span id="friend-requests-received-count" class="friends-count">0</span>
+        </div>
+        <p id="friend-requests-received-status" class="friends-status" role="status" aria-live="polite">Carregando solicitações…</p>
+        <div id="friend-requests-received-list" class="friends-list" aria-live="polite" aria-busy="true"></div>
+      </section>
+
+      <section id="friend-requests-sent" class="friends-panel" aria-labelledby="friend-requests-sent-title">
+        <div class="friends-section-heading">
+          <div><p class="feed-eyebrow">AGUARDANDO RETORNO</p><h2 id="friend-requests-sent-title">Solicitações enviadas</h2></div>
+          <span id="friend-requests-sent-count" class="friends-count">0</span>
+        </div>
+        <p id="friend-requests-sent-status" class="friends-status" role="status" aria-live="polite">Carregando solicitações…</p>
+        <div id="friend-requests-sent-list" class="friends-list" aria-live="polite" aria-busy="true"></div>
+      </section>
+    </div>
+  </main>
+  <footer data-component="footer"></footer>
+</body>
+
+</html>

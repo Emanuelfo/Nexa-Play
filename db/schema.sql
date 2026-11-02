@@ -31,6 +31,47 @@ create table if not exists usuarios (
   atualizado_em  timestamptz not null default now()
 );
 
+alter table usuarios
+  add column if not exists nome_exibicao varchar(100),
+  add column if not exists biografia text not null default '',
+  add column if not exists avatar_url text,
+  add column if not exists capa_url text,
+  add column if not exists perfil_publico boolean not null default true,
+  add column if not exists mostrar_biografia boolean not null default true,
+  add column if not exists mostrar_pontos boolean not null default true,
+  add column if not exists mostrar_amigos boolean not null default true,
+  add column if not exists mostrar_conquistas boolean not null default true,
+  add column if not exists mostrar_progresso boolean not null default true;
+
+update usuarios
+set nome_exibicao = nome_usuario,
+    nome_usuario = coalesce(
+      nullif(btrim(left(regexp_replace(lower(nome_usuario), '[^a-z0-9]+', '-', 'g'), 20), '-'), ''),
+      'jogador'
+    ) || '-' || id::text
+where nome_exibicao is null;
+
+alter table usuarios alter column nome_exibicao set not null;
+create unique index if not exists uq_usuarios_nome_usuario_lower
+  on usuarios (lower(nome_usuario));
+
+create table if not exists amizades (
+  id              bigint generated always as identity primary key,
+  solicitante_id  bigint not null references usuarios(id) on delete cascade,
+  destinatario_id bigint not null references usuarios(id) on delete cascade,
+  status          varchar(20) not null default 'pendente'
+                  check (status in ('pendente', 'aceita')),
+  criado_em       timestamptz not null default now(),
+  atualizado_em   timestamptz not null default now(),
+  check (solicitante_id <> destinatario_id)
+);
+create unique index if not exists uq_amizades_par
+  on amizades (least(solicitante_id, destinatario_id), greatest(solicitante_id, destinatario_id));
+create index if not exists idx_amizades_destinatario_status
+  on amizades (destinatario_id, status);
+create index if not exists idx_amizades_solicitante_status
+  on amizades (solicitante_id, status);
+
 create table if not exists mensagens (
   id          bigint generated always as identity primary key,
   nome        varchar(100) not null,
@@ -136,7 +177,58 @@ create table if not exists curtidas (
 create index if not exists idx_curtidas_usuario_id on curtidas(usuario_id);
 
 -- =========================================================
--- 6) Ajustes idempotentes (úteis se as tabelas já existiam de uma execução anterior)
+-- 6) Projetos públicos e colaboração
+-- =========================================================
+create table if not exists projetos (
+  id              bigint generated always as identity primary key,
+  proprietario_id bigint not null references usuarios(id) on delete cascade,
+  titulo          varchar(120) not null,
+  descricao       text not null,
+  imagem_url      text,
+  categoria       varchar(80) not null,
+  link_externo    text,
+  visibilidade    varchar(10) not null default 'publico'
+                  check (visibilidade in ('publico','privado')),
+  tipo            varchar(10) not null default 'individual'
+                  check (tipo in ('individual','equipe')),
+  criado_em       timestamptz not null default now(),
+  atualizado_em  timestamptz not null default now()
+);
+create index if not exists idx_projetos_publicos_data
+  on projetos (criado_em desc, id desc) where visibilidade = 'publico';
+create index if not exists idx_projetos_proprietario_data
+  on projetos (proprietario_id, id desc);
+create index if not exists idx_projetos_categoria
+  on projetos (categoria, id desc);
+
+create table if not exists projeto_participantes (
+  id              bigint generated always as identity primary key,
+  projeto_id      bigint not null references projetos(id) on delete cascade,
+  usuario_id      bigint not null references usuarios(id) on delete cascade,
+  origem          varchar(12) not null check (origem in ('convite','solicitacao')),
+  status          varchar(12) not null default 'pendente'
+                  check (status in ('pendente','aceito','recusado')),
+  criado_em       timestamptz not null default now(),
+  atualizado_em  timestamptz not null default now(),
+  unique (projeto_id, usuario_id)
+);
+create index if not exists idx_projeto_participantes_usuario_status
+  on projeto_participantes (usuario_id, status);
+create index if not exists idx_projeto_participantes_projeto_status
+  on projeto_participantes (projeto_id, status);
+
+create table if not exists projeto_atualizacoes (
+  id          bigint generated always as identity primary key,
+  projeto_id  bigint not null references projetos(id) on delete cascade,
+  autor_id    bigint not null references usuarios(id) on delete cascade,
+  texto       text not null,
+  criado_em   timestamptz not null default now()
+);
+create index if not exists idx_projeto_atualizacoes_projeto_data
+  on projeto_atualizacoes (projeto_id, id desc);
+
+-- =========================================================
+-- 7) Ajustes idempotentes (úteis se as tabelas já existiam de uma execução anterior)
 -- =========================================================
 
 -- 6.1) token_hash: char(64) -> varchar(64) (no-op se já for varchar(64))
@@ -185,18 +277,29 @@ begin
 end $$;
 
 -- =========================================================
--- 7) Trigger de atualizado_em (somente usuarios, única tabela com essa coluna)
+-- 8) Triggers de atualizado_em
 -- =========================================================
 create or replace trigger trg_usuarios_atualizado_em
   before update on usuarios
   for each row
   execute function set_atualizado_em();
 
--- =========================================================
--- 8) RLS ligado em todas as tabelas, SEM policies e SEM FORCE
+  create or replace trigger trg_projetos_atualizado_em
+    before update on projetos
+    for each row
+    execute function set_atualizado_em();
+
+  create or replace trigger trg_projeto_participantes_atualizado_em
+    before update on projeto_participantes
+    for each row
+    execute function set_atualizado_em();
+
+  -- =========================================================
+  -- 9) RLS ligado em todas as tabelas, SEM policies e SEM FORCE
 --    (o backend conecta como postgres, que ignora RLS; a API pública do Supabase fica sem acesso)
 -- =========================================================
 alter table usuarios            enable row level security;
+alter table amizades            enable row level security;
 alter table mensagens           enable row level security;
 alter table redefinicoes_senha  enable row level security;
 alter table trilhas             enable row level security;
@@ -207,5 +310,8 @@ alter table usuario_conquistas  enable row level security;
 alter table publicacoes         enable row level security;
 alter table comentarios         enable row level security;
 alter table curtidas            enable row level security;
+alter table projetos            enable row level security;
+alter table projeto_participantes enable row level security;
+alter table projeto_atualizacoes enable row level security;
 
 commit;

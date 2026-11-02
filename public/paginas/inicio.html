@@ -9,6 +9,7 @@
   <link rel="icon" href="../assets/icones/favicon.svg">
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/responsive.css">
+  <link rel="stylesheet" href="../css/area-logada.css">
   <script src="../js/functions.js" defer></script>
   <script src="../js/main.js" defer></script>
   <script src="../js/motion.js" defer></script>
@@ -17,8 +18,34 @@
 <body data-page="inicio" data-root="../" data-protected="1">
   <a class="sr-only" href="#conteudo">Ir para o conteúdo</a>
   <header data-component="header"></header>
-  <main id="conteudo">
-    <section class="hero stage" aria-labelledby="hero-t"><span class="orb o1" aria-hidden="true"></span><span
+  <main id="conteudo" class="community-main">
+    <header class="feed-page-header">
+      <p class="feed-eyebrow">COMUNIDADE NEXA QUEST</p>
+      <h1>Feed da comunidade</h1>
+      <p>Acompanhe publicações e compartilhe o que você está criando.</p>
+    </header>
+    <section class="feed-composer" aria-labelledby="feed-composer-title">
+      <form id="feed-post-form">
+        <label id="feed-composer-title" for="feed-post-text">Compartilhe uma ideia com a comunidade</label>
+        <textarea id="feed-post-text" name="texto" maxlength="2000" rows="3" placeholder="O que você está criando ou aprendendo?" required></textarea>
+        <div class="feed-composer-footer">
+          <span>Publicação em texto · até 2000 caracteres</span>
+          <button class="btn btn-azul" type="submit">Publicar</button>
+        </div>
+        <p id="feed-post-status" class="feed-status" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+    <section class="feed-section" id="publicacoes" aria-labelledby="feed-title">
+      <div class="feed-section-heading">
+        <div><p class="feed-eyebrow">AGORA</p><h2 id="feed-title">Publicações recentes</h2></div>
+      </div>
+      <div id="feed-list" class="feed-list" aria-live="polite" aria-busy="true">
+        <div class="feed-loading" role="status">Carregando publicações…</div>
+      </div>
+      <p id="feed-status" class="feed-status" role="status" aria-live="polite"></p>
+      <button id="feed-load-more" class="feed-load-more" type="button" hidden>Carregar mais publicações</button>
+    </section>
+    <section class="hero stage legacy-feed-home" aria-labelledby="hero-t"><span class="orb o1" aria-hidden="true"></span><span
         class="orb o2" aria-hidden="true"></span><span class="ghost" aria-hidden="true">NEXA</span>
       <div class="wrap">
         <div>
@@ -37,15 +64,15 @@
                 <path d="M7 10v5M4.5 12.500h5" />
                 <circle cx="16" cy="11" r=".5" />
                 <circle cx="18" cy="14" r=".5" />
-              </svg><small>Desafios disponíveis</small><b data-stat="desafios">5</b></div>
+              </svg><small>Desafios disponíveis</small><b data-stat="desafios">—</b></div>
             <div class="stat"><svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6.100L12 16.8 6.6 19.700l1.1-6.100L3.2 9.400l6.1-.8z" />
-              </svg><small>Mais conquistas</small><b data-stat="conquistas">0</b></div>
+              </svg><small>Conquistas registradas</small><b data-stat="conquistas">—</b></div>
             <div class="stat"><svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
-              </svg><small>Minha evolução</small><b data-stat="nivel">Nível 01</b></div>
+              </svg><small>Minha evolução</small><b data-stat="nivel">Indisponível</b></div>
           </div>
         </div>
         <div class="hero-art"><span class="halo" aria-hidden="true"></span><img
@@ -53,7 +80,7 @@
             width="628" height="718"></div>
       </div>
     </section>
-    <section class="wrap quest" id="quest" aria-labelledby="quest-t">
+    <section class="wrap quest legacy-feed-home" id="quest" aria-labelledby="quest-t">
       <div class="panel">
         <div class="quest-head">
           <div><small>CONHEÇA O</small>
@@ -70,7 +97,7 @@
       </div>
     </section>
 
-    <section class="sec features" id="recursos" aria-labelledby="rec-t">
+    <section class="sec features legacy-feed-home" id="recursos" aria-labelledby="rec-t">
       <div class="wrap">
         <div class="f-head">
           <div><span class="pill">RECURSOS</span>
