@@ -62,6 +62,10 @@
     width: min(70%, 340px)
   }
 
+  .hero-logo {
+    width: 70%;
+  }
+
   .split .art {
     order: -1;
     max-width: 420px;
@@ -142,7 +146,9 @@
   }
 
   .card {
-    padding: 1.6rem 1.3rem
+    padding: 1.6rem 1.3rem;
+    margin: 70px auto 0;
+
   }
 
   .btn {

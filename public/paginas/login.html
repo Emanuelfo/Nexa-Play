@@ -20,10 +20,9 @@
             alt="Nexa Play" width="157" height="84"></a>
     <main class="auth"><span class="blob"></span>
         <div class="auth-copy">
-            <h1>ENTRE NA <b>NEXA PLAY</b></h1>
-            <p>Acesse sua conta e continue sua jornada de aprendizado e conquistas.</p>
+            <h1>ENTRE NO <b>NEXA QUEST</b></h1>
         </div>
-        <section class="card" aria-label="Entrar"><img class="logo-c" src="../assets/imagens/logo-escura.svg"
+        <section class="card" aria-label="Entrar"><img class="logo-c" src="../assets/imagens/logo-escura-quest.svg"
                 alt="Nexa Play" width="157" height="84">
             <form id="form-login" novalidate>
                 <div class="field"><label class="sr-only" for="id_login">E-mail ou usuário</label>
@@ -42,8 +41,7 @@
                         </svg><input class="input" id="senha" name="senha" type="password" placeholder="Senha"
                             autocomplete="current-password" required></div><span class="err" id="senha-err"></span>
                 </div>
-                <div class="line-row"><label><input type="checkbox" name="lembrar"> Lembrar de mim</label><button
-                        class="link" type="button" id="forgot">Esqueceu sua senha?</button></div>
+                <div class="line-row"><label><input type="checkbox" name="lembrar"> Lembrar de mim</label></div>
                 <button class="btn" type="submit">ENTRAR</button>
                 <p class="status" id="login-status" role="status"></p>
                 <div class="or">OU</div><button class="btn btn-soft" type="button" id="google-btn"><svg width="18"
@@ -60,25 +58,6 @@
                 <a class="btn btn-soft" href="criar-conta.html">Criar conta</a>
             </form>
         </section>
-        <dialog id="dlg-reset" aria-labelledby="reset-t">
-            <form id="form-reset" novalidate style="display:flex;flex-direction:column;gap:.7rem">
-                <h2 id="reset-t">Redefinir senha</h2>
-                <p style="font-size:.85rem">Informe o e-mail ou celular da conta, sua data de nascimento e escolha uma
-                    nova senha.</p>
-                <label class="sr-only" for="reset_id">E-mail ou celular</label><input class="input" id="reset_id"
-                    name="reset_id" placeholder="E-mail ou celular" required>
-                <label class="sr-only" for="reset_nasc">Data de nascimento</label><input class="input" id="reset_nasc"
-                    name="reset_nasc" inputmode="numeric" placeholder="Data de nascimento (dd/mm/aaaa)" maxlength="10"
-                    required>
-                <label class="sr-only" for="reset_senha">Nova senha</label><input class="input" id="reset_senha"
-                    name="reset_senha" type="password" placeholder="Nova senha (mín. 6 caracteres)"
-                    autocomplete="new-password" required>
-                <p class="status" id="reset-status" role="status"></p>
-                <div style="display:flex;gap:.6rem;flex-wrap:wrap"><button class="btn" type="submit">Salvar
-                        senha</button><button class="btn btn-soft" type="button" id="reset-cancel">Cancelar</button>
-                </div>
-            </form>
-        </dialog>
     </main>
 </body>
 

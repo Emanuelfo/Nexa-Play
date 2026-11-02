@@ -17,6 +17,7 @@ const app = express();
 app.use(express.json({ limit: "1mb" }));
 
 // Site (HTML/CSS/JS/imagens)
+app.get("/health", (req, res) => res.send("ok"));
 app.use(express.static(path.join(__dirname, "..", "public")));
 
 // API
@@ -29,7 +30,6 @@ const PORT = process.env.PORT || 3000;
 sequelize.authenticate()
   .then(() => {
     console.log("Conectado ao banco de dados");
-    return sequelize.sync(); // cria as tabelas que ainda não existem
   })
   .then(() => app.listen(PORT, () => console.log(`Servidor rodando em http://localhost:${PORT}`)))
   .catch((err) => {

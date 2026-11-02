@@ -805,7 +805,7 @@ textarea.input {
     padding: 2rem 2.4rem;
     width: 100%;
     max-width: 430px;
-    justify-self: center
+    justify-self: center;
 }
 
 .card form {
@@ -828,7 +828,7 @@ textarea.input {
 }
 
 .avatar img {
-    width: 100%;
+    width: 60%;
     margin: auto;
 }
 
@@ -1339,7 +1339,7 @@ dialog h2 {
 }
 
 .stage .hero-art img {
-    width: min(100%, 540px);
+    width: min(60%, 540px);
     position: relative;
     filter: drop-shadow(0 30px 40px rgba(0, 0, 0, .45));
     transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
@@ -1693,7 +1693,8 @@ body:has(.auth) {
 
 @media (prefers-reduced-motion:no-preference) {
     .card {
-        animation: cardin .9s var(--ease) both
+        animation: cardin .9s var(--ease) both;
+        margin: 70px auto 0;
     }
 
     .auth-copy {
@@ -2980,4 +2981,8 @@ main {
     .sobre .sobre-copy>:nth-child(n+3) {
         transition-delay: .16s !important
     }
+}
+
+#ja-tem-conta {
+    padding:5px;
 }

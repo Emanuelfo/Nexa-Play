@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
-const { Op, where, fn, col } = require("sequelize");
+const { where, fn, col } = require("sequelize");
 const Usuario = require("../models/Usuario");
-const { normalizarContato } = require("../utils/validacao");
+const { ehEmail } = require("../utils/validacao");
 const { dadosPublicos, gerarToken } = require("./usuarioController");
 
 async function login(req, res) {
@@ -11,28 +11,15 @@ async function login(req, res) {
 
     if (!id_login || !senha) return invalido();
 
-    // O site permite entrar com e-mail, celular, nome ou nome completo
-    const contato = normalizarContato(id_login);
-    let candidatos;
-    if (contato) {
-      candidatos = await Usuario.findAll({ where: { contato } });
-    } else {
-      const texto = String(id_login).trim().toLowerCase();
-      candidatos = await Usuario.findAll({
-        where: {
-          [Op.or]: [
-            where(fn("lower", col("nome")), texto),
-            where(fn("lower", fn("concat", col("nome"), " ", col("sobrenome"))), texto),
-          ],
-        },
-        limit: 20,
+    const identificador = String(id_login).trim();
+    const usuario = ehEmail(identificador)
+      ? await Usuario.findOne({ where: { email: identificador.toLowerCase() } })
+      : await Usuario.findOne({
+        where: where(fn("lower", col("nome_usuario")), identificador.toLowerCase()),
       });
-    }
 
-    for (const usuario of candidatos) {
-      if (await bcrypt.compare(String(senha), usuario.senha)) {
-        return res.json({ token: gerarToken(usuario, !!lembrar), usuario: dadosPublicos(usuario) });
-      }
+    if (usuario && await bcrypt.compare(String(senha), usuario.senha)) {
+      return res.json({ token: gerarToken(usuario, !!lembrar), usuario: dadosPublicos(usuario) });
     }
     invalido();
   } catch (erro) {

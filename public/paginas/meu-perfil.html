@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Meu Perfil</title>
+  <meta name="description" content="Seu perfil no Nexa Quest: nível, pontos, jornada, comunidade e conta.">
+  <link rel="icon" href="../assets/icones/favicon.svg">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/perfil.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+  <script src="../js/functions.js" defer></script>
+  <script src="../js/main.js" defer></script>
+  <script src="../js/motion.js" defer></script>
+</head>
+
+<body data-page="perfil" data-root="../" data-protected="1">
+  <a class="sr-only" href="#conteudo">Ir para o conteúdo</a>
+  <header data-component="header"></header>
+  <main id="conteudo">
+    <section class="hero stage" id="perfil" aria-labelledby="hero-t"><span class="orb o1" aria-hidden="true"></span><span
+        class="orb o2" aria-hidden="true"></span><span class="ghost" aria-hidden="true">PERFIL</span>
+      <div class="wrap">
+        <div>
+          <div class="pf-id"><span class="pf-avatar" data-user-avatar aria-hidden="true">J</span><span class="pill">MEU PERFIL</span></div>
+          <h1 id="hero-t"><b style="display:inline" data-user-name>JOGADOR</b></h1>
+          <p class="lead">Este é o seu espaço no Nexa Quest: acompanhe a sua evolução, as suas conquistas e a sua jornada.</p>
+          <div class="stats">
+            <div class="stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="20"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><small>Nível</small><b data-stat="nivel">Nível 01</b></div>
+            <div class="stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="20"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg><small>Pontuação</small><b data-stat="pontos">0</b></div>
+            <div class="stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="20"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8 6.6 19.7l1.1-6.1L3.2 9.4l6.1-.8z"/></svg><small>Conquistas</small><b data-stat="conquistas">0</b></div>
+          </div>
+          <div class="news"><small>PROGRESSO ATÉ O PRÓXIMO NÍVEL</small>
+            <div class="pf-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-progress-bar><i data-progress style="--w:0%"></i></div>
+            <strong data-progress-text>0% concluído</strong>
+          </div>
+        </div>
+        <div class="hero-art"><span class="halo" aria-hidden="true"></span><img src="../assets/imagens/mascote-palco.svg" alt="Mascote golfinho da Nexa Play sobre uma plataforma"></div>
+      </div>
+    </section>
+
+    <section class="wrap" id="conquistas" aria-labelledby="conq-t">
+      <div class="panel quest-panel">
+        <div>
+          <p class="kicker" style="color:var(--cyan)">BADGES E CONQUISTAS</p>
+          <h2 id="conq-t">As suas conquistas</h2>
+          <p>Cada marco alcançado no Nexa Quest vira uma badge no seu perfil.</p>
+        </div>
+        <ul class="perks">
+          <li><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0zM17 5h3v2a3 3 0 01-3 3M7 5H4v2a3 3 0 003 3"/></svg></i>
+<div><b>Nenhuma badge ainda</b><span>Conclua missões e desafios para desbloquear as suas primeiras conquistas.</span></div></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="sec features" id="jornada" aria-labelledby="jor-t">
+      <div class="wrap">
+        <div class="f-head"><div><span class="pill">MINHA JORNADA</span>
+<h2 id="jor-t">Tudo o que você já fez <em>e o que vem pela frente.</em></h2></div><p>Missões, desafios e conteúdos do Nexa Quest, organizados em um só lugar.</p></div>
+        <div class="fgrid">
+          <article class="fcard" id="missoes">
+            <div class="fc-top"><span class="fc-num" aria-hidden="true">01</span><span class="fc-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="11" rx="5"/><path d="M7 10v5M4.5 12.5h5"/><circle cx="16" cy="11" r=".5"/><circle cx="18" cy="14" r=".5"/></svg></span></div>
+            <h3>MISSÕES EM ANDAMENTO</h3>
+            <p>Você ainda não iniciou nenhuma missão. Quando começar, ela aparece aqui.</p>
+            <div class="fc-art fa-bars" aria-hidden="true"><i style="--w:0%"></i><i style="--w:0%"></i><i style="--w:0%"></i></div>
+          </article>
+          <article class="fcard">
+            <div class="fc-top"><span class="fc-num" aria-hidden="true">02</span><span class="fc-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0zM17 5h3v2a3 3 0 01-3 3M7 5H4v2a3 3 0 003 3"/></svg></span></div>
+            <h3>MISSÕES CONCLUÍDAS</h3>
+            <p>As missões que você completar ficam registradas no seu histórico.</p>
+            <div class="fc-art fa-badges" aria-hidden="true"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8 6.6 19.7l1.1-6.1L3.2 9.4l6.1-.8z"/></svg></span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0zM17 5h3v2a3 3 0 01-3 3M7 5H4v2a3 3 0 003 3"/></svg></span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg></span></div>
+          </article>
+          <article class="fcard" id="desafios">
+            <div class="fc-top"><span class="fc-num" aria-hidden="true">03</span><span class="fc-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></span></div>
+            <h3>DESAFIOS REALIZADOS</h3>
+            <p>Os desafios superados e a sua pontuação em cada um aparecem aqui.</p>
+            <div class="fc-art fa-bars" aria-hidden="true"><i style="--w:0%"></i><i style="--w:0%"></i><i style="--w:0%"></i></div>
+          </article>
+          <article class="fcard">
+            <div class="fc-top"><span class="fc-num" aria-hidden="true">04</span><span class="fc-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg></span></div>
+            <h3>CONTEÚDOS DESBLOQUEADOS</h3>
+            <p>Avance na jornada para liberar novos conteúdos e acompanhar o seu progresso.</p>
+            <div class="fc-art fa-badges" aria-hidden="true"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8 6.6 19.7l1.1-6.1L3.2 9.4l6.1-.8z"/></svg></span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0zM17 5h3v2a3 3 0 01-3 3M7 5H4v2a3 3 0 003 3"/></svg></span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg></span></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec" id="comunidade" aria-labelledby="com-t">
+      <div class="wrap split">
+        <div><span class="pill">COMUNIDADE</span>
+          <h2 id="com-t">A comunidade do <em>Nexa Quest.</em></h2>
+          <p>Veja publicações, compartilhe as suas conquistas e interaja com outros usuários da plataforma.</p>
+          <p class="tags" aria-label="Na comunidade">
+            <span>PUBLICAÇÕES</span><span>CONQUISTAS</span><span>INTERAÇÕES</span></p>
+          <div class="btn-row"><a class="btn btn-azul" href="#" data-soon="A comunidade ainda não está disponível nesta versão.">ACESSAR A COMUNIDADE</a></div>
+        </div>
+        <div class="art"><img src="../assets/imagens/mascote-destaque.svg" alt="Mascote golfinho do Nexa Quest" width="700" height="512" loading="lazy"></div>
+      </div>
+    </section>
+
+    <section class="wrap" id="conta" aria-labelledby="conta-t">
+      <div class="panel quest-panel">
+        <div>
+          <p class="kicker" style="color:var(--cyan)">MINHA CONTA</p>
+          <h2 id="conta-t">Informações da conta</h2>
+          <p>Os dados do seu cadastro no Nexa Quest.</p>
+          <div class="btn-row"><button class="btn btn-line" type="button" data-logout>Sair da conta</button></div>
+        </div>
+        <ul class="perks">
+          <li><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg></i>
+<div><b>Nome do Usuário</b><span data-field="nome_usuario">—</span></div></li>
+          <li><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18v12H3z"/><path d="M3 7l9 6 9-6"/></svg></i>
+<div><b>E-mail</b><span data-field="email">—</span></div></li>
+          <li><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></i>
+<div><b>Preferências e configurações</b><span>Disponíveis em uma próxima versão.</span></div></li>
+        </ul>
+      </div>
+    </section>
+    <div class="waves" aria-hidden="true"></div>
+  </main>
+  <footer data-component="footer"></footer>
+</body>
+
+</html>

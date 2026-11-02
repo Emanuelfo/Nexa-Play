@@ -12,7 +12,7 @@ async function enviar(req, res) {
     if (!ehEmail(email)) return res.status(400).json({ mensagem: "Informe um e-mail válido." });
     if (assunto.length < 3) return res.status(400).json({ mensagem: "Informe o assunto." });
     if (texto.length < 10) return res.status(400).json({ mensagem: "Escreva ao menos 10 caracteres." });
-    if (texto.length > 5000 || assunto.length > 200 || nome.length > 150 || email.length > 200) {
+    if (texto.length > 5000 || assunto.length > 150 || nome.length > 100 || email.length > 255) {
       return res.status(400).json({ mensagem: "Algum campo excede o tamanho permitido." });
     }
 

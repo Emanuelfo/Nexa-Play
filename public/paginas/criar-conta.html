@@ -21,44 +21,30 @@
     <main class="auth"><span class="blob"></span>
         <div class="auth-copy">
             <h1>CRIE UMA <b>CONTA</b></h1>
-            <p>É rápido e fácil.</p>
-            <hr>
         </div>
         <section class="card" aria-label="Cadastro">
             <form id="form-cadastro" novalidate>
                 <div class="avatar"><img id="avatar-img"
-                        src="../assets/imagens/golfinho-fone.svg">
+                        src="../assets/imagens/logo-escura-quest.svg">
                     
                 </div>
-                <div class="row2">
-                    <div class="field"><label class="sr-only" for="nome">Nome</label><input class="input" id="nome"
-                            name="nome" type="text" placeholder="Nome" autocomplete="given-name" required><span
-                            class="err" id="nome-err"></span></div>
-                    <div class="field"><label class="sr-only" for="sobrenome">Sobrenome</label><input class="input"
-                            id="sobrenome" name="sobrenome" type="text" placeholder="Sobrenome"
-                            autocomplete="family-name" required><span class="err" id="sobrenome-err"></span></div>
-                </div>
-                <div class="field"><label class="sr-only" for="contato">Celular ou email</label><input class="input"
-                        id="contato" name="contato" type="text" placeholder="Celular ou email" autocomplete="username"
-                        required><span class="err" id="contato-err"></span></div>
+                <div class="field"><label class="sr-only" for="nome_usuario">Nome de Usuário</label><input class="input"
+                            id="nome_usuario" name="nome_usuario" type="text" placeholder="Nome de Usuário"
+                            autocomplete="username" required maxlength="100"><span class="err" id="nome_usuario-err"></span></div>
+                <div class="field"><label class="sr-only" for="email">E-mail</label><input class="input"
+                        id="email" name="email" type="email" placeholder="E-mail" autocomplete="email"
+                        required><span class="err" id="email-err"></span></div>
                 <div class="field"><label class="sr-only" for="senha">Senha</label><input class="input" id="senha"
                         name="senha" type="password" placeholder="Senha" autocomplete="new-password" required
                         minlength="6"><span class="err" id="senha-err"></span></div>
-                <div class="field"><label class="legend" for="nascimento">Data de nascimento</label><input
-                        class="input date" id="nascimento" name="nascimento" inputmode="numeric"
-                        placeholder="dd/mm/aaaa" maxlength="10" autocomplete="bday" required><span class="err"
-                        id="nascimento-err"></span></div>
-                <fieldset style="border:0;padding:0;margin:0">
-                    <legend class="legend">Gênero</legend>
-                    <div class="radios"><label><input type="radio" name="genero" value="Feminino">
-                            Feminino</label><label><input type="radio" name="genero" value="Masculino">
-                            Masculino</label><label><input type="radio" name="genero" value="Outros"> Outros</label>
-                    </div><span class="err" id="genero-err"></span>
-                </fieldset>
-                <button class="btn" type="submit" style="align-self:center;margin-top:.4rem">Cadastre-se</button>
-                <p class="status" id="cadastro-status" role="status" style="text-align:center"></p>
-                <p style="text-align:center;font-size:.75rem">Já tem conta? <a class="link" href="login.html">Entrar</a>
-                </p>
+                <div class="field"><label class="sr-only" for="confirmar-senha">Confirmar Senha</label><input class="input" id="confirmar-senha"
+                        name="confirmar-senha" type="password" placeholder="Confirmar Senha" autocomplete="new-password" required
+                        minlength="6"><span class="err" id="confirmar-senha-err"></span></div>
+                <button class="btn" type="submit">Cadastrar</button>
+                <p class="status" id="cadastro-status" role="status"></p>
+                <div class="or">OU</div>
+                <p id="ja-tem-conta" style="text-align:center;font-size:.75rem">Já tem conta?</p>
+                <a class="btn btn-soft" href="login.html">Entrar</a>
             </form>
         </section>
     </main>

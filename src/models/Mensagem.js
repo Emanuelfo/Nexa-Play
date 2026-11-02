@@ -8,6 +8,7 @@ const Mensagem = sequelize.define("Mensagem", {
   email: { type: DataTypes.STRING, allowNull: false },
   assunto: { type: DataTypes.STRING, allowNull: false },
   texto: { type: DataTypes.TEXT, allowNull: false },
+  tableName: "mensagens", createdAt: "criado_em", updatedAt: false
 });
 
 // usuario_id é opcional: visitantes sem login também podem enviar mensagem
