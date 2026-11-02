@@ -300,3 +300,402 @@
     order: -1
   }
 }
+
+/* Ajustes de leitura e espaço para celulares */
+@media (max-width:560px) {
+  :root {
+    --wrap: min(1180px, calc(100vw - 2rem))
+  }
+
+  html {
+    scroll-padding-top: 68px
+  }
+
+  .site-header .wrap {
+    min-height: 62px;
+    gap: .5rem
+  }
+
+  .brand img {
+    height: 34px;
+    max-width: 150px
+  }
+
+  .user-area {
+    gap: .25rem
+  }
+
+  .user-btn {
+    width: 36px;
+    height: 36px
+  }
+
+  .menu-btn {
+    width: 40px;
+    height: 40px
+  }
+
+  .nav {
+    padding: .5rem 1rem 1rem
+  }
+
+  .nav a {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    font-size: .78rem
+  }
+
+  .hero.stage {
+    padding: 2rem 0 2.5rem
+  }
+
+  .stage .wrap {
+    gap: 1.25rem
+  }
+
+  .stage h1,
+  .about-hero.stage h1 {
+    font-size: clamp(2rem, 9vw, 2.8rem);
+    line-height: 1.05;
+    letter-spacing: -.035em
+  }
+
+  .stage p.lead {
+    font-size: .98rem;
+    line-height: 1.55;
+    margin-bottom: 1.1rem
+  }
+
+  .stage .hero-art {
+    order: 0;
+    width: min(58vw, 210px);
+    max-width: 210px;
+    margin: 0 auto
+  }
+
+  .stage .hero-art img {
+    width: 100%;
+    max-height: 250px;
+    object-fit: contain
+  }
+
+  .hero-logo {
+    width: min(58vw, 200px);
+    max-width: 100%;
+    vertical-align: middle
+  }
+
+  .ghost {
+    top: 38%;
+    font-size: clamp(5rem, 27vw, 8rem);
+    -webkit-text-stroke-width: 1px
+  }
+
+  .orb {
+    filter: blur(32px)
+  }
+
+  .o1 {
+    width: 55vw;
+    height: 55vw
+  }
+
+  .o2 {
+    width: 38vw;
+    height: 38vw
+  }
+
+  .sec,
+  .features {
+    padding-block: 2.5rem
+  }
+
+  .sec h2,
+  .f-head h2,
+  .sec .ptn-copy h2 {
+    font-size: clamp(1.65rem, 7.5vw, 2.2rem);
+    line-height: 1.12;
+    margin-top: 1rem
+  }
+
+  .sec p,
+  .f-head p,
+  .ptn-lead {
+    font-size: .95rem;
+    line-height: 1.6
+  }
+
+  .pill {
+    padding: .45rem 1.1rem;
+    font-size: .7rem
+  }
+
+  .split .art,
+  .about-hero .art {
+    width: min(100%, 300px);
+    max-width: 300px;
+    margin-inline: auto
+  }
+
+  .split .art img,
+  .about-hero .art img {
+    width: 100%;
+    max-height: 300px;
+    object-fit: contain
+  }
+
+  .panel,
+  .quest-panel,
+  .contato .panel {
+    margin-block: 1.5rem;
+    padding: 1.25rem;
+    border-radius: 22px
+  }
+
+  .quest-panel {
+    margin-inline: auto
+  }
+
+  .quest-panel h2 {
+    font-size: clamp(1.55rem, 7vw, 2rem)
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .55rem;
+    margin-top: 1rem
+  }
+
+  .stat {
+    min-width: 0;
+    padding: .7rem
+  }
+
+  .stat:last-child {
+    grid-column: 1 / -1
+  }
+
+  .stat b,
+  .stage .stat b {
+    font-size: 1.15rem;
+    overflow-wrap: anywhere
+  }
+
+  .news {
+    margin-top: 1rem;
+    padding: .85rem
+  }
+
+  .news p {
+    font-size: .82rem !important;
+    line-height: 1.5
+  }
+
+  .btn-row {
+    gap: .6rem
+  }
+
+  .btn-row .btn,
+  .hero .btn {
+    width: 100%;
+    min-height: 46px;
+    padding: .7rem 1rem;
+    font-size: .8rem
+  }
+
+  .mini-feats {
+    gap: .8rem
+  }
+
+  .f-head {
+    gap: .8rem;
+    margin-bottom: 1.25rem
+  }
+
+  .fgrid {
+    gap: .85rem
+  }
+
+  .fcard {
+    padding: 1.15rem;
+    border-radius: 22px;
+    gap: .65rem
+  }
+
+  .fcard h3 {
+    font-size: 1.05rem
+  }
+
+  .fcard p {
+    font-size: .9rem
+  }
+
+  .manifesto {
+    padding-block: 3rem
+  }
+
+  .m-stage > * {
+    --rail: 2.8rem;
+    --big: clamp(2rem, 11cqi, 3rem)
+  }
+
+  .mrow {
+    gap: .35rem
+  }
+
+  .m-art {
+    width: clamp(5.5rem, 25cqi, 7rem)
+  }
+
+  .qm {
+    --qm-py: 3rem
+  }
+
+  .qm-inner {
+    gap: 2rem
+  }
+
+  .qm-title {
+    font-size: clamp(1.9rem, 8vw, 2.5rem)
+  }
+
+  .qm-stage {
+    padding-block: .5rem 1rem
+  }
+
+  .ptn {
+    row-gap: 1rem
+  }
+
+  .ptn-art {
+    margin-inline: -1rem
+  }
+
+  .ptn-eyebrow {
+    margin-bottom: 1rem;
+    font-size: .68rem;
+    letter-spacing: .16em
+  }
+
+  .ptn-list li {
+    padding-block: .8rem;
+    font-size: 1.1rem
+  }
+
+  .sec.sobre {
+    padding-block: 3rem;
+    --sw-h: 230px
+  }
+
+  .sobre-grid {
+    gap: 1.5rem
+  }
+
+  .cta-row,
+  .cta-row.go {
+    padding: 1.4rem;
+    margin-block: 1.5rem 2rem;
+    border-radius: 24px
+  }
+
+  .cta-row.go h2 {
+    font-size: clamp(1.6rem, 7vw, 2.2rem)
+  }
+
+  .auth {
+    min-height: 100svh;
+    align-content: start;
+    gap: .8rem;
+    padding: 5rem 1rem 2rem
+  }
+
+  .auth-logo {
+    top: 12px
+  }
+
+  .auth-logo img {
+    height: 42px
+  }
+
+  .auth-copy h1 {
+    font-size: clamp(1.8rem, 8vw, 2.35rem);
+    line-height: 1.08
+  }
+
+  .card {
+    max-width: 430px;
+    margin: 0 auto;
+    padding: 1.25rem 1rem;
+    border-radius: 22px
+  }
+
+  .card .logo-c {
+    height: 52px;
+    margin-bottom: .5rem
+  }
+
+  .avatar {
+    width: 150px;
+    height: 76px;
+    margin-bottom: .25rem
+  }
+
+  .input {
+    min-height: 44px;
+    font-size: 16px
+  }
+
+  textarea.input {
+    min-height: 120px
+  }
+
+  .contato .panel {
+    gap: 1.25rem
+  }
+
+  .form-grid {
+    gap: .65rem
+  }
+
+  .site-footer {
+    padding-block: 2.5rem 2rem
+  }
+
+  .site-footer .wrap {
+    gap: 1.5rem
+  }
+
+  .site-footer ul {
+    gap: .6rem;
+    font-size: .85rem
+  }
+
+  .site-footer a {
+    min-height: 36px
+  }
+
+  .waves {
+    height: 54px
+  }
+}
+
+@media (max-width:360px) {
+  .stage h1,
+  .about-hero.stage h1 {
+    font-size: 1.85rem
+  }
+
+  .stage .hero-art {
+    width: min(54vw, 180px)
+  }
+
+  .card {
+    padding-inline: .9rem
+  }
+
+  .m-stage > * {
+    --rail: 2.45rem;
+    --big: clamp(1.8rem, 10.5cqi, 2.5rem)
+  }
+}

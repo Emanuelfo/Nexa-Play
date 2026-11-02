@@ -63,6 +63,16 @@ function initContact() {
 function initRegister() {
   const f = $('#form-cadastro'); if (!f) return;
   const confirmarSenha = f.elements.namedItem('confirmar-senha');
+  const validarConfirmacao = () => {
+    const mensagem = !confirmarSenha.value
+      ? 'Confirme sua senha.'
+      : confirmarSenha.value !== f.senha.value ? 'As senhas não coincidem.' : '';
+    return NP.setErr(confirmarSenha, mensagem);
+  };
+  confirmarSenha.addEventListener('input', validarConfirmacao);
+  f.senha.addEventListener('input', () => {
+    if (confirmarSenha.value) validarConfirmacao();
+  });
   f.addEventListener('submit', async e => {
     e.preventDefault();
     const nomeUsuario = f.nome_usuario.value.trim();
@@ -70,7 +80,7 @@ function initRegister() {
     const ok = [NP.setErr(f.nome_usuario, nomeUsuario.length < 2 || nomeUsuario.length > 100 ? 'Use um nome de usuário entre 2 e 100 caracteres.' : ''),
     NP.setErr(f.email, NP.isEmail(email) ? '' : 'Informe um e-mail válido.'),
     NP.setErr(f.senha, f.senha.value.length < 6 ? 'A senha precisa ter ao menos 6 caracteres.' : ''),
-    NP.setErr(confirmarSenha, confirmarSenha.value === f.senha.value ? '' : 'As senhas não coincidem.')].every(Boolean);
+    validarConfirmacao()].every(Boolean);
     if (!ok) return NP.status($('#cadastro-status'), 'Revise os campos destacados.', false);
     const btn = $('button[type=submit]', f); btn.disabled = true; NP.status($('#cadastro-status'), 'Criando sua conta…', true);
     const r = await NP.api('/usuarios', { method: 'POST', body: { nome_usuario: nomeUsuario, email, senha: f.senha.value, lembrar: true } });
