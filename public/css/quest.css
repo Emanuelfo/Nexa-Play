@@ -147,3 +147,86 @@
   .qm-device { transform: rotateY(-9deg) rotateX(3deg) }
   .qm-glare { background-position: 50% 0 }
 }
+
+/* ==========================================================================
+   Demonstração em vídeo (home) — logo abaixo da vitrine do jogo.
+   Cabeçalho em duas colunas (título à esquerda, texto e botão à direita) e o
+   vídeo do YouTube em 16:9 na largura total do conteúdo.
+   Só usa os tokens do site; o JS (js/quest.js) escreve apenas .vd--ready e .vd--in.
+   ========================================================================== */
+
+.vd {
+  --vd-py: clamp(3rem, 7vw, 5.5rem);
+  position: relative;
+  padding-block: clamp(2.5rem, 5vw, 4rem) var(--vd-py);
+  background: linear-gradient(180deg, #dcebfd 0, #e8f2ff 100%);
+  color: var(--ink);
+}
+
+.vd-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr);
+  align-items: end;
+  gap: clamp(1.5rem, 4vw, 4rem);
+  margin-bottom: clamp(1.6rem, 3vw, 2.6rem);
+}
+.vd-eyebrow {
+  display: inline-flex; align-items: center; gap: .7rem;
+  font: 700 .72rem var(--font); letter-spacing: .16em; text-transform: uppercase;
+  color: var(--azul);
+}
+.vd-eyebrow::before { content: ""; width: 28px; height: 2px; border-radius: 2px; background: currentColor }
+.vd-title {
+  margin: 1rem 0 0;
+  font: 900 clamp(2rem, 3.8vw, 3.4rem)/1.04 var(--font);
+  letter-spacing: -.04em;
+  text-wrap: balance;
+}
+.vd-title em { font-style: normal; color: var(--azul) }
+.vd-lead { max-width: 38ch; font-size: clamp(1rem, 1.25vw, 1.12rem); line-height: 1.6; color: var(--ink) }
+.vd .btn-row { margin-top: 1.4rem }
+.vd .btn-row .btn.btn-glow { margin: 0 } /* o botão padrão do site traz margem vertical; aqui o espaçamento vem do grid */
+
+/* ---------- player ---------- */
+.vd-frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: clamp(10px, 1.6vw, 20px);
+  background: var(--qm-night, #050f33);
+  box-shadow:
+    0 0 0 1px rgba(5, 15, 51, .55),
+    0 40px 70px -32px rgba(5, 15, 51, .6),
+    0 14px 28px -16px rgba(10, 31, 92, .35);
+}
+.vd-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block }
+.vd-yt {
+  display: block; width: fit-content; margin: .9rem 0 0 auto;
+  font: 700 .82rem var(--font); letter-spacing: .02em;
+  color: var(--azul); text-decoration: underline; text-underline-offset: .22em; text-decoration-thickness: 1.5px;
+  transition: color .18s;
+}
+.vd-yt:hover { color: var(--navy) }
+
+/* ---------- entrada (só com JS e sem preferência por menos movimento) ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .vd--ready .vd-titles, .vd--ready .vd-aside, .vd--ready .vd-player {
+    opacity: 0; translate: 0 28px;
+    transition: opacity .8s var(--ease), translate .8s var(--ease);
+  }
+  .vd--ready .vd-aside { transition-delay: .11s }
+  .vd--ready .vd-player { transition-delay: .22s }
+  .vd--in .vd-titles, .vd--in .vd-aside, .vd--in .vd-player { opacity: 1; translate: 0 0 }
+}
+
+/* ---------- tablet e celular: cabeçalho em coluna única ---------- */
+@media (max-width: 900px) {
+  .vd-head { grid-template-columns: 1fr; align-items: start; gap: 1.2rem }
+  .vd .btn-row { margin-top: 1.2rem }
+}
+@media (min-width: 561px) and (max-width: 900px) {
+  .vd .btn-row .btn { flex: 0 0 auto } /* o site usa botão 100% só no celular */
+}
+@media (max-width: 560px) {
+  .vd-title { font-size: clamp(1.9rem, 9vw, 2.4rem) }
+}
