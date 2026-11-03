@@ -1226,6 +1226,26 @@ dialog h2 {
     gap: .8rem
 }
 
+.hero.stage .btn-row .btn {
+    flex: 0 0 11rem
+}
+
+.hero.stage .btn-row {
+    align-items: center
+}
+
+.hero.stage .btn-row .btn-line {
+    height: 44px;
+    line-height: 1;
+    padding-block: .7rem
+}
+
+@media (max-width: 560px) {
+    .hero.stage .btn-row .btn {
+        flex-basis: 100%
+    }
+}
+
 /* Hero em palco escuro */
 .hero.stage {
     overflow: hidden;
