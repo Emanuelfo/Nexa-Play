@@ -9,9 +9,13 @@ async function login(req, res) {
     const { id_login, senha, lembrar } = req.body;
     const invalido = () => res.status(401).json({ mensagem: "E-mail, usuário ou senha incorretos. Confira os dados ou crie uma conta." });
 
-    if (!id_login || !senha) return invalido();
+    if (typeof id_login !== "string" || !id_login.trim() || id_login.length > 255
+      || typeof senha !== "string" || !senha || Buffer.byteLength(senha, "utf8") > 1024
+      || (lembrar !== undefined && typeof lembrar !== "boolean")) {
+      return invalido();
+    }
 
-    const identificador = String(id_login).trim();
+    const identificador = id_login.trim();
     const usuario = ehEmail(identificador)
       ? await Usuario.findOne({ where: { email: identificador.toLowerCase() } })
       : await Usuario.findOne({
@@ -23,7 +27,12 @@ async function login(req, res) {
     }
     invalido();
   } catch (erro) {
-    res.status(500).json({ mensagem: "Erro ao fazer login", erro: erro.message });
+    console.error(JSON.stringify({
+      event: "login_error",
+      request_id: req.requestId,
+      error: erro.original?.code || erro.parent?.code || erro.name,
+    }));
+    res.status(500).json({ mensagem: "Não foi possível fazer login." });
   }
 }
 

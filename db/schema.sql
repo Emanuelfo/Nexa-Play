@@ -227,6 +227,16 @@ create table if not exists projeto_atualizacoes (
 create index if not exists idx_projeto_atualizacoes_projeto_data
   on projeto_atualizacoes (projeto_id, id desc);
 
+-- Buckets compartilhados de rate limiting; as chaves persistidas são hashes,
+-- nunca endereços IP, nomes de usuário ou IDs em texto claro.
+create table if not exists public.api_rate_limit_windows (
+  bucket_key char(64) primary key,
+  hit_count   integer not null check (hit_count > 0),
+  reset_at    timestamptz not null
+);
+create index if not exists idx_api_rate_limit_windows_reset_at
+  on public.api_rate_limit_windows (reset_at);
+
 -- =========================================================
 -- 7) Ajustes idempotentes (úteis se as tabelas já existiam de uma execução anterior)
 -- =========================================================
@@ -296,7 +306,7 @@ create or replace trigger trg_usuarios_atualizado_em
 
   -- =========================================================
   -- 9) RLS ligado em todas as tabelas, SEM policies e SEM FORCE
---    (o backend conecta como postgres, que ignora RLS; a API pública do Supabase fica sem acesso)
+--    (o backend usa DATABASE_URL no servidor e pode ignorar RLS; a API pública fica sem policies)
 -- =========================================================
 alter table usuarios            enable row level security;
 alter table amizades            enable row level security;
@@ -313,5 +323,6 @@ alter table curtidas            enable row level security;
 alter table projetos            enable row level security;
 alter table projeto_participantes enable row level security;
 alter table projeto_atualizacoes enable row level security;
+alter table public.api_rate_limit_windows enable row level security;
 
 commit;

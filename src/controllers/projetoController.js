@@ -1,6 +1,7 @@
 const { QueryTypes } = require("sequelize");
 const sequelize = require("../config/database");
 const Usuario = require("../models/Usuario");
+const logErro = require("../utils/logErro");
 
 const LIMITE_PADRAO = 12;
 const LIMITE_MAXIMO = 30;
@@ -170,7 +171,7 @@ async function explorar(req, res) {
       proximoCursor: temMais ? String(projetos[projetos.length - 1].id) : null,
     });
   } catch (erro) {
-    console.error("Erro ao explorar projetos:", erro);
+    logErro("project_explore_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível carregar os projetos." });
   }
 }
@@ -204,7 +205,7 @@ async function meusProjetos(req, res) {
       proximoCursor: temMais ? String(projetos[projetos.length - 1].id) : null,
     });
   } catch (erro) {
-    console.error("Erro ao buscar projetos do usuário:", erro);
+    logErro("user_projects_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível carregar seus projetos." });
   }
 }
@@ -239,7 +240,7 @@ async function criar(req, res) {
     });
     return res.status(201).json({ projeto });
   } catch (erro) {
-    console.error("Erro ao criar projeto:", erro);
+    logErro("project_create_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível criar o projeto." });
   }
 }
@@ -322,7 +323,7 @@ async function obter(req, res) {
     }
     return res.json({ projeto: resultado });
   } catch (erro) {
-    console.error("Erro ao buscar projeto:", erro);
+    logErro("project_load_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível carregar o projeto." });
   }
 }
@@ -382,7 +383,7 @@ async function atualizar(req, res) {
     if (!projeto) return res.status(404).json({ mensagem: "Projeto não encontrado ou você não é o proprietário." });
     return res.json({ projeto, mensagem: "Projeto atualizado." });
   } catch (erro) {
-    console.error("Erro ao atualizar projeto:", erro);
+    logErro("project_update_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível atualizar o projeto." });
   }
 }
@@ -427,7 +428,7 @@ async function convidar(req, res) {
     if (!convite) return res.status(409).json({ mensagem: "Já existe um convite, solicitação ou participação para este usuário." });
     return res.status(201).json({ convite });
   } catch (erro) {
-    console.error("Erro ao convidar participante:", erro);
+    logErro("project_invitation_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível enviar o convite." });
   }
 }
@@ -462,7 +463,7 @@ async function solicitarParticipacao(req, res) {
     if (!solicitacao) return res.status(409).json({ mensagem: "Já existe uma solicitação, convite ou participação para este projeto." });
     return res.status(201).json({ solicitacao });
   } catch (erro) {
-    console.error("Erro ao solicitar participação:", erro);
+    logErro("project_join_request_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível solicitar participação." });
   }
 }
@@ -509,7 +510,7 @@ async function responderParticipacao(req, res) {
     }
     return res.json({ participacao: resultado });
   } catch (erro) {
-    console.error("Erro ao responder à participação:", erro);
+    logErro("project_participation_response_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível atualizar a participação." });
   }
 }
@@ -541,7 +542,7 @@ async function removerParticipante(req, res) {
     if (!removido) return res.status(404).json({ mensagem: "Participação não encontrada ou ação não permitida." });
     return res.json({ mensagem: "Participação removida." });
   } catch (erro) {
-    console.error("Erro ao remover participante:", erro);
+    logErro("project_participant_remove_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível remover a participação." });
   }
 }
@@ -589,7 +590,7 @@ async function criarAtualizacao(req, res) {
     });
     return res.status(201).json({ atualizacao: { ...atualizacao, autor } });
   } catch (erro) {
-    console.error("Erro ao publicar atualização do projeto:", erro);
+    logErro("project_update_post_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível publicar a atualização." });
   }
 }

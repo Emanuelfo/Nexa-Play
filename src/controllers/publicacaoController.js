@@ -1,5 +1,6 @@
 const { QueryTypes } = require("sequelize");
 const sequelize = require("../config/database");
+const logErro = require("../utils/logErro");
 
 const LIMITE_PADRAO = 10;
 const LIMITE_MAXIMO = 30;
@@ -130,7 +131,7 @@ async function listar(req, res) {
       proximoCursor: temMais ? String(publicacoes[publicacoes.length - 1].id) : null,
     });
   } catch (erro) {
-    console.error("Erro ao listar publicações:", erro);
+    logErro("publication_list_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível carregar as publicações." });
   }
 }
@@ -148,7 +149,7 @@ async function obter(req, res) {
     if (!publicacao) return res.status(404).json({ mensagem: "Publicação não encontrada." });
     return res.json({ publicacao });
   } catch (erro) {
-    console.error("Erro ao buscar publicação:", erro);
+    logErro("publication_load_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível carregar a publicação." });
   }
 }
@@ -208,7 +209,7 @@ async function criar(req, res) {
     }
     return res.status(201).json({ publicacao });
   } catch (erro) {
-    console.error("Erro ao criar publicação:", erro);
+    logErro("publication_create_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível criar a publicação." });
   }
 }
@@ -230,7 +231,7 @@ async function apagar(req, res) {
     if (!publicacao) return res.status(404).json({ mensagem: "Publicação não encontrada ou não pertence a você." });
     return res.json({ mensagem: "Publicação apagada." });
   } catch (erro) {
-    console.error("Erro ao apagar publicação:", erro);
+    logErro("publication_delete_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível apagar a publicação." });
   }
 }
@@ -269,7 +270,7 @@ async function editar(req, res) {
     if (!existente) return res.status(404).json({ mensagem: "Publicação não encontrada ou não pertence a você." });
     return res.status(403).json({ mensagem: "O prazo de 30 minutos para editar esta publicação expirou." });
   } catch (erro) {
-    console.error("Erro ao editar publicação:", erro);
+    logErro("publication_edit_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível editar a publicação." });
   }
 }
@@ -322,7 +323,7 @@ async function alterarCurtida(req, res) {
     });
     return res.json(resultado);
   } catch (erro) {
-    console.error("Erro ao alterar curtida:", erro);
+    logErro("publication_like_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível atualizar a curtida." });
   }
 }
@@ -379,7 +380,7 @@ async function listarComentarios(req, res) {
       proximoCursor: temMais ? String(itens[itens.length - 1].id) : null,
     });
   } catch (erro) {
-    console.error("Erro ao listar comentários:", erro);
+    logErro("comment_list_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível carregar os comentários." });
   }
 }
@@ -426,7 +427,7 @@ async function criarComentario(req, res) {
     });
     return res.status(201).json({ comentario });
   } catch (erro) {
-    console.error("Erro ao criar comentário:", erro);
+    logErro("comment_create_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível publicar o comentário." });
   }
 }

@@ -9,11 +9,11 @@ contas, login com JWT e mensagens de contato ficam no banco.
 3. Execute `npm install` e depois `npm start`.
 4. Acesse **http://localhost:3000**. Não abra as páginas por `file://` ou por um servidor estático (como Live Server), pois o cadastro precisa da API Express na mesma origem.
 
-O servidor Express serve os arquivos do site e a API na mesma origem. A aplicação não cria as tabelas automaticamente.
+O servidor Express serve os arquivos do site e a API na mesma origem. As tabelas da aplicação continuam sendo provisionadas pelo schema; o backend cria apenas a tabela técnica interna de rate limiting, de forma idempotente.
 
 ## Deploy Netlify + Render
-- O frontend envia as chamadas da API para `https://nexaplay-prod.onrender.com`, configurado centralmente em `public/js/functions.js`.
-- O backend permite CORS para `https://nexaquest.netlify.app`, incluindo o header `Authorization` e credenciais para cookies.
+- O frontend envia as chamadas da API para `https://nexa-play.onrender.com`, configurado centralmente em `public/js/functions.js`.
+- O backend permite CORS para `https://nexaquest.netlify.app` e origens adicionais configuradas em `CORS_ORIGINS` (separadas por vírgula). A autenticação usa `Authorization: Bearer`; não usa cookies nem credenciais CORS.
 - Se o domínio do frontend ou da API mudar, atualize esses valores em `src/app.js` e `public/js/functions.js`, respectivamente.
 
 ## Estrutura
@@ -73,6 +73,14 @@ O feed usa as tabelas `publicacoes`, `comentarios` e `curtidas`; o perfil usa `a
 - Publicações só armazenam texto e referência opcional a uma conquista; imagens/projetos vinculados e eventos/notificações do jogo precisam de suporte adicional.
 - Perfis privados mostram apenas identidade básica até que uma amizade seja aceita. Publicações de perfis privados também ficam restritas ao próprio usuário e a amigos.
 - O e-mail nunca é disponibilizado no perfil público. Cada usuário pode ocultar biografia, pontuação, quantidade de amigos, conquistas e progresso individualmente.
+
+### Segurança da API
+- Helmet aplica cabeçalhos HTTP e uma CSP compatível com os scripts locais, fontes Google, imagens HTTPS e o vídeo do YouTube. Os limites de requisição são compartilhados entre instâncias por `api_rate_limit_windows` no PostgreSQL; o servidor cria a tabela de forma idempotente e limpa janelas expiradas.
+- Limites atuais: API 1.200 req/min/IP; login 10 req/15 min/IP e 20 por identificador; cadastro 5/h/IP; mensagens 5/h/IP; publicações 10/h/usuário; comentários 30/min/usuário; curtidas 60/min/usuário; solicitações de amizade 20/h/usuário. Escritas de perfil e projetos também têm limites próprios e retornam HTTP 429 com `Retry-After`.
+- Configure `JWT_SECRET` com pelo menos 32 bytes aleatórios, `CORS_ORIGINS` para domínios adicionais e `DATABASE_SSL_CA` com o certificado raiz PEM do projeto Supabase (substitua quebras de linha por `\n` se necessário). A CA ativa a validação do certificado TLS; sem ela, a conexão mantém criptografia mas não valida o certificado e o backend em produção emite um alerta. O Render deve ser o único proxy confiável à frente do Express; os logs JSON registram IDs de requisição e eventos de abuso sem gravar tokens, senhas, corpos ou IPs em texto claro.
+- CSRF tradicional não se aplica ao fluxo atual: a API autentica exclusivamente por token Bearer enviado em header, não por cookies. A aplicação valida JWT HS256 com expiração e ID de usuário, usa consultas parametrizadas e exige autorização no servidor.
+- O backend conecta ao PostgreSQL/Supabase pelo `DATABASE_URL` de servidor e, conforme o schema atual, essa role pode ignorar RLS. As tabelas seguem com RLS habilitado e sem policies para acesso público, mas RLS não substitui as verificações de identidade/autoria da API quando a role do backend tem bypass. Aplicar RLS por usuário exigiria migrar a autenticação customizada para Supabase Auth e criar policies; esta implementação não altera as policies/tabelas sociais.
+- A CSP aplicada pelo Helmet vale para páginas servidas diretamente pelo Express. Como produção publica o frontend no Netlify, configure também os headers CSP no Netlify para obter a mesma proteção nos documentos hospedados lá.
 
 ### Dados do Nexa Quest e integração Unity
 - O repositório não contém scripts/projeto Unity nem um endpoint de recebimento de resultados do jogo. Portanto, não é possível confirmar como o cliente Unity salva ou envia progresso, e nenhuma integração de escrita com o jogo foi inventada.

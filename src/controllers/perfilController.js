@@ -1,6 +1,7 @@
 const { QueryTypes } = require("sequelize");
 const sequelize = require("../config/database");
 const Usuario = require("../models/Usuario");
+const logErro = require("../utils/logErro");
 
 const CAMPOS_PRIVACIDADE = [
   "mostrar_biografia",
@@ -221,7 +222,7 @@ async function meuPerfil(req, res) {
     if (!perfil) return res.status(404).json({ mensagem: "Perfil não encontrado." });
     return res.json({ usuario: perfil });
   } catch (erro) {
-    console.error("Erro ao buscar perfil do usuário:", erro);
+    logErro("profile_load_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível carregar o perfil." });
   }
 }
@@ -235,7 +236,7 @@ async function perfilPublico(req, res) {
     if (!perfil) return res.status(404).json({ mensagem: "Perfil não encontrado." });
     return res.json({ usuario: perfil });
   } catch (erro) {
-    console.error("Erro ao buscar perfil público:", erro);
+    logErro("public_profile_load_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível carregar o perfil." });
   }
 }
@@ -298,7 +299,7 @@ async function atualizarMeuPerfil(req, res) {
     if (erro.name === "SequelizeUniqueConstraintError" || erro.code === "23505") {
       return res.status(409).json({ mensagem: "Esse nome de usuário já está em uso." });
     }
-    console.error("Erro ao atualizar perfil:", erro);
+    logErro("profile_update_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível salvar o perfil." });
   }
 }
@@ -338,7 +339,7 @@ async function solicitarAmizade(req, res) {
     if (erro.original?.code === "23505" || erro.parent?.code === "23505") {
       return res.status(409).json({ mensagem: "A relação de amizade mudou. Atualize o perfil." });
     }
-    console.error("Erro ao solicitar amizade:", erro);
+    logErro("friend_request_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível enviar a solicitação." });
   }
 }
@@ -365,7 +366,7 @@ async function aceitarAmizade(req, res) {
     }
     return res.json({ amizade: { status: "amigos" } });
   } catch (erro) {
-    console.error("Erro ao aceitar solicitação:", erro);
+    logErro("friend_request_accept_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível aceitar a solicitação." });
   }
 }
@@ -397,7 +398,7 @@ async function removerAmizade(req, res) {
     }
     return res.json({ amizade: { status: "nenhuma" } });
   } catch (erro) {
-    console.error("Erro ao remover amizade:", erro);
+    logErro("friendship_remove_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível remover a solicitação ou amizade." });
   }
 }
@@ -435,7 +436,7 @@ async function listarAmizades(req, res) {
       enviadas: relacionamentos.filter(item => item.relacao === "enviada"),
     });
   } catch (erro) {
-    console.error("Erro ao listar amizades:", erro);
+    logErro("friendship_list_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível carregar suas amizades." });
   }
 }
@@ -477,7 +478,7 @@ async function buscarUsuarios(req, res) {
     });
     return res.json({ usuarios });
   } catch (erro) {
-    console.error("Erro ao pesquisar usuários:", erro);
+    logErro("user_search_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível pesquisar usuários." });
   }
 }
@@ -504,7 +505,7 @@ async function sugerirUsuarios(req, res) {
     });
     return res.json({ usuarios });
   } catch (erro) {
-    console.error("Erro ao carregar sugestões de amizade:", erro);
+    logErro("friend_suggestions_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível carregar sugestões de pessoas." });
   }
 }

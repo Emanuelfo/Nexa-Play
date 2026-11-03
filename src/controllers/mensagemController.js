@@ -3,10 +3,10 @@ const { ehEmail } = require("../utils/validacao");
 
 async function enviar(req, res) {
   try {
-    const nome = String(req.body.nome || "").trim();
-    const email = String(req.body.email || "").trim();
-    const assunto = String(req.body.assunto || "").trim();
-    const texto = String(req.body.msg || "").trim();
+    const nome = typeof req.body.nome === "string" ? req.body.nome.trim() : "";
+    const email = typeof req.body.email === "string" ? req.body.email.trim() : "";
+    const assunto = typeof req.body.assunto === "string" ? req.body.assunto.trim() : "";
+    const texto = typeof req.body.msg === "string" ? req.body.msg.trim() : "";
 
     if (nome.length < 2) return res.status(400).json({ mensagem: "Informe seu nome." });
     if (!ehEmail(email)) return res.status(400).json({ mensagem: "Informe um e-mail válido." });
@@ -19,7 +19,12 @@ async function enviar(req, res) {
     await Mensagem.create({ nome, email, assunto, texto, usuario_id: req.usuario ? req.usuario.id : null });
     res.status(201).json({ mensagem: "Mensagem enviada." });
   } catch (erro) {
-    res.status(500).json({ mensagem: "Erro ao enviar mensagem", erro: erro.message });
+    console.error(JSON.stringify({
+      event: "message_submission_error",
+      request_id: req.requestId,
+      error: erro.original?.code || erro.parent?.code || erro.name,
+    }));
+    res.status(500).json({ mensagem: "Não foi possível enviar a mensagem." });
   }
 }
 

@@ -27,14 +27,21 @@ async function cadastrar(req, res) {
     const nomeExibicao = typeof nome_completo === "string" ? nome_completo.trim() : "";
     const nomeUsuario = typeof nome_usuario === "string" ? nome_usuario.trim().toLowerCase() : "";
     const emailNorm = typeof email === "string" ? email.trim().toLowerCase() : "";
+    if (lembrar !== undefined && typeof lembrar !== "boolean") {
+      return res.status(400).json({ mensagem: "A opção de manter a sessão deve ser verdadeira ou falsa." });
+    }
     if (!nomeExibicao || nomeExibicao.length > 100) {
       return res.status(400).json({ mensagem: "Informe seu nome completo (até 100 caracteres)." });
     }
     if (!/^[a-z0-9_]{3,30}$/.test(nomeUsuario)) {
       return res.status(400).json({ mensagem: "O nome de usuário deve ter de 3 a 30 caracteres: letras, números ou _." });
     }
-    if (!ehEmail(emailNorm)) return res.status(400).json({ mensagem: "Use um e-mail válido." });
-    if (typeof senha !== "string" || senha.length < 6) return res.status(400).json({ mensagem: "A senha precisa ter ao menos 6 caracteres." });
+    if (!ehEmail(emailNorm) || emailNorm.length > 255) {
+      return res.status(400).json({ mensagem: "Use um e-mail válido com até 255 caracteres." });
+    }
+    if (typeof senha !== "string" || senha.length < 6 || Buffer.byteLength(senha, "utf8") > 72) {
+      return res.status(400).json({ mensagem: "A senha deve ter ao menos 6 caracteres e no máximo 72 bytes." });
+    }
 
     if (await Usuario.findOne({ where: { email: emailNorm } })) {
       return res.status(409).json({ mensagem: "Já existe uma conta com esse e-mail." });
@@ -57,7 +64,12 @@ async function cadastrar(req, res) {
     if (erro.name === "SequelizeUniqueConstraintError" || erro.code === "23505") {
       return res.status(409).json({ mensagem: "O e-mail ou nome de usuário já está em uso." });
     }
-    res.status(500).json({ mensagem: "Erro ao cadastrar usuário", erro: erro.message });
+    console.error(JSON.stringify({
+      event: "registration_error",
+      request_id: req.requestId,
+      error: erro.original?.code || erro.parent?.code || erro.name,
+    }));
+    res.status(500).json({ mensagem: "Não foi possível cadastrar o usuário." });
   }
 }
 
@@ -68,7 +80,12 @@ async function me(req, res) {
     if (!usuario) return res.status(401).json({ mensagem: "Usuário não encontrado" });
     res.json(dadosPublicos(usuario));
   } catch (erro) {
-    res.status(500).json({ mensagem: "Erro ao buscar usuário", erro: erro.message });
+    console.error(JSON.stringify({
+      event: "current_user_error",
+      request_id: req.requestId,
+      error: erro.original?.code || erro.parent?.code || erro.name,
+    }));
+    res.status(500).json({ mensagem: "Não foi possível buscar o usuário." });
   }
 }
 
