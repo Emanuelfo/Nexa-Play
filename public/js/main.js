@@ -632,6 +632,88 @@ function renderFeedPost(post) {
   actions.append(like, commentsButton, share);
   const currentUser = NP.currentUser();
   if (currentUser && String(currentUser.id) === String(post.autor.id)) {
+    const editDeadline = new Date(post.criado_em).getTime() + 30 * 60 * 1000;
+    if (Number.isFinite(editDeadline) && Date.now() < editDeadline) {
+      const editButton = document.createElement('button');
+      editButton.className = 'feed-action';
+      editButton.type = 'button';
+      editButton.dataset.feedEdit = '';
+      editButton.setAttribute('aria-label', 'Editar publicação');
+      editButton.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg><span>Editar</span>';
+      editButton.addEventListener('click', () => {
+        const form = document.createElement('form');
+        form.className = 'feed-edit-form';
+        const input = document.createElement('textarea');
+        input.name = 'texto';
+        input.maxLength = 2000;
+        input.rows = 4;
+        input.value = post.texto || '';
+        input.setAttribute('aria-label', 'Editar texto da publicação');
+        input.required = true;
+        const controls = document.createElement('div');
+        controls.className = 'feed-edit-controls';
+        const status = document.createElement('p');
+        status.className = 'feed-status';
+        status.setAttribute('role', 'status');
+        status.setAttribute('aria-live', 'polite');
+        const save = document.createElement('button');
+        save.className = 'btn btn-sm';
+        save.type = 'submit';
+        save.textContent = 'Salvar';
+        const cancel = document.createElement('button');
+        cancel.className = 'btn-soft btn-sm';
+        cancel.type = 'button';
+        cancel.textContent = 'Cancelar';
+        cancel.addEventListener('click', () => {
+          form.remove();
+          text.hidden = false;
+          editButton.hidden = false;
+          like.disabled = false;
+          commentsButton.disabled = false;
+          share.disabled = false;
+        });
+        controls.append(save, cancel);
+        form.append(input, controls, status);
+        text.hidden = true;
+        editButton.hidden = true;
+        like.disabled = true;
+        commentsButton.disabled = true;
+        share.disabled = true;
+        item.insertBefore(form, actions);
+        input.focus();
+        form.addEventListener('submit', async event => {
+          event.preventDefault();
+          const texto = input.value.trim();
+          if (!texto) {
+            status.textContent = 'A publicação não pode ficar vazia.';
+            return;
+          }
+          save.disabled = true;
+          cancel.disabled = true;
+          const response = await NP.api(`/publicacoes/${encodeURIComponent(post.id)}`, {
+            method: 'PUT',
+            body: { texto },
+          });
+          save.disabled = false;
+          cancel.disabled = false;
+          if (!response.ok || !response.data.publicacao) {
+            status.textContent = response.data.mensagem || 'Não foi possível editar a publicação.';
+            return;
+          }
+          post.texto = response.data.publicacao.texto;
+          text.textContent = post.texto;
+          form.remove();
+          text.hidden = false;
+          editButton.hidden = false;
+          like.disabled = false;
+          commentsButton.disabled = false;
+          share.disabled = false;
+          NP.toast('Publicação atualizada.');
+        });
+      });
+      actions.append(editButton);
+    }
+
     const deleteButton = document.createElement('button');
     deleteButton.className = 'feed-action';
     deleteButton.type = 'button';

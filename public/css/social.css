@@ -160,6 +160,10 @@ body[data-page="inicio"] .social-shell { grid-template-columns: 220px minmax(0, 
 .composer-count { font-size: 13px; color: var(--nq-muted); font-variant-numeric: tabular-nums; }
 .composer-count.is-near { color: var(--nq-bad); }
 .feed-composer .feed-status { padding-left: 52px; margin-top: .4rem; }
+.feed-edit-form { display: grid; gap: .55rem; margin-top: .75rem; }
+.feed-edit-form textarea { width: 100%; min-height: 96px; padding: .65rem .8rem; border: 1px solid var(--nq-border); border-radius: var(--nq-r); background: var(--nq-canvas); resize: vertical; font: inherit; line-height: 1.5; }
+.feed-edit-form textarea:focus { outline: none; border-color: var(--nq-blue); background: var(--nq-surface); }
+.feed-edit-controls { display: flex; gap: .5rem; }
 
 .feed-post { padding: 1rem; border-bottom: 1px solid var(--nq-border); }
 .feed-post:last-child { border-bottom: 0; }

@@ -235,6 +235,45 @@ async function apagar(req, res) {
   }
 }
 
+async function editar(req, res) {
+  if (!validarId(req.params.id)) {
+    return res.status(400).json({ mensagem: "Identificador de publicação inválido." });
+  }
+  const texto = typeof req.body?.texto === "string" ? req.body.texto.trim() : "";
+  if (!texto || texto.length > 2000) {
+    return res.status(400).json({ mensagem: "A publicação deve ter entre 1 e 2000 caracteres." });
+  }
+
+  try {
+    const [publicacao] = await sequelize.query(`
+      UPDATE publicacoes
+      SET texto = :texto
+      WHERE id = :id
+        AND usuario_id = :usuarioId
+        AND criado_em >= now() - interval '30 minutes'
+      RETURNING id, texto, criado_em
+    `, {
+      replacements: { id: req.params.id, usuarioId: req.usuario.id, texto },
+      type: QueryTypes.SELECT,
+    });
+    if (publicacao) return res.json({ publicacao });
+
+    const [existente] = await sequelize.query(`
+      SELECT id
+      FROM publicacoes
+      WHERE id = :id AND usuario_id = :usuarioId
+    `, {
+      replacements: { id: req.params.id, usuarioId: req.usuario.id },
+      type: QueryTypes.SELECT,
+    });
+    if (!existente) return res.status(404).json({ mensagem: "Publicação não encontrada ou não pertence a você." });
+    return res.status(403).json({ mensagem: "O prazo de 30 minutos para editar esta publicação expirou." });
+  } catch (erro) {
+    console.error("Erro ao editar publicação:", erro);
+    return res.status(500).json({ mensagem: "Não foi possível editar a publicação." });
+  }
+}
+
 async function alterarCurtida(req, res) {
   if (!validarId(req.params.id)) {
     return res.status(400).json({ mensagem: "Identificador de publicação inválido." });
@@ -392,4 +431,4 @@ async function criarComentario(req, res) {
   }
 }
 
-module.exports = { listar, obter, criar, apagar, alterarCurtida, listarComentarios, criarComentario };
+module.exports = { listar, obter, criar, apagar, editar, alterarCurtida, listarComentarios, criarComentario };
