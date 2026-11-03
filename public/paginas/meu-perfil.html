@@ -1,13 +1,15 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-social-theme data-theme="light">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <script src="../js/theme.js"></script>
   <title>Meu perfil | Nexa Quest</title>
   <meta name="description" content="Seu perfil, conquistas e atividade no Nexa Quest.">
   <link rel="icon" href="../assets/icones/favicon.svg">
   <link rel="stylesheet" href="../css/social.css">
+  <link rel="stylesheet" href="../css/theme.css">
   <script src="../js/functions.js" defer></script>
   <script src="../js/main.js" defer></script>
 </head>
@@ -18,11 +20,11 @@
   <main id="conteudo">
     <h1 class="sr-only">Perfil</h1>
     <p id="profile-status" class="feed-status" role="status" aria-live="polite"></p>
-    <section id="perfil" class="pf-head" aria-labelledby="profile-name" aria-busy="true">
+    <section id="perfil" class="pf-head" aria-labelledby="profile-name" aria-busy="true" data-profile-pending>
       <div class="player-cover" data-profile-cover><img data-cover-image alt="" hidden></div>
       <div class="pf-body">
         <div class="pf-top">
-          <div class="player-avatar" data-profile-avatar aria-hidden="true"><span data-avatar-initial>?</span><img data-avatar-image alt="" hidden></div>
+          <div class="player-avatar" data-profile-avatar aria-hidden="true"><span data-avatar-initial></span><img data-avatar-image alt="" hidden></div>
           <div class="player-profile-actions">
             <button class="btn-soft" id="profile-edit-toggle" type="button" aria-expanded="false" aria-controls="profile-editor">Editar perfil</button>
             <a class="btn-soft" data-profile-public-link href="#">Ver como público</a>
@@ -90,7 +92,10 @@
     <div class="pf-panels">
       <section class="pf-panel is-active" id="publicacoes" role="tabpanel" aria-labelledby="tab-publicacoes">
         <div id="feed-list" class="feed-list" aria-live="polite" aria-busy="true">
-          <div class="feed-loading" role="status"><div class="skeleton-row"><i></i><i></i></div></div>
+          <div class="feed-loading" aria-hidden="true">
+            <article class="feed-skeleton-post"><div class="feed-skeleton-heading"><i></i><span><i></i><i></i></span></div><i class="feed-skeleton-line"></i><i class="feed-skeleton-line short"></i><div class="feed-skeleton-actions"><i></i><i></i></div></article>
+            <article class="feed-skeleton-post"><div class="feed-skeleton-heading"><i></i><span><i></i><i></i></span></div><i class="feed-skeleton-line"></i><i class="feed-skeleton-line short"></i><div class="feed-skeleton-actions"><i></i><i></i></div></article>
+          </div>
         </div>
         <p id="feed-status" class="feed-status" role="status" aria-live="polite"></p>
         <button id="feed-load-more" class="feed-load-more" type="button" hidden>Carregar mais publicações</button>
@@ -99,18 +104,26 @@
       <section class="pf-panel" id="projetos" role="tabpanel" aria-labelledby="tab-projetos">
         <div class="nq-panel-head"><h2>Projetos publicados</h2><a class="btn-soft btn-sm" href="criar-projeto.html">Novo projeto</a></div>
         <p data-profile-projects-status class="feed-status" role="status" aria-live="polite"></p>
-        <div class="project-grid" data-profile-projects aria-live="polite" aria-busy="true"></div>
+        <div class="project-grid" data-profile-projects aria-live="polite" aria-busy="true">
+          <article class="project-card project-card-skeleton" aria-hidden="true"><div class="project-skeleton-cover"></div><div class="project-card-body"><i class="project-skeleton-line short"></i><i class="project-skeleton-line"></i><i class="project-skeleton-line"></i><i class="project-skeleton-line owner"></i></div></article>
+          <article class="project-card project-card-skeleton" aria-hidden="true"><div class="project-skeleton-cover"></div><div class="project-card-body"><i class="project-skeleton-line short"></i><i class="project-skeleton-line"></i><i class="project-skeleton-line"></i><i class="project-skeleton-line owner"></i></div></article>
+          <article class="project-card project-card-skeleton" aria-hidden="true"><div class="project-skeleton-cover"></div><div class="project-card-body"><i class="project-skeleton-line short"></i><i class="project-skeleton-line"></i><i class="project-skeleton-line"></i><i class="project-skeleton-line owner"></i></div></article>
+        </div>
         <a class="profile-text-button" data-profile-projects-link href="explorar-projetos.html">Ver todos os projetos</a>
       </section>
 
       <section class="pf-panel" id="conquistas" role="tabpanel" aria-labelledby="tab-conquistas">
         <div class="nq-panel-head"><h2>Conquistas</h2><strong class="profile-section-count" data-achievement-count></strong></div>
-        <div class="profile-achievements" data-profile-achievements aria-live="polite"></div>
+        <div class="profile-achievements" data-profile-achievements aria-live="polite" aria-busy="true">
+          <article class="profile-achievement profile-achievement-skeleton" aria-hidden="true"><span></span><div><i></i><i></i></div></article>
+          <article class="profile-achievement profile-achievement-skeleton" aria-hidden="true"><span></span><div><i></i><i></i></div></article>
+          <article class="profile-achievement profile-achievement-skeleton" aria-hidden="true"><span></span><div><i></i><i></i></div></article>
+        </div>
       </section>
 
       <section class="pf-panel" id="jornada" role="tabpanel" aria-labelledby="tab-jornada">
         <div class="nq-panel-head"><h2>Atividade no Nexa Quest</h2><a class="btn-soft btn-sm" data-profile-game-link href="estatisticas.html">Ver detalhes</a></div>
-        <div data-profile-progress aria-live="polite"></div>
+        <div data-profile-progress aria-live="polite" aria-busy="true"><div class="profile-progress-skeleton" aria-hidden="true"><i></i><i></i><i></i></div></div>
       </section>
     </div>
   </main>

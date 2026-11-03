@@ -1,13 +1,15 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-social-theme data-theme="light">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <script src="../js/theme.js"></script>
   <title>Início | Nexa Quest</title>
   <meta name="description" content="Publicações da comunidade Nexa Quest.">
   <link rel="icon" href="../assets/icones/favicon.svg">
   <link rel="stylesheet" href="../css/social.css">
+  <link rel="stylesheet" href="../css/theme.css">
   <script src="../js/functions.js" defer></script>
   <script src="../js/main.js" defer></script>
 </head>
@@ -31,9 +33,9 @@
     </form>
     <section id="publicacoes" aria-label="Publicações">
       <div id="feed-list" class="feed-list" aria-live="polite" aria-busy="true">
-        <div class="feed-loading" role="status">
-          <div class="skeleton-row"><i></i><i></i></div>
-          <div class="skeleton-row"><i></i><i></i></div>
+      <div class="feed-loading" aria-hidden="true">
+        <article class="feed-skeleton-post"><div class="feed-skeleton-heading"><i></i><span><i></i><i></i></span></div><i class="feed-skeleton-line"></i><i class="feed-skeleton-line short"></i><div class="feed-skeleton-actions"><i></i><i></i></div></article>
+        <article class="feed-skeleton-post"><div class="feed-skeleton-heading"><i></i><span><i></i><i></i></span></div><i class="feed-skeleton-line"></i><i class="feed-skeleton-line short"></i><div class="feed-skeleton-actions"><i></i><i></i></div></article>
         </div>
       </div>
       <p id="feed-status" class="feed-status" role="status" aria-live="polite"></p>

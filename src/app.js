@@ -18,13 +18,13 @@ if (!process.env.JWT_SECRET) {
 const app = express();
 const frontendOrigins = new Set(["https://nexaquest.netlify.app"]);
 
-app.use((req, res, next) => {
+app.use("/api", (req, res, next) => {
   const origin = req.get("Origin");
   if (origin && frontendOrigins.has(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Access-Control-Allow-Credentials", "true");
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+    if (req.method === "OPTIONS") res.setHeader("Access-Control-Max-Age", "600");
   }
   res.vary("Origin");
 

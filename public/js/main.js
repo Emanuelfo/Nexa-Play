@@ -54,11 +54,37 @@ function formatRelative(value) {
 }
 
 let ownProfilePromise = null;
-function loadOwnProfile() {
-  if (!ownProfilePromise) {
-    ownProfilePromise = NP.api('/me/perfil').then(r => (r.ok && r.data.usuario ? r.data.usuario : null));
+let publicProfilePromise = null;
+function loadOwnProfileResponse(retry = false) {
+  if (retry || !ownProfilePromise) {
+    ownProfilePromise = NP.api('/me/perfil');
   }
   return ownProfilePromise;
+}
+
+function loadPublicProfileResponse(id, retry = false) {
+  if (retry || !publicProfilePromise) {
+    publicProfilePromise = NP.api(`/usuarios/${encodeURIComponent(id)}/perfil`);
+  }
+  return publicProfilePromise;
+}
+
+function loadOwnProfile() {
+  return loadOwnProfileResponse().then(r => (r.ok && r.data.usuario ? r.data.usuario : null));
+}
+
+function statusWithRetry(el, message, retry) {
+  if (!el) return;
+  NP.status(el, message, false);
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'profile-text-button';
+  button.textContent = 'Tentar novamente';
+  button.addEventListener('click', () => {
+    button.disabled = true;
+    retry();
+  });
+  el.append(' ', button);
 }
 
 function initTabs(list, onSelect) {
@@ -155,6 +181,10 @@ function renderSocialShell(host, user) {
       <input id="nq-search-input" name="q" type="search" minlength="2" maxlength="100" placeholder="Buscar pessoas" autocomplete="off">
     </form>
     <div class="nq-top-actions">
+      <button class="theme-toggle" data-theme-toggle type="button" aria-label="Alternar entre modo claro e escuro" title="Ativar modo escuro" aria-pressed="false">
+        <svg data-theme-icon="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 15.4A8.5 8.5 0 0 1 8.6 3.8 8.5 8.5 0 1 0 20.2 15.4Z"></path></svg>
+        <svg data-theme-icon="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"></path></svg>
+      </button>
       <div class="user-area">
         <button class="user-btn" id="user-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="user-menu" aria-label="Abrir menu da conta"></button>
         <div class="user-menu" id="user-menu" aria-label="Menu da conta">
@@ -168,6 +198,7 @@ function renderSocialShell(host, user) {
       </div>
     </div>
   </div>`;
+  document.dispatchEvent(new Event('np:social-theme-controls-ready'));
   const accountButton = $('#user-btn');
   const accountMenu = $('#user-menu');
   accountButton.append(avatarEl({ nome_usuario: user.nome_usuario }, 34));
@@ -472,6 +503,7 @@ function setProfileImage(image, value) {
   }
   image.onerror = () => { image.hidden = true; };
   image.onload = () => { image.hidden = false; };
+  image.decoding = 'async';
   image.src = src;
 }
 
@@ -736,9 +768,28 @@ function renderFeedPost(post) {
   return item;
 }
 
+function createFeedSkeleton() {
+  const skeleton = document.createElement('div');
+  skeleton.className = 'feed-loading';
+  skeleton.setAttribute('aria-hidden', 'true');
+  skeleton.innerHTML = `
+    <article class="feed-skeleton-post">
+      <div class="feed-skeleton-heading"><i></i><span><i></i><i></i></span></div>
+      <i class="feed-skeleton-line"></i><i class="feed-skeleton-line short"></i>
+      <div class="feed-skeleton-actions"><i></i><i></i></div>
+    </article>
+    <article class="feed-skeleton-post">
+      <div class="feed-skeleton-heading"><i></i><span><i></i><i></i></span></div>
+      <i class="feed-skeleton-line"></i><i class="feed-skeleton-line short"></i>
+      <div class="feed-skeleton-actions"><i></i><i></i></div>
+    </article>`;
+  return skeleton;
+}
+
 function initFeed() {
   const list = $('#feed-list');
-  if (!list) return;
+  if (!list || list.dataset.initialized === 'true') return;
+  list.dataset.initialized = 'true';
   const form = $('#feed-post-form');
   const input = $('#feed-post-text');
   const formStatus = $('#feed-post-status');
@@ -772,11 +823,7 @@ function initFeed() {
         }
       }
       if (!sharedPost) {
-        const skeleton = document.createElement('div');
-        skeleton.className = 'feed-loading';
-        skeleton.setAttribute('role', 'status');
-        skeleton.innerHTML = '<div class="skeleton-row"><i></i><i></i></div><div class="skeleton-row"><i></i><i></i></div>';
-        list.append(skeleton);
+        list.append(createFeedSkeleton());
       } else {
         list.append(renderFeedPost(sharedPost));
       }
@@ -906,12 +953,13 @@ function renderProfileAchievements(profile) {
   const section = $('#conquistas');
   const list = $('[data-profile-achievements]');
   if (!section || !list) return;
+  list.setAttribute('aria-busy', 'false');
+  list.replaceChildren();
   if (!Array.isArray(profile.conquistas)) {
     section.hidden = true;
     return;
   }
   section.hidden = false;
-  list.replaceChildren();
   const count = $('[data-achievement-count]');
   if (count) {
     const total = profile.estatisticas?.conquistas ?? profile.conquistas.length;
@@ -1070,6 +1118,7 @@ function syncProfileTabs() {
 function renderProfileData(profile, ownProfile) {
   const card = $('#perfil') || $('#public-profile');
   if (!card) return;
+  card.removeAttribute('data-profile-pending');
   card.setAttribute('aria-busy', 'false');
   $('[data-profile-name]', card).textContent = profile.nome_exibicao || profile.nome_usuario || 'Jogador';
   $('[data-profile-handle]', card).textContent = `@${profile.nome_usuario || ''}`;
@@ -1089,9 +1138,13 @@ function renderProfileData(profile, ownProfile) {
   const initial = $('[data-avatar-initial]', card);
   if (initial) {
     initial.textContent = (profile.nome_exibicao || profile.nome_usuario || '?').charAt(0).toUpperCase();
-    initial.hidden = Boolean(safeHttpsUrl(profile.avatar_url));
+    initial.hidden = false;
   }
   if (avatar && initial) {
+    avatar.onload = () => {
+      avatar.hidden = false;
+      initial.hidden = true;
+    };
     avatar.onerror = () => {
       avatar.hidden = true;
       initial.hidden = false;
@@ -1133,13 +1186,21 @@ function renderProfileData(profile, ownProfile) {
   if (progressSection && progress) {
     progressSection.hidden = !progressData;
     progress.replaceChildren();
+    progress.setAttribute('aria-busy', 'false');
     if (progressData) renderProfileActivity(progress, progressData);
   }
 
   const projects = $('#projetos');
   if (projects) {
     projects.hidden = Boolean(profile.privado);
-    if (!profile.privado) carregarProjetosPerfil(profile);
+    if (!profile.privado) {
+      carregarProjetosPerfil(profile);
+    } else {
+      const projectList = $('[data-profile-projects]', projects);
+      projectList?.replaceChildren();
+      projectList?.setAttribute('aria-busy', 'false');
+      $('[data-profile-projects-status]', projects).textContent = '';
+    }
   }
   const projectsLink = $('[data-profile-projects-link]');
   if (projectsLink) {
@@ -1171,6 +1232,25 @@ function renderProfileData(profile, ownProfile) {
   syncProfileTabs();
 }
 
+function renderProfilePreview(user) {
+  const card = $('#perfil');
+  if (!card || !user) return;
+  card.removeAttribute('data-profile-pending');
+  const name = user.nome_exibicao || user.nome_usuario || 'Jogador';
+  $('[data-profile-name]', card).textContent = name;
+  $('[data-profile-handle]', card).textContent = `@${user.nome_usuario || ''}`;
+  const initial = $('[data-avatar-initial]', card);
+  if (initial) {
+    initial.textContent = name.charAt(0).toUpperCase();
+    initial.hidden = false;
+  }
+  const stats = $('[data-profile-stats]', card);
+  if (stats && user.pontos !== null && user.pontos !== undefined) {
+    stats.replaceChildren();
+    setProfileStat(stats, 'pontos', Number(user.pontos).toLocaleString('pt-BR'));
+  }
+}
+
 function openRelationshipActions(profile) {
   const host = $('[data-relationship-actions]');
   if (!host) return;
@@ -1199,6 +1279,7 @@ function openRelationshipActions(profile) {
       NP.status(status, response.data.mensagem || 'Não foi possível atualizar a amizade.', false);
       return;
     }
+    publicProfilePromise = null;
     await initPublicProfile(true);
     NP.status(status, {
       nenhuma: 'Solicitação enviada.',
@@ -1236,9 +1317,9 @@ function initProfileEditor(profile) {
     toggle.setAttribute('aria-expanded', String(open));
     if (open) editor.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
-  toggle.addEventListener('click', () => setOpen(editor.hidden));
-  close?.addEventListener('click', () => setOpen(false));
-  form.addEventListener('submit', async event => {
+  toggle.onclick = () => setOpen(editor.hidden);
+  if (close) close.onclick = () => setOpen(false);
+  form.onsubmit = async event => {
     event.preventDefault();
     const status = $('#profile-edit-status');
     const submit = $('button[type="submit"]', form);
@@ -1262,6 +1343,7 @@ function initProfileEditor(profile) {
       return;
     }
     profile = response.data.usuario;
+    ownProfilePromise = Promise.resolve({ ok: true, status: response.status, data: { usuario: profile } });
     renderProfileData(profile, true);
     preencherEditor(profile);
     const currentUser = NP.currentUser();
@@ -1269,23 +1351,47 @@ function initProfileEditor(profile) {
     const userButton = $('#user-btn');
     if (userButton) userButton.replaceChildren(avatarEl(profile, 34));
     NP.status(status, 'Perfil atualizado.', true);
-  });
+  };
 }
 
-async function carregarPerfil(url, ownProfile, skipFeed = false) {
+async function carregarPerfil(url, ownProfile, skipFeed = false, retry = false) {
   const card = $('#perfil') || $('#public-profile');
   const status = $('#profile-status') || $('#public-profile-status');
-  const response = await NP.api(url);
+  if (retry) {
+    card?.setAttribute('aria-busy', 'true');
+    NP.status(status, 'Carregando perfil…', true);
+  }
+  const publicId = ownProfile ? null : new URLSearchParams(location.search).get('id');
+  const response = ownProfile
+    ? await loadOwnProfileResponse(retry)
+    : await loadPublicProfileResponse(publicId, retry);
   if (!response.ok || !response.data.usuario) {
     card?.setAttribute('aria-busy', 'false');
-    NP.status(status, response.data.mensagem || 'Não foi possível carregar este perfil.', false);
-    $('#publicacoes')?.setAttribute('hidden', '');
+    card?.removeAttribute('data-profile-pending');
+    if (!ownProfile) {
+      $('[data-profile-name]', card).textContent = 'Perfil indisponível';
+      $('[data-profile-handle]', card).textContent = '';
+      const initial = $('[data-avatar-initial]', card);
+      if (initial) initial.textContent = '!';
+    }
     $('#conquistas')?.setAttribute('hidden', '');
     $('#jornada')?.setAttribute('hidden', '');
+    const achievementList = $('[data-profile-achievements]');
+    achievementList?.replaceChildren();
+    achievementList?.setAttribute('aria-busy', 'false');
+    const progressList = $('[data-profile-progress]');
+    progressList?.replaceChildren();
+    progressList?.setAttribute('aria-busy', 'false');
+    statusWithRetry(
+      status,
+      response.data.mensagem || 'Não foi possível carregar este perfil.',
+      () => carregarPerfil(url, ownProfile, skipFeed, true),
+    );
     syncProfileTabs();
     return null;
   }
   const profile = response.data.usuario;
+  if (status) status.textContent = '';
   renderProfileData(profile, ownProfile);
   if (ownProfile) initProfileEditor(profile);
   else openRelationshipActions(profile);
@@ -1302,10 +1408,23 @@ async function initPublicProfile(skipFeed = false) {
   const id = new URLSearchParams(location.search).get('id');
   if (!id || !/^\d{1,18}$/.test(id) || BigInt(id) < 1n) {
     NP.status($('#public-profile-status'), 'O perfil solicitado não é válido.', false);
-    $('#public-profile')?.setAttribute('aria-busy', 'false');
-    $('#publicacoes')?.setAttribute('hidden', '');
+    const card = $('#public-profile');
+    card?.setAttribute('aria-busy', 'false');
+    card?.removeAttribute('data-profile-pending');
+    $('[data-profile-name]', card).textContent = 'Perfil indisponível';
+    const initial = $('[data-avatar-initial]', card);
+    if (initial) initial.textContent = '!';
+    $('#conquistas')?.setAttribute('hidden', '');
+    $('#jornada')?.setAttribute('hidden', '');
+    renderProfileAchievements({ conquistas: null });
+    const progressList = $('[data-profile-progress]');
+    progressList?.replaceChildren();
+    progressList?.setAttribute('aria-busy', 'false');
     return;
   }
+  document.body.dataset.feedUserId = id;
+  initFeed();
+  carregarProjetosPerfil({ id });
   await carregarPerfil(`/usuarios/${encodeURIComponent(id)}/perfil`, false, skipFeed);
 }
 
@@ -1313,7 +1432,12 @@ async function initProfile() {
   if (!$('#perfil')) return;
   if (!NP.currentUser()) return void (location.href = 'login.html');
   setupProfileTabs();
-  await carregarPerfil('/me/perfil', true);
+  const user = NP.currentUser();
+  renderProfilePreview(user);
+  document.body.dataset.feedUserId = String(user.id);
+  initFeed();
+  carregarProjetosPerfil(user);
+  await carregarPerfil('/me/perfil', true, true);
 }
 
 function formatGameMonth(value) {
@@ -1572,7 +1696,7 @@ function renderGameStats(profile, ownProfile) {
   }
 }
 
-async function initGameStats() {
+async function initGameStats(retry = false) {
   if (!NP.currentUser()) return void (location.href = 'login.html');
   const page = $('.game-stats-page');
   const status = $('#game-stats-status');
@@ -1585,10 +1709,14 @@ async function initGameStats() {
   }
   const ownProfile = !id || String(NP.currentUser().id) === String(id);
   const endpoint = ownProfile ? '/me/perfil' : `/usuarios/${encodeURIComponent(id)}/perfil`;
-  const response = await NP.api(endpoint);
+  const response = ownProfile ? await loadOwnProfileResponse(retry) : await NP.api(endpoint);
   if (!response.ok || !response.data.usuario) {
     page?.setAttribute('aria-busy', 'false');
-    return NP.status(status, response.data.mensagem || 'Não foi possível carregar as estatísticas.', false);
+    return statusWithRetry(
+      status,
+      response.data.mensagem || 'Não foi possível carregar as estatísticas.',
+      () => initGameStats(true),
+    );
   }
   renderGameStats(response.data.usuario, ownProfile);
   page?.setAttribute('aria-busy', 'false');
@@ -1601,18 +1729,35 @@ function projectLink(project) {
   return `${NP.root()}paginas/projeto.html?id=${encodeURIComponent(project.id)}`;
 }
 
-function carregarProjetosPerfil(profile) {
+function renderProjectSkeleton(list) {
+  list.replaceChildren();
+  for (let index = 0; index < 3; index += 1) {
+    const card = document.createElement('article');
+    card.className = 'project-card project-card-skeleton';
+    card.setAttribute('aria-hidden', 'true');
+    card.innerHTML = '<div class="project-skeleton-cover"></div><div class="project-card-body"><i class="project-skeleton-line short"></i><i class="project-skeleton-line"></i><i class="project-skeleton-line"></i><i class="project-skeleton-line owner"></i></div>';
+    list.append(card);
+  }
+}
+
+function carregarProjetosPerfil(profile, retry = false) {
   const list = $('[data-profile-projects]');
   const status = $('[data-profile-projects-status]');
-  if (!list || list.dataset.profileId === String(profile.id)) return;
+  if (!list || (!retry && list.dataset.profileId === String(profile.id))) return;
   list.dataset.profileId = String(profile.id);
   list.setAttribute('aria-busy', 'true');
-  status.textContent = 'Carregando projetos públicos…';
+  NP.status(status, 'Carregando projetos públicos…', true);
+  renderProjectSkeleton(list);
   NP.api(`/projetos?limite=6&usuario=${encodeURIComponent(profile.id)}`).then(response => {
     if (list.dataset.profileId !== String(profile.id)) return;
     list.setAttribute('aria-busy', 'false');
     if (!response.ok || !Array.isArray(response.data.projetos)) {
-      status.textContent = response.data.mensagem || 'Não foi possível carregar os projetos.';
+      list.replaceChildren();
+      statusWithRetry(
+        status,
+        response.data.mensagem || 'Não foi possível carregar os projetos.',
+        () => carregarProjetosPerfil(profile, true),
+      );
       return;
     }
     list.replaceChildren();
@@ -2391,6 +2536,13 @@ function initGameLinks() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  if (document.body.dataset.protected && NP.token()) {
+    loadOwnProfileResponse();
+    const publicId = new URLSearchParams(location.search).get('id');
+    if (document.body.dataset.page === 'perfil-publico' && publicId && /^\d{1,18}$/.test(publicId) && BigInt(publicId) > 0n) {
+      loadPublicProfileResponse(publicId);
+    }
+  }
   await NP.loadUser(); // confirma o login no servidor antes de montar as páginas
   renderHeader(); renderFooter();
   const page = document.body.dataset.page;
@@ -2400,8 +2552,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   else if (page === 'projeto-criar') initCreateProject();
   else if (page === 'projetos-explorar') initProjectExplorer();
   else if (page === 'meus-projetos') initMyProjects();
-  else if ($('#public-profile')) await initPublicProfile();
-  else if ($('#perfil')) await initProfile();
+  else if ($('#public-profile')) initPublicProfile();
+  else if ($('#perfil')) initProfile();
   else {
     initHome();
     initFeed();

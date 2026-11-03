@@ -28,14 +28,17 @@ const NP = {
   status(el, msg, ok) { if (el) { el.textContent = msg; el.className = 'status ' + (ok ? 'ok' : 'bad'); } },
   /* API (backend Node/PostgreSQL). O token JWT fica no localStorage ("lembrar de mim") ou no sessionStorage. */
   async api(path, { method = 'GET', body } = {}) {
-    const headers = { 'Content-Type': 'application/json' }, t = NP.token();
+    const headers = {}, t = NP.token();
     if (t) headers.Authorization = 'Bearer ' + t;
+    if (body) headers['Content-Type'] = 'application/json';
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
     try {
       const r = await fetch(`${API_BASE_URL}/api${path}`, {
         method,
         headers,
-        credentials: 'include',
         body: body ? JSON.stringify(body) : undefined,
+        signal: controller.signal,
       });
       const response = await r.text();
       let data;
@@ -51,7 +54,19 @@ const NP = {
       if (!data || typeof data !== 'object') data = {};
       if (!r.ok && !data.mensagem) data.mensagem = `Falha na API (HTTP ${r.status}).`;
       return { ok: r.ok, status: r.status, data };
-    } catch { return { ok: false, status: 0, data: { mensagem: 'Não foi possível conectar ao servidor. Tente novamente.' } }; }
+    } catch {
+      return {
+        ok: false,
+        status: 0,
+        data: {
+          mensagem: controller.signal.aborted
+            ? 'A solicitação demorou demais para responder. Tente novamente.'
+            : 'Não foi possível conectar ao servidor. Tente novamente.',
+        },
+      };
+    } finally {
+      clearTimeout(timeout);
+    }
   },
   token() { try { return localStorage.getItem('np_token') || sessionStorage.getItem('np_token'); } catch { return null; } },
   login(token, remember) {
