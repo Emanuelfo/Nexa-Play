@@ -49,6 +49,7 @@ public/                        O site (index.html, paginas/, css/, js/, assets/)
 | GET | `/api/publicacoes?limite=10&cursor=...&usuario=...` | token | Feed paginado; `usuario` filtra publicações de um perfil |
 | GET | `/api/publicacoes/:id` | token | Consulta uma publicação compartilhada |
 | POST | `/api/publicacoes` | token | Cria publicação de texto; `conquista_id` opcional só é aceito para conquista desbloqueada pelo próprio usuário |
+| DELETE | `/api/publicacoes/:id` | token | Apaga uma publicação do próprio usuário |
 | PUT / DELETE | `/api/publicacoes/:id/curtida` | token | Adiciona ou remove a curtida |
 | GET | `/api/publicacoes/:id/comentarios?limite=10&cursor=...` | token | Lista comentários paginados |
 | POST | `/api/publicacoes/:id/comentarios` | token | Cria comentário (máximo 1.000 caracteres) |

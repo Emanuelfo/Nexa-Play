@@ -630,6 +630,28 @@ function renderFeedPost(post) {
   share.setAttribute('aria-label', 'Compartilhar publicação');
   share.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.7 6.8-4.4m-6.8 7 6.8 4.3"/></svg><span class="sr-only">Compartilhar</span>';
   actions.append(like, commentsButton, share);
+  const currentUser = NP.currentUser();
+  if (currentUser && String(currentUser.id) === String(post.autor.id)) {
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'feed-action';
+    deleteButton.type = 'button';
+    deleteButton.dataset.feedDelete = '';
+    deleteButton.setAttribute('aria-label', 'Apagar publicação');
+    deleteButton.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v6m6-6v6"/></svg><span>Apagar</span>';
+    deleteButton.addEventListener('click', async () => {
+      if (!window.confirm('Deseja apagar esta publicação? Esta ação não pode ser desfeita.')) return;
+      deleteButton.disabled = true;
+      const response = await NP.api(`/publicacoes/${encodeURIComponent(post.id)}`, { method: 'DELETE' });
+      deleteButton.disabled = false;
+      if (!response.ok) {
+        NP.toast(response.data.mensagem || 'Não foi possível apagar a publicação.');
+        return;
+      }
+      item.remove();
+      NP.toast('Publicação apagada.');
+    });
+    actions.append(deleteButton);
+  }
 
   const comments = document.createElement('section');
   comments.className = 'feed-comments';

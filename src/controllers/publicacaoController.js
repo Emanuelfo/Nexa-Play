@@ -213,6 +213,28 @@ async function criar(req, res) {
   }
 }
 
+async function apagar(req, res) {
+  if (!validarId(req.params.id)) {
+    return res.status(400).json({ mensagem: "Identificador de publicação inválido." });
+  }
+
+  try {
+    const [publicacao] = await sequelize.query(`
+      DELETE FROM publicacoes
+      WHERE id = :id AND usuario_id = :usuarioId
+      RETURNING id
+    `, {
+      replacements: { id: req.params.id, usuarioId: req.usuario.id },
+      type: QueryTypes.SELECT,
+    });
+    if (!publicacao) return res.status(404).json({ mensagem: "Publicação não encontrada ou não pertence a você." });
+    return res.json({ mensagem: "Publicação apagada." });
+  } catch (erro) {
+    console.error("Erro ao apagar publicação:", erro);
+    return res.status(500).json({ mensagem: "Não foi possível apagar a publicação." });
+  }
+}
+
 async function alterarCurtida(req, res) {
   if (!validarId(req.params.id)) {
     return res.status(400).json({ mensagem: "Identificador de publicação inválido." });
@@ -370,4 +392,4 @@ async function criarComentario(req, res) {
   }
 }
 
-module.exports = { listar, obter, criar, alterarCurtida, listarComentarios, criarComentario };
+module.exports = { listar, obter, criar, apagar, alterarCurtida, listarComentarios, criarComentario };
