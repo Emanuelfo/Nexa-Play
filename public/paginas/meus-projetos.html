@@ -3,41 +3,27 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Meus projetos | Nexa Quest</title>
-  <meta name="description" content="Projetos que você criou ou dos quais participa no Nexa Quest.">
+  <meta name="description" content="Seus projetos e participações em equipes.">
   <link rel="icon" href="../assets/icones/favicon.svg">
-  <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/responsive.css">
-  <link rel="stylesheet" href="../css/area-logada.css">
-  <link rel="stylesheet" href="../css/social-v2.css">
+  <link rel="stylesheet" href="../css/social.css">
   <script src="../js/functions.js" defer></script>
   <script src="../js/main.js" defer></script>
-  <script src="../js/social-v2.js" defer></script>
 </head>
 
 <body data-page="meus-projetos" data-root="../" data-protected="1">
   <a class="sr-only" href="#conteudo">Ir para o conteúdo</a>
   <header data-component="header"></header>
-  <main id="conteudo" class="projects-page">
-    <header class="projects-hero">
-      <div>
-        <p class="feed-eyebrow">SEU ESPAÇO DE CRIAÇÃO</p>
-        <h1>Meus projetos</h1>
-        <p>Reúna o que você criou e os projetos em equipe dos quais participa.</p>
-      </div>
-      <div class="projects-hero-actions">
-        <a class="btn btn-line" href="explorar-projetos.html">Explorar projetos</a>
-        <a class="btn" href="criar-projeto.html">Criar projeto</a>
-      </div>
-    </header>
+  <main id="conteudo">
+    <div class="nq-pagehead">
+      <h1>Meus projetos</h1>
+      <div class="nq-pagehead-actions"><a class="btn" href="criar-projeto.html">Criar projeto</a></div>
+    </div>
     <p id="projects-status" class="feed-status" role="status" aria-live="polite"></p>
-    <section class="project-grid" id="project-list" aria-label="Seus projetos" aria-live="polite" aria-busy="true">
-      <p class="feed-loading">Carregando seus projetos…</p>
-    </section>
+    <section class="project-grid" id="project-list" aria-label="Seus projetos" aria-live="polite" aria-busy="true"></section>
     <button id="projects-load-more" class="feed-load-more" type="button" hidden>Carregar mais projetos</button>
   </main>
-  <footer data-component="footer"></footer>
 </body>
 
 </html>

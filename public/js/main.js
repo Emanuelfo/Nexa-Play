@@ -2,51 +2,176 @@
 const GAME_URL = ''; // Integração pendente: URL do jogo Nexa Quest (ex.: 'https://...')
 const { $, $$ } = NP;
 
+/* ---------- Helpers visuais compartilhados da área social ---------- */
+const NQ_ICON = {
+  home: '<path d="m3 10.5 9-7.5 9 7.5V20a1 1 0 0 1-1 1h-5v-6.5H9V21H4a1 1 0 0 1-1-1z"/>',
+  explore: '<circle cx="12" cy="12" r="9"/><path d="m15.8 8.2-2.1 5.5-5.5 2.1 2.1-5.5z"/>',
+  create: '<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8v8M8 12h8"/>',
+  people: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-5.5 6.5-5.5s6.5 1.900 6.500 5.500M16 4.800a3.500 3.500 0 0 1 0 6.400M18 14.800c2 .6 3.500 2.200 3.500 5.200"/>',
+  projects: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2.500h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.600-6.500 8-6.500s8 2.500 8 6.500"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.800-3.800"/>',
+  trophy: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>',
+};
+const nqSvg = path => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
+
+function userInitial(user) {
+  return (user?.nome_exibicao || user?.nome_usuario || '?').trim().charAt(0).toUpperCase() || '?';
+}
+
+function avatarEl(user, size = 40, tag = 'span') {
+  const el = document.createElement(tag);
+  el.className = 'nq-avatar';
+  el.style.setProperty('--s', `${size}px`);
+  const initial = userInitial(user);
+  const url = safeHttpsUrl(user?.avatar_url);
+  if (url) {
+    const image = document.createElement('img');
+    image.src = url;
+    image.alt = '';
+    image.loading = 'lazy';
+    image.onerror = () => { image.remove(); el.textContent = initial; };
+    el.append(image);
+  } else {
+    el.textContent = initial;
+  }
+  return el;
+}
+
+function formatRelative(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const seconds = Math.round((Date.now() - date.getTime()) / 1000);
+  if (seconds < 45) return 'agora';
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `há ${minutes} min`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `há ${hours} h`;
+  const days = Math.round(hours / 24);
+  if (days < 7) return `há ${days} d`;
+  const sameYear = date.getFullYear() === new Date().getFullYear();
+  return new Intl.DateTimeFormat('pt-BR', sameYear ? { day: 'numeric', month: 'short' } : { day: 'numeric', month: 'short', year: 'numeric' }).format(date).replace('.', '');
+}
+
+let ownProfilePromise = null;
+function loadOwnProfile() {
+  if (!ownProfilePromise) {
+    ownProfilePromise = NP.api('/me/perfil').then(r => (r.ok && r.data.usuario ? r.data.usuario : null));
+  }
+  return ownProfilePromise;
+}
+
+function initTabs(list, onSelect) {
+  const tabs = [...list.querySelectorAll('[role="tab"]')];
+  const select = (name, focus) => {
+    tabs.forEach(tab => {
+      const on = tab.dataset.tab === name;
+      tab.setAttribute('aria-selected', String(on));
+      tab.tabIndex = on ? 0 : -1;
+      const panel = document.getElementById(tab.dataset.tab);
+      if (panel) panel.classList.toggle('is-active', on);
+      if (on && focus) tab.focus();
+    });
+    if (onSelect) onSelect(name);
+  };
+  tabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => select(tab.dataset.tab));
+    tab.addEventListener('keydown', event => {
+      const visible = tabs.filter(t => !t.hidden);
+      const at = visible.indexOf(tab);
+      let next = null;
+      if (event.key === 'ArrowRight') next = visible[(at + 1) % visible.length];
+      if (event.key === 'ArrowLeft') next = visible[(at - 1 + visible.length) % visible.length];
+      if (event.key === 'Home') next = visible[0];
+      if (event.key === 'End') next = visible[visible.length - 1];
+      if (next) { event.preventDefault(); select(next.dataset.tab, true); }
+    });
+  });
+  const initial = tabs.find(t => t.getAttribute('aria-selected') === 'true') || tabs[0];
+  if (initial) select(initial.dataset.tab);
+  return { select, tabs };
+}
+
+async function railRelationAction(person, button) {
+  button.disabled = true;
+  const response = await NP.api(`/usuarios/${encodeURIComponent(person.id)}/amizade`, { method: 'POST' });
+  if (!response.ok) {
+    button.disabled = false;
+    NP.toast(response.data.mensagem || 'Não foi possível enviar a solicitação.');
+    return;
+  }
+  button.textContent = 'Enviada';
+}
+
+function renderRailSuggestions(box) {
+  const list = $('[data-rail-people]', box);
+  NP.api('/usuarios/sugestoes').then(response => {
+    const users = response.ok && Array.isArray(response.data.usuarios) ? response.data.usuarios.slice(0, 4) : [];
+    if (!users.length) { box.hidden = true; return; }
+    users.forEach(person => {
+      const row = document.createElement('li');
+      row.className = 'nq-person';
+      const link = document.createElement('a');
+      link.href = profileHref(person);
+      const name = document.createElement('strong');
+      name.textContent = person.nome_exibicao || person.nome_usuario;
+      const handle = document.createElement('span');
+      handle.textContent = `@${person.nome_usuario}`;
+      link.append(name, handle);
+      const add = document.createElement('button');
+      add.type = 'button';
+      add.className = 'btn-soft btn-sm';
+      add.textContent = 'Adicionar';
+      add.addEventListener('click', () => railRelationAction(person, add));
+      row.append(avatarEl(person, 36), link, add);
+      list.append(row);
+    });
+  });
+}
+
 function renderSocialShell(host, user) {
   const root = NP.root();
-  const home = `${root}paginas/inicio.html`;
   const profile = `${root}paginas/meu-perfil.html`;
-  const publicProfile = `${root}paginas/perfil-publico.html`;
   const page = document.body.dataset.page;
-  const icon = path => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
   const navigation = [
-    { key: 'inicio', label: 'Início', href: home, path: '<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>' },
-    { key: 'projetos-explorar', label: 'Explorar', href: `${root}paginas/explorar-projetos.html`, path: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4M11 8v6M8 11h6"/>' },
-    { key: 'projeto-criar', label: 'Criar projeto', href: `${root}paginas/criar-projeto.html`, path: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 8v8M8 12h8"/>' },
-    { key: 'amigos', label: 'Amigos', href: `${root}paginas/amigos.html`, path: '<path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM20 8v6M23 11h-6"/>' },
-    { key: 'perfil', label: 'Perfil', href: profile, path: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>' }
+    { key: 'inicio', label: 'Início', href: `${root}paginas/inicio.html`, path: NQ_ICON.home },
+    { key: 'projetos-explorar', label: 'Explorar', href: `${root}paginas/explorar-projetos.html`, path: NQ_ICON.explore },
+    { key: 'amigos', label: 'Pessoas', href: `${root}paginas/amigos.html`, path: NQ_ICON.people },
+    { key: 'meus-projetos', label: 'Projetos', href: `${root}paginas/meus-projetos.html`, path: NQ_ICON.projects },
+    { key: 'perfil', label: 'Perfil', href: profile, path: NQ_ICON.user },
   ];
-  const railLinks = page === 'amigos'
-    ? [['#friends-list', 'Meus amigos'], ['#friend-search-results', 'Encontrar pessoas'], ['#friend-requests-received', 'Solicitações recebidas'], ['#friend-requests-sent', 'Solicitações enviadas']]
-    : page === 'estatisticas-jogo'
-      ? [['#game-identity-title', 'Resumo do jogo'], ['#game-level-title', 'Nível e experiência'], ['#game-evolution-title', 'Evolução'], ['#game-achievements-title', 'Conquistas'], ['#game-history-title', 'Histórico']]
-    : page === 'perfil'
-    ? [['#conquistas', 'Conquistas'], ['#jornada', 'Progresso no jogo'], ['#projetos', 'Projetos'], ['#publicacoes', 'Publicações']]
-    : page === 'perfil-publico'
-      ? [['#conquistas', 'Conquistas'], ['#jornada', 'Progresso no jogo'], ['#projetos', 'Projetos'], ['#publicacoes', 'Publicações']]
-      : page.startsWith('projeto') || page === 'meus-projetos'
-        ? [['#conteudo', 'Projetos']]
-      : [['#feed-post-text', 'Criar publicação'], ['#publicacoes', 'Publicações recentes']];
+  const activeMap = { 'perfil-publico': null, 'estatisticas-jogo': 'perfil', 'projeto-detalhe': 'projetos-explorar', 'projeto-criar': 'meus-projetos' };
+  const activeKey = page in activeMap ? activeMap[page] : page;
+  const link = (item, extra = '') => `<a href="${item.href}" title="${item.label}"${activeKey === item.key ? ' aria-current="page"' : ''}${extra}>${nqSvg(item.path)}<span>${item.label}</span></a>`;
+  const publishHref = `${root}paginas/inicio.html?novo=1`;
+  const initial = user.nome_usuario.charAt(0).toUpperCase();
 
   host.className = 'site-header social-topbar';
-  host.innerHTML = `<div class="social-topbar-inner">
-    <a class="brand" href="${home}" aria-label="Nexa Quest — início"><img src="${root}assets/imagens/logo-escura-quest.svg" alt="Nexa Quest" width="157" height="84"></a>
-    <div class="social-header-actions">
-      <button class="social-notifications" type="button" disabled aria-label="Notificações indisponíveis nesta versão" title="Notificações indisponíveis nesta versão">${icon('<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>')}</button>
+  host.innerHTML = `<div class="nq-top">
+    <a class="nq-brand" href="${root}paginas/inicio.html" aria-label="Nexa Quest — início"><img src="${root}assets/imagens/logo-escura-quest.svg" alt="Nexa Quest" width="64" height="34"></a>
+    <form class="nq-search" role="search" action="${root}paginas/amigos.html">
+      ${nqSvg(NQ_ICON.search)}
+      <label class="sr-only" for="nq-search-input">Buscar pessoas</label>
+      <input id="nq-search-input" name="q" type="search" minlength="2" maxlength="100" placeholder="Buscar pessoas" autocomplete="off">
+    </form>
+    <div class="nq-top-actions">
       <div class="user-area">
-        <button class="user-btn" id="user-btn" aria-haspopup="true" aria-expanded="false" aria-label="Abrir menu da conta"></button>
+        <button class="user-btn" id="user-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="user-menu" aria-label="Abrir menu da conta"></button>
         <div class="user-menu" id="user-menu" aria-label="Menu da conta">
+          <div class="menu-id"><strong data-menu-name></strong><span>@${user.nome_usuario}</span></div>
           <a href="${profile}">Meu perfil</a>
           <a href="${root}paginas/meus-projetos.html">Meus projetos</a>
-          <a href="${root}paginas/estatisticas.html">Jornada no jogo</a>
+          <a href="${root}paginas/estatisticas.html">Atividade no jogo</a>
+          <a href="#" data-game>Acessar o jogo</a>
           <button type="button" id="logout">Sair da conta</button>
         </div>
       </div>
     </div>
   </div>`;
-  $('#user-btn').textContent = user.nome_usuario.charAt(0).toUpperCase();
   const accountButton = $('#user-btn');
   const accountMenu = $('#user-menu');
+  accountButton.append(avatarEl({ nome_usuario: user.nome_usuario }, 34));
+  $('[data-menu-name]').textContent = user.nome_usuario;
   accountButton.addEventListener('click', () => {
     const open = accountMenu.classList.toggle('open');
     accountButton.setAttribute('aria-expanded', open);
@@ -66,39 +191,81 @@ function renderSocialShell(host, user) {
 
   const shell = document.createElement('div');
   shell.className = 'social-shell';
-  const sidebar = document.createElement('aside');
-  sidebar.className = 'social-sidebar';
-  sidebar.setAttribute('aria-label', 'Navegação da plataforma');
-  sidebar.innerHTML = `<p class="social-nav-heading">PLATAFORMA</p><nav class="social-nav" aria-label="Principal">${navigation.map(item => {
-    const classes = `social-nav-link${item.key === 'projeto-criar' ? ' is-create' : ''}`;
-    const active = page === item.key
-      || (page === 'perfil-publico' && item.key === 'perfil')
-      || (page === 'estatisticas-jogo' && item.key === 'perfil')
-      || (page === 'meus-projetos' && item.key === 'projetos-explorar')
-      || (page === 'projeto-detalhe' && item.key === 'projetos-explorar');
-    return item.href
-      ? `<a class="${classes}" href="${page === item.key ? '#conteudo' : item.href}"${active ? ' aria-current="page"' : ''}>${icon(item.path)}<span>${item.label}</span></a>`
-      : `<span class="${classes} is-unavailable" aria-disabled="true" title="${item.label} ainda não está disponível"><span class="social-nav-icon">${icon(item.path)}</span><span>${item.label}<small>Indisponível</small></span></span>`;
-  }
-  ).join('')}</nav>`;
-  const rail = document.createElement('aside');
-  rail.className = 'social-rail';
-  rail.setAttribute('aria-label', 'Atalhos desta página');
-  rail.innerHTML = `<section class="social-rail-card">
-    ${page === 'inicio' ? '<div class="social-rail-profile"><span class="social-rail-avatar" data-rail-avatar aria-hidden="true"></span><strong data-rail-name></strong><span data-rail-points></span><a href="' + profile + '">Ver meu perfil</a></div>' : ''}
-    <p class="social-nav-heading">NESTA PÁGINA</p>
-    <nav aria-label="Atalhos">${railLinks.map(([href, label]) => `<a href="${href}">${label}<span aria-hidden="true">→</span></a>`).join('')}</nav>
-  </section>`;
-  if (page === 'inicio') {
-    $('.social-rail-avatar', rail).textContent = user.nome_usuario.charAt(0).toUpperCase();
-    $('[data-rail-name]', rail).textContent = user.nome_usuario;
-    $('[data-rail-points]', rail).textContent = `${Number(user.pontos) || 0} pontos`;
-  }
+  const sidebar = document.createElement('nav');
+  sidebar.className = 'nq-nav';
+  sidebar.setAttribute('aria-label', 'Principal');
+  sidebar.innerHTML = `<ul>${navigation.map(item => `<li>${link(item)}</li>`).join('')}</ul><a class="btn" href="${publishHref}" data-publish>Publicar</a>`;
+
+  const tabbar = document.createElement('nav');
+  tabbar.className = 'nq-tabbar';
+  tabbar.setAttribute('aria-label', 'Navegação principal');
+  const short = key => navigation.find(item => item.key === key);
+  tabbar.innerHTML = [short('inicio'), short('projetos-explorar')].map(item => link(item)).join('')
+    + `<a class="is-create" href="${publishHref}" data-publish aria-label="Publicar">${nqSvg(NQ_ICON.create)}<span class="sr-only">Publicar</span></a>`
+    + [short('amigos'), short('perfil')].map(item => link(item)).join('');
+
   const main = $('main');
   if (!main) return;
   main.classList.add('social-main');
   host.after(shell);
-  shell.append(sidebar, main, rail);
+  shell.append(sidebar, main);
+
+  if (page === 'inicio') {
+    const side = document.createElement('aside');
+    side.className = 'nq-side';
+    side.setAttribute('aria-label', 'Resumo e sugestões');
+    side.innerHTML = `<section class="nq-box" aria-label="Seu perfil">
+        <div class="nq-mini"><span data-rail-avatar></span><div><strong data-rail-name></strong><span data-rail-handle></span></div></div>
+        <div class="nq-mini-stats" data-rail-stats hidden></div>
+      </section>
+      <section class="nq-box" aria-labelledby="rail-people-title">
+        <h2 id="rail-people-title">Pessoas para conhecer</h2>
+        <ul class="nq-people" data-rail-people></ul>
+        <a class="nq-more" href="${root}paginas/amigos.html">Ver mais pessoas</a>
+      </section>
+      <section class="nq-box" aria-labelledby="rail-game-title">
+        <h2 id="rail-game-title">Nexa Quest</h2>
+        <p class="nq-muted">Continue sua jornada e desbloqueie novas conquistas.</p>
+        <a class="btn btn-sm" href="#" data-game style="margin-top:.75rem">Acessar o jogo</a>
+      </section>`;
+    shell.append(side);
+    $('[data-rail-avatar]', side).replaceWith(avatarEl({ nome_usuario: user.nome_usuario }, 48));
+    $('[data-rail-name]', side).textContent = user.nome_usuario;
+    $('[data-rail-handle]', side).textContent = `${Number(user.pontos) || 0} pontos`;
+    renderRailSuggestions($('[data-rail-people]', side).closest('.nq-box'));
+  }
+  document.body.append(tabbar);
+
+  // Publicar: na própria página do feed, apenas leva o foco ao campo de texto.
+  $$('[data-publish]').forEach(anchor => anchor.addEventListener('click', event => {
+    const input = $('#feed-post-text');
+    if (input) { event.preventDefault(); input.scrollIntoView({ block: 'center' }); input.focus(); }
+  }));
+
+  loadOwnProfile().then(own => {
+    if (!own) return;
+    accountButton.replaceChildren(avatarEl(own, 34));
+    $('[data-menu-name]').textContent = own.nome_exibicao || own.nome_usuario;
+    const composerAvatar = $('[data-composer-avatar]');
+    if (composerAvatar) composerAvatar.replaceWith(avatarEl(own, 40));
+    if (page === 'inicio') {
+      const railAvatar = $('.nq-side .nq-mini .nq-avatar');
+      railAvatar?.replaceWith(avatarEl(own, 48));
+      $('[data-rail-name]').textContent = own.nome_exibicao || own.nome_usuario;
+      $('[data-rail-handle]').textContent = `@${own.nome_usuario}`;
+      const stats = $('[data-rail-stats]');
+      const values = own.estatisticas || {};
+      [['Amigos', values.amigos], ['Conquistas', values.conquistas], ['Pontos', values.pontos]].forEach(([label, value]) => {
+        if (value === null || value === undefined) return;
+        const cell = document.createElement('div');
+        const strong = document.createElement('b');
+        strong.textContent = Number(value).toLocaleString('pt-BR');
+        cell.append(strong, label);
+        stats.append(cell);
+      });
+      stats.hidden = !stats.childElementCount;
+    }
+  });
 }
 
 function renderHeader() {
@@ -311,16 +478,20 @@ function setProfileImage(image, value) {
 function renderFeedComment(comment) {
   const item = document.createElement('article');
   item.className = 'feed-comment';
+  const body = document.createElement('div');
+  body.className = 'feed-comment-body';
   const heading = document.createElement('div');
   heading.className = 'feed-comment-heading';
   heading.append(makeProfileAnchor(comment.autor, 'feed-comment-author'));
   const date = document.createElement('time');
   date.dateTime = comment.criado_em || '';
-  date.textContent = formatSocialDate(comment.criado_em);
+  date.title = formatSocialDate(comment.criado_em);
+  date.textContent = formatRelative(comment.criado_em);
   heading.append(date);
   const text = document.createElement('p');
   text.textContent = comment.texto || '';
-  item.append(heading, text);
+  body.append(heading, text);
+  item.append(avatarEl(comment.autor, 32), body);
   return item;
 }
 
@@ -332,27 +503,23 @@ function renderFeedPost(post) {
 
   const heading = document.createElement('header');
   heading.className = 'feed-post-header';
-  const avatar = makeProfileAnchor(post.autor, 'feed-avatar');
-  avatar.setAttribute('aria-label', `Ver perfil de ${post.autor.nome_usuario || 'usuário'}`);
-  const avatarImageUrl = safeHttpsUrl(post.autor.avatar_url);
-  if (avatarImageUrl) {
-    const avatarImage = document.createElement('img');
-    avatarImage.src = avatarImageUrl;
-    avatarImage.alt = '';
-    avatarImage.loading = 'lazy';
-    avatarImage.onerror = () => avatarImage.remove();
-    avatar.replaceChildren(avatarImage);
-  } else {
-    avatar.textContent = (post.autor.nome_exibicao || post.autor.nome_usuario || '?').charAt(0).toUpperCase();
-  }
+  const avatarLink = document.createElement('a');
+  avatarLink.className = 'feed-avatar';
+  avatarLink.href = profileHref(post.autor);
+  avatarLink.setAttribute('aria-label', `Ver perfil de ${post.autor.nome_usuario || 'usuário'}`);
+  avatarLink.append(avatarEl(post.autor, 40));
   const authorMeta = document.createElement('div');
   authorMeta.className = 'feed-post-author-meta';
   authorMeta.append(makeProfileAnchor(post.autor, 'feed-post-author'));
+  const sub = document.createElement('div');
+  sub.className = 'feed-post-sub';
   const date = document.createElement('time');
   date.dateTime = post.criado_em || '';
-  date.textContent = formatSocialDate(post.criado_em);
-  authorMeta.append(date);
-  heading.append(avatar, authorMeta);
+  date.title = formatSocialDate(post.criado_em);
+  date.textContent = formatRelative(post.criado_em);
+  sub.append(`@${post.autor.nome_usuario || 'usuario'} · `, date);
+  authorMeta.append(sub);
+  heading.append(avatarLink, authorMeta);
 
   const text = document.createElement('p');
   text.className = 'feed-post-text';
@@ -362,7 +529,17 @@ function renderFeedPost(post) {
   if (post.conquista && post.conquista.titulo) {
     const achievement = document.createElement('div');
     achievement.className = 'feed-post-reference';
-    achievement.textContent = `Conquista: ${post.conquista.titulo}`;
+    const badge = document.createElement('span');
+    badge.className = 'attach-badge';
+    badge.innerHTML = nqSvg(NQ_ICON.trophy);
+    const info = document.createElement('div');
+    info.className = 'attach-text';
+    const name = document.createElement('strong');
+    name.textContent = post.conquista.titulo;
+    const kind = document.createElement('span');
+    kind.textContent = 'Conquista desbloqueada';
+    info.append(name, kind);
+    achievement.append(badge, info);
     item.append(achievement);
   }
   addSafeImage(item, post.imagem_url, post.imagem_alt);
@@ -377,7 +554,17 @@ function renderFeedPost(post) {
       const projectLink = document.createElement('a');
       projectLink.className = 'feed-project-reference';
       projectLink.href = projectUrl.href;
-      projectLink.textContent = `Projeto: ${post.projeto.titulo}`;
+      const projectBadge = document.createElement('span');
+      projectBadge.className = 'attach-badge';
+      projectBadge.innerHTML = nqSvg(NQ_ICON.projects);
+      const projectInfo = document.createElement('div');
+      projectInfo.className = 'attach-text';
+      const projectName = document.createElement('strong');
+      projectName.textContent = post.projeto.titulo;
+      const projectKind = document.createElement('span');
+      projectKind.textContent = 'Projeto';
+      projectInfo.append(projectName, projectKind);
+      projectLink.append(projectBadge, projectInfo);
       if (projectUrl.origin !== location.origin) {
         projectLink.target = '_blank';
         projectLink.rel = 'noopener noreferrer';
@@ -408,7 +595,8 @@ function renderFeedPost(post) {
   share.className = 'feed-action';
   share.type = 'button';
   share.dataset.feedShare = '';
-  share.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.7 6.8-4.4m-6.8 7 6.8 4.3"/></svg><span>Compartilhar</span>';
+  share.setAttribute('aria-label', 'Compartilhar publicação');
+  share.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.7 6.8-4.4m-6.8 7 6.8 4.3"/></svg><span class="sr-only">Compartilhar</span>';
   actions.append(like, commentsButton, share);
 
   const comments = document.createElement('section');
@@ -434,12 +622,12 @@ function renderFeedPost(post) {
   const commentInput = document.createElement('textarea');
   commentInput.name = 'texto';
   commentInput.maxLength = 1000;
-  commentInput.rows = 2;
-  commentInput.placeholder = 'Escreva um comentário…';
+  commentInput.rows = 1;
+  commentInput.placeholder = 'Adicione um comentário…';
   commentInput.setAttribute('aria-label', 'Escreva um comentário');
   commentInput.required = true;
   const commentSubmit = document.createElement('button');
-  commentSubmit.className = 'btn btn-azul';
+  commentSubmit.className = 'btn btn-sm';
   commentSubmit.type = 'submit';
   commentSubmit.textContent = 'Comentar';
   commentForm.append(commentInput, commentSubmit);
@@ -470,7 +658,7 @@ function renderFeedPost(post) {
     commentMore.hidden = !commentsCursor;
     commentStatus.textContent = response.data.comentarios.length
       ? ''
-      : 'Ainda não há comentários. Seja a primeira pessoa a comentar.';
+      : 'Nenhum comentário ainda. Comece a conversa.';
   };
   commentsButton.addEventListener('click', async () => {
     const open = comments.hidden;
@@ -571,7 +759,7 @@ function initFeed() {
     let sharedPostError = '';
     list.setAttribute('aria-busy', 'true');
     more.disabled = true;
-    status.textContent = reset ? 'Carregando publicações…' : 'Carregando mais publicações…';
+    status.textContent = reset ? '' : 'Carregando mais publicações…';
     if (reset) {
       cursor = null;
       list.replaceChildren();
@@ -587,7 +775,7 @@ function initFeed() {
         const skeleton = document.createElement('div');
         skeleton.className = 'feed-loading';
         skeleton.setAttribute('role', 'status');
-        skeleton.textContent = 'Carregando publicações…';
+        skeleton.innerHTML = '<div class="skeleton-row"><i></i><i></i></div><div class="skeleton-row"><i></i><i></i></div>';
         list.append(skeleton);
       } else {
         list.append(renderFeedPost(sharedPost));
@@ -640,11 +828,11 @@ function initFeed() {
       const empty = document.createElement('div');
       empty.className = 'feed-empty';
       const title = document.createElement('strong');
-      title.textContent = userId ? 'Este perfil ainda não tem publicações.' : 'Ainda não há publicações.';
+      title.textContent = userId ? 'Nenhuma publicação ainda.' : 'O feed ainda está vazio.';
       const message = document.createElement('p');
       message.textContent = userId
-        ? 'Quando esta pessoa compartilhar algo, as publicações aparecerão aqui.'
-        : 'Quando a comunidade compartilhar ideias, elas aparecerão aqui. Você pode iniciar a conversa.';
+        ? 'As publicações desta pessoa aparecerão aqui.'
+        : 'Publique a primeira ideia da comunidade ou siga alguém em Pessoas.';
       empty.append(title, message);
       list.append(empty);
     } else if (!reset && response.data.publicacoes.length === 0) {
@@ -654,6 +842,20 @@ function initFeed() {
 
   more.addEventListener('click', () => loadPage());
   if (form) {
+    const count = $('#feed-post-count');
+    const open = () => form.classList.add('is-open');
+    const refresh = () => {
+      if (count) {
+        count.textContent = `${input.value.length}/2000`;
+        count.classList.toggle('is-near', input.value.length > 1800);
+      }
+    };
+    input.addEventListener('focus', open);
+    input.addEventListener('input', () => { open(); refresh(); });
+    input.addEventListener('keydown', event => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') form.requestSubmit();
+    });
+    if (new URLSearchParams(location.search).get('novo') === '1') setTimeout(() => input.focus(), 150);
     form.addEventListener('submit', async event => {
       event.preventDefault();
       const texto = input.value.trim();
@@ -671,7 +873,10 @@ function initFeed() {
         return;
       }
       input.value = '';
-      NP.status(formStatus, 'Publicação compartilhada.', true);
+      form.classList.remove('is-open');
+      input.blur();
+      if (count) count.textContent = '0/2000';
+      NP.status(formStatus, 'Publicado.', true);
       const empty = list.querySelector('.feed-empty');
       if (empty) empty.remove();
       list.prepend(renderFeedPost(response.data.publicacao));
@@ -733,7 +938,9 @@ function renderProfileAchievements(profile) {
       image.loading = 'lazy';
       icon.append(image);
     } else {
-      icon.textContent = '✦';
+      icon.innerHTML = nqSvg(NQ_ICON.trophy);
+      icon.firstElementChild.setAttribute('width', '22');
+      icon.firstElementChild.setAttribute('height', '22');
     }
     const details = document.createElement('div');
     const title = document.createElement('strong');
@@ -744,6 +951,120 @@ function renderProfileAchievements(profile) {
     item.append(icon, details);
     list.append(item);
   });
+}
+
+function buildProgressTrack(percent) {
+  const meter = document.createElement('div');
+  meter.className = 'profile-progress-track';
+  meter.setAttribute('role', 'progressbar');
+  meter.setAttribute('aria-label', 'Progresso registrado no Nexa Quest');
+  meter.setAttribute('aria-valuemin', '0');
+  meter.setAttribute('aria-valuemax', '100');
+  meter.setAttribute('aria-valuenow', String(percent));
+  const bar = document.createElement('span');
+  bar.style.width = `${Math.max(0, Math.min(100, Number(percent) || 0))}%`;
+  meter.append(bar);
+  return meter;
+}
+
+function renderProfileActivity(container, data) {
+  const summary = document.createElement('div');
+  summary.className = 'act-summary';
+  [[data.concluidas, 'atividades concluídas'], [data.em_andamento, 'em andamento'], [`${data.percentual}%`, 'da jornada concluída']].forEach(([value, label]) => {
+    const card = document.createElement('div');
+    card.className = 'act-card';
+    const strong = document.createElement('strong');
+    strong.textContent = typeof value === 'number' ? value.toLocaleString('pt-BR') : value;
+    const span = document.createElement('span');
+    span.textContent = label;
+    card.append(strong, span);
+    summary.append(card);
+  });
+  container.append(summary);
+
+  const months = Array.isArray(data.evolucao) ? data.evolucao : [];
+  if (months.length >= 2) {
+    const box = document.createElement('section');
+    box.className = 'act-box';
+    const title = document.createElement('h3');
+    title.textContent = 'Atividades concluídas por mês';
+    const chart = document.createElement('div');
+    chart.className = 'game-evolution-chart';
+    const max = Math.max(...months.map(item => Number(item.atividades_concluidas) || 0), 1);
+    months.forEach(item => {
+      const count = Number(item.atividades_concluidas) || 0;
+      const column = document.createElement('div');
+      column.className = 'game-chart-column';
+      column.setAttribute('aria-label', `${formatGameMonth(item.mes)}: ${count} atividades concluídas`);
+      const value = document.createElement('strong');
+      value.textContent = String(count);
+      const track = document.createElement('div');
+      track.className = 'game-chart-track';
+      const bar = document.createElement('span');
+      bar.style.height = `${Math.max(8, Math.round((count / max) * 100))}%`;
+      track.append(bar);
+      const label = document.createElement('span');
+      label.className = 'game-chart-month';
+      label.textContent = formatGameMonth(item.mes);
+      column.append(value, track, label);
+      chart.append(column);
+    });
+    box.append(title, chart);
+    container.append(box);
+  }
+
+  const history = Array.isArray(data.historico) ? data.historico.slice(0, 6) : [];
+  if (history.length) {
+    const box = document.createElement('section');
+    box.className = 'act-box';
+    const title = document.createElement('h3');
+    title.textContent = 'Atividades recentes';
+    const list = document.createElement('div');
+    list.className = 'game-history-list';
+    history.forEach(activity => {
+      const row = document.createElement('article');
+      row.className = 'game-history-item';
+      const name = document.createElement('strong');
+      name.textContent = activity.titulo || 'Atividade concluída';
+      const points = document.createElement('span');
+      points.className = 'game-history-points';
+      points.textContent = `+${Number(activity.pontuacao) || 0} pts`;
+      const meta = document.createElement('time');
+      meta.dateTime = activity.concluida_em;
+      const type = activity.tipo === 'missao' ? 'Missão' : activity.tipo === 'desafio' ? 'Desafio' : 'Atividade';
+      meta.textContent = `${type}${activity.trilha ? ` · ${activity.trilha}` : ''} · ${formatRelative(activity.concluida_em)}`;
+      row.append(name, points, meta);
+      list.append(row);
+    });
+    box.append(title, list);
+    container.append(box);
+  }
+}
+
+let profileTabs = null;
+function setupProfileTabs() {
+  const list = $('#profile-tabs');
+  if (!list || profileTabs) return;
+  profileTabs = initTabs(list, name => {
+    try { history.replaceState(null, '', `#${name}`); } catch { /* ignora */ }
+  });
+  const fromHash = location.hash.slice(1);
+  if (fromHash && profileTabs.tabs.some(tab => tab.dataset.tab === fromHash)) profileTabs.select(fromHash);
+}
+
+function syncProfileTabs() {
+  const list = $('#profile-tabs');
+  if (!list || !profileTabs) return;
+  profileTabs.tabs.forEach(tab => {
+    const panel = document.getElementById(tab.dataset.tab);
+    tab.hidden = !panel || panel.hidden;
+  });
+  const selected = profileTabs.tabs.find(tab => tab.getAttribute('aria-selected') === 'true');
+  if (!selected || selected.hidden) {
+    const first = profileTabs.tabs.find(tab => !tab.hidden);
+    if (first) profileTabs.select(first.dataset.tab);
+  }
+  list.hidden = profileTabs.tabs.every(tab => tab.hidden);
 }
 
 function renderProfileData(profile, ownProfile) {
@@ -758,7 +1079,7 @@ function renderProfileData(profile, ownProfile) {
   const joined = $('[data-profile-joined]', card);
   const createdAt = new Date(profile.criado_em);
   joined.textContent = profile.criado_em && !Number.isNaN(createdAt.getTime())
-    ? `Na comunidade desde ${new Intl.DateTimeFormat('pt-BR', { dateStyle: 'medium' }).format(createdAt)}`
+    ? `Membro desde ${new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(createdAt)}`
     : '';
 
   const cover = $('[data-cover-image]', card);
@@ -780,19 +1101,28 @@ function renderProfileData(profile, ownProfile) {
   stats.replaceChildren();
   const values = profile.estatisticas;
   if (values) {
-    if (values.pontos !== null) setProfileStat(stats, 'Pontos', Number(values.pontos).toLocaleString('pt-BR'));
-    if (values.amigos !== null) setProfileStat(stats, 'Amigos', Number(values.amigos).toLocaleString('pt-BR'));
-    if (values.conquistas !== null) setProfileStat(stats, 'Conquistas', Number(values.conquistas).toLocaleString('pt-BR'));
-    if (values.progresso) {
-      setProfileStat(
-        stats,
-        'Jornada concluída',
-        `${values.progresso.percentual}%`,
-        `${values.progresso.concluidas} de ${values.progresso.total} atividades`,
-      );
-    }
+    if (values.amigos !== null) setProfileStat(stats, 'amigos', Number(values.amigos).toLocaleString('pt-BR'));
+    if (values.conquistas !== null) setProfileStat(stats, 'conquistas', Number(values.conquistas).toLocaleString('pt-BR'));
+    if (values.pontos !== null) setProfileStat(stats, 'pontos', Number(values.pontos).toLocaleString('pt-BR'));
   }
   stats.hidden = !stats.childElementCount;
+
+  const journey = $('[data-profile-journey]', card);
+  const progressData = profile.privado ? null : values?.progresso;
+  if (journey) {
+    journey.replaceChildren();
+    journey.hidden = !progressData;
+    if (progressData) {
+      const line = document.createElement('div');
+      line.className = 'pf-journey-line';
+      const label = document.createElement('strong');
+      label.textContent = 'Jornada';
+      const detail = document.createElement('span');
+      detail.textContent = `${progressData.concluidas} de ${progressData.total} atividades · ${progressData.percentual}%`;
+      line.append(label, detail);
+      journey.append(line, buildProgressTrack(progressData.percentual));
+    }
+  }
 
   const privateNotice = $('[data-profile-private]');
   if (privateNotice) privateNotice.hidden = !profile.privado;
@@ -801,24 +1131,9 @@ function renderProfileData(profile, ownProfile) {
   const progressSection = $('#jornada');
   const progress = $('[data-profile-progress]');
   if (progressSection && progress) {
-    const data = profile.privado ? null : profile.estatisticas?.progresso;
-    progressSection.hidden = !data;
+    progressSection.hidden = !progressData;
     progress.replaceChildren();
-    if (data) {
-      const summary = document.createElement('p');
-      summary.textContent = `${data.concluidas} de ${data.total} atividades concluídas · ${data.em_andamento} em andamento`;
-      const meter = document.createElement('div');
-      meter.className = 'profile-progress-track';
-      meter.setAttribute('role', 'progressbar');
-      meter.setAttribute('aria-label', 'Progresso registrado no Nexa Quest');
-      meter.setAttribute('aria-valuemin', '0');
-      meter.setAttribute('aria-valuemax', '100');
-      meter.setAttribute('aria-valuenow', String(data.percentual));
-      const bar = document.createElement('span');
-      bar.style.width = `${Math.max(0, Math.min(100, Number(data.percentual) || 0))}%`;
-      meter.append(bar);
-      progress.append(summary, meter);
-    }
+    if (progressData) renderProfileActivity(progress, progressData);
   }
 
   const projects = $('#projetos');
@@ -853,6 +1168,7 @@ function renderProfileData(profile, ownProfile) {
     publicLink.href = `${NP.root()}paginas/perfil-publico.html?id=${encodeURIComponent(profile.id)}`;
     publicLink.hidden = !ownProfile;
   }
+  syncProfileTabs();
 }
 
 function openRelationshipActions(profile) {
@@ -951,7 +1267,7 @@ function initProfileEditor(profile) {
     const currentUser = NP.currentUser();
     if (currentUser) currentUser.nome_usuario = profile.nome_usuario;
     const userButton = $('#user-btn');
-    if (userButton) userButton.textContent = profile.nome_usuario.charAt(0).toUpperCase();
+    if (userButton) userButton.replaceChildren(avatarEl(profile, 34));
     NP.status(status, 'Perfil atualizado.', true);
   });
 }
@@ -966,6 +1282,7 @@ async function carregarPerfil(url, ownProfile, skipFeed = false) {
     $('#publicacoes')?.setAttribute('hidden', '');
     $('#conquistas')?.setAttribute('hidden', '');
     $('#jornada')?.setAttribute('hidden', '');
+    syncProfileTabs();
     return null;
   }
   const profile = response.data.usuario;
@@ -981,6 +1298,7 @@ async function carregarPerfil(url, ownProfile, skipFeed = false) {
 
 async function initPublicProfile(skipFeed = false) {
   if (!NP.currentUser()) return void (location.href = 'login.html');
+  setupProfileTabs();
   const id = new URLSearchParams(location.search).get('id');
   if (!id || !/^\d{1,18}$/.test(id) || BigInt(id) < 1n) {
     NP.status($('#public-profile-status'), 'O perfil solicitado não é válido.', false);
@@ -994,6 +1312,7 @@ async function initPublicProfile(skipFeed = false) {
 async function initProfile() {
   if (!$('#perfil')) return;
   if (!NP.currentUser()) return void (location.href = 'login.html');
+  setupProfileTabs();
   await carregarPerfil('/me/perfil', true);
 }
 
@@ -1036,7 +1355,9 @@ function renderGameAchievements(profile, ownProfile) {
       image.loading = 'lazy';
       icon.append(image);
     } else {
-      icon.textContent = '✦';
+      icon.innerHTML = nqSvg(NQ_ICON.trophy);
+      icon.firstElementChild.setAttribute('width', '22');
+      icon.firstElementChild.setAttribute('height', '22');
     }
     const details = document.createElement('div');
     const title = document.createElement('strong');
@@ -1360,7 +1681,8 @@ function projectCard(project, myProject = false) {
   }
   owner.append(ownerLink);
   const meta = document.createElement('span');
-  meta.textContent = `${Number(project.total_participantes) || 0} integrantes`;
+  const members = Number(project.total_participantes) || 0;
+  meta.textContent = `${members} ${members === 1 ? 'integrante' : 'integrantes'}`;
   owner.append(meta);
   body.append(tags, title, description, owner);
   card.append(cover, body);
@@ -1540,6 +1862,8 @@ function renderFriendList(target, users, emptyMessage) {
 }
 
 let friendActionInProgress = false;
+let friendsTabs = null;
+let friendsTabsOpened = false;
 let friendSearchHasResults = false;
 
 async function executarAcaoAmizade(user, action) {
@@ -1587,7 +1911,7 @@ async function carregarPainelAmizades() {
   const friends = Array.isArray(response.data.amigos) ? response.data.amigos : [];
   const received = Array.isArray(response.data.recebidas) ? response.data.recebidas : [];
   const sent = Array.isArray(response.data.enviadas) ? response.data.enviadas : [];
-  renderFriendList($('#friends-list-content'), friends, 'Você ainda não tem amigos por aqui. Pesquise pessoas ou veja as sugestões.');
+  renderFriendList($('#friends-list-content'), friends, 'Você ainda não tem amigos. Veja as sugestões ou busque alguém pelo nome.');
   renderFriendList($('#friend-requests-received-list'), received, 'Você não tem solicitações recebidas.');
   renderFriendList($('#friend-requests-sent-list'), sent, 'Você não tem solicitações enviadas.');
   $('#friends-list-status').textContent = '';
@@ -1596,6 +1920,11 @@ async function carregarPainelAmizades() {
   $('#friends-count').textContent = String(friends.length);
   $('#friend-requests-received-count').textContent = String(received.length);
   $('#friend-requests-sent-count').textContent = String(sent.length);
+  $('#friend-requests-received-count').classList.toggle('is-alert', received.length > 0);
+  if (!friendsTabsOpened) {
+    friendsTabsOpened = true;
+    if (received.length > 0 && !new URLSearchParams(location.search).get('q')) friendsTabs?.select('friend-requests-received');
+  }
 }
 
 async function carregarSugestoesAmizade() {
@@ -1609,7 +1938,7 @@ async function carregarSugestoesAmizade() {
     status.textContent = response.data.mensagem || 'Não foi possível carregar sugestões.';
     return;
   }
-  renderFriendList(list, response.data.usuarios, 'Não há novas sugestões agora. Use a pesquisa para encontrar alguém.');
+  renderFriendList(list, response.data.usuarios, 'Sem sugestões por enquanto. Use a busca para encontrar alguém.');
   status.textContent = '';
 }
 
@@ -1619,6 +1948,8 @@ async function pesquisarAmigos(term) {
   const status = $('#friends-search-status');
   friendSearchHasResults = value.length >= 2;
   results.hidden = !friendSearchHasResults;
+  const searchBlock = $('#friends-search-block');
+  if (searchBlock) searchBlock.hidden = !friendSearchHasResults;
   if (!friendSearchHasResults) {
     status.textContent = 'Digite pelo menos 2 caracteres para pesquisar.';
     return;
@@ -1639,10 +1970,16 @@ function initFriendsPage() {
   const form = $('#friends-search-form');
   if (!form) return;
   if (!NP.currentUser()) return void (location.href = 'login.html');
+  friendsTabs = initTabs($('#friends-tabs'));
   form.addEventListener('submit', event => {
     event.preventDefault();
     pesquisarAmigos($('#friends-search-input').value);
   });
+  const initialQuery = new URLSearchParams(location.search).get('q');
+  if (initialQuery) {
+    $('#friends-search-input').value = initialQuery;
+    pesquisarAmigos(initialQuery);
+  }
   carregarPainelAmizades();
   carregarSugestoesAmizade();
 }
@@ -1690,6 +2027,12 @@ function initProjectExplorer() {
     }
   };
   form?.addEventListener('submit', event => { event.preventDefault(); load(true); });
+  const chips = $$('#project-chips .chip');
+  chips.forEach(chip => chip.addEventListener('click', () => {
+    chips.forEach(other => other.setAttribute('aria-pressed', String(other === chip)));
+    $('#project-category').value = chip.dataset.cat;
+    load(true);
+  }));
   more.addEventListener('click', () => load());
   load(true);
 }

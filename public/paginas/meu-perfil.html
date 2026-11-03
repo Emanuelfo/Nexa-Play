@@ -3,59 +3,46 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Meu perfil | Nexa Quest</title>
-  <meta name="description" content="Sua identidade, amizades e progresso no Nexa Quest.">
+  <meta name="description" content="Seu perfil, conquistas e atividade no Nexa Quest.">
   <link rel="icon" href="../assets/icones/favicon.svg">
-  <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/responsive.css">
-  <link rel="stylesheet" href="../css/area-logada.css">
-  <link rel="stylesheet" href="../css/social-v2.css">
+  <link rel="stylesheet" href="../css/social.css">
   <script src="../js/functions.js" defer></script>
   <script src="../js/main.js" defer></script>
-  <script src="../js/social-v2.js" defer></script>
 </head>
 
 <body data-page="perfil" data-root="../" data-protected="1">
   <a class="sr-only" href="#conteudo">Ir para o conteúdo</a>
   <header data-component="header"></header>
-  <main id="conteudo" class="player-profile-page">
-    <header class="feed-page-header">
-      <p class="feed-eyebrow">IDENTIDADE DO JOGADOR</p>
-      <h1>Meu perfil</h1>
-      <p>Seu espaço na comunidade Nexa Quest: sua história, conquistas e progresso.</p>
-    </header>
-
+  <main id="conteudo">
+    <h1 class="sr-only">Perfil</h1>
     <p id="profile-status" class="feed-status" role="status" aria-live="polite"></p>
-
-    <section id="perfil" class="player-profile-card" aria-labelledby="profile-name" aria-busy="true">
-      <div class="player-cover" data-profile-cover>
-        <img data-cover-image alt="" hidden>
-        <span class="player-cover-mark">NEXA QUEST · JOGADOR</span>
-      </div>
-      <div class="player-profile-content">
-        <div class="player-profile-top">
+    <section id="perfil" class="pf-head" aria-labelledby="profile-name" aria-busy="true">
+      <div class="player-cover" data-profile-cover><img data-cover-image alt="" hidden></div>
+      <div class="pf-body">
+        <div class="pf-top">
           <div class="player-avatar" data-profile-avatar aria-hidden="true"><span data-avatar-initial>?</span><img data-avatar-image alt="" hidden></div>
           <div class="player-profile-actions">
-            <button class="btn btn-soft" id="profile-edit-toggle" type="button" aria-expanded="false" aria-controls="profile-editor">Editar perfil</button>
-            <a class="btn btn-line" data-profile-game-link href="estatisticas.html">Estatísticas do jogo</a>
-            <a class="btn btn-line" data-profile-public-link href="#" target="_blank" rel="noopener noreferrer">Ver como público</a>
+            <button class="btn-soft" id="profile-edit-toggle" type="button" aria-expanded="false" aria-controls="profile-editor">Editar perfil</button>
+            <a class="btn-soft" data-profile-public-link href="#">Ver como público</a>
           </div>
         </div>
         <div class="player-identity">
-          <p class="feed-eyebrow">PERFIL DO JOGADOR</p>
           <h2 id="profile-name" data-profile-name>Carregando perfil…</h2>
           <p class="player-handle" data-profile-handle></p>
           <p class="player-bio" data-profile-bio></p>
-          <p class="player-joined" data-profile-joined></p>
+          <p class="player-private-notice" data-profile-private hidden>Este jogador limitou as informações do perfil a amigos. Envie uma solicitação de amizade para ver conquistas, projetos e publicações.</p>
         </div>
-        <div class="player-stats" data-profile-stats aria-label="Estatísticas públicas"></div>
+        <div class="player-stats" data-profile-stats aria-label="Resumo do jogador"></div>
+        <p class="player-joined" data-profile-joined></p>
+        <div class="pf-journey" data-profile-journey hidden></div>
       </div>
     </section>
 
     <section id="profile-editor" class="profile-editor-card" hidden aria-labelledby="profile-editor-title">
-      <div class="profile-section-heading">
-        <div><p class="feed-eyebrow">PERSONALIZE SUA IDENTIDADE</p><h2 id="profile-editor-title">Editar perfil</h2></div>
+      <div class="nq-panel-head">
+        <h2 id="profile-editor-title">Editar perfil</h2>
         <button class="profile-text-button" id="profile-edit-close" type="button">Fechar</button>
       </div>
       <form id="profile-edit-form" class="profile-edit-form">
@@ -64,29 +51,29 @@
             <input name="nome_exibicao" type="text" maxlength="100" required autocomplete="nickname">
           </label>
           <label>Nome de usuário
-            <span class="profile-input-prefix">@</span>
             <input name="nome_usuario" type="text" maxlength="30" minlength="3" pattern="[A-Za-z0-9_]{3,30}" required autocomplete="username">
+            <small>3 a 30 caracteres: letras, números ou _.</small>
           </label>
           <label class="profile-form-wide">Biografia
-            <textarea name="biografia" rows="3" maxlength="500" placeholder="O que você quer compartilhar com a comunidade?"></textarea>
+            <textarea name="biografia" rows="3" maxlength="500" placeholder="Fale sobre o que você cria e aprende."></textarea>
             <small>Até 500 caracteres.</small>
           </label>
-          <label>Foto de perfil · URL HTTPS
+          <label>Foto de perfil (URL HTTPS)
             <input name="avatar_url" type="url" inputmode="url" placeholder="https://…" autocomplete="url">
           </label>
-          <label>Imagem de capa · URL HTTPS
+          <label>Imagem de capa (URL HTTPS)
             <input name="capa_url" type="url" inputmode="url" placeholder="https://…" autocomplete="url">
           </label>
         </div>
         <fieldset class="profile-privacy">
-          <legend>O que fica visível no seu perfil público?</legend>
-          <label><input name="perfil_publico" type="checkbox"> Perfil público (desativado: somente você e seus amigos verão as informações.)</label>
-          <label><input name="mostrar_biografia" type="checkbox"> Biografia</label>
-          <label><input name="mostrar_pontos" type="checkbox"> Pontuação</label>
-          <label><input name="mostrar_amigos" type="checkbox"> Quantidade de amigos</label>
-          <label><input name="mostrar_conquistas" type="checkbox"> Conquistas e medalhas</label>
-          <label><input name="mostrar_progresso" type="checkbox"> Progresso no Nexa Quest</label>
-          <p>Nome, nome de usuário e imagens identificam seu perfil. Seu e-mail nunca é exibido publicamente.</p>
+          <legend>Privacidade do perfil</legend>
+          <label><input name="perfil_publico" type="checkbox"> Perfil público (desligado: só você e seus amigos veem as informações)</label>
+          <label><input name="mostrar_biografia" type="checkbox"> Mostrar biografia</label>
+          <label><input name="mostrar_pontos" type="checkbox"> Mostrar pontuação</label>
+          <label><input name="mostrar_amigos" type="checkbox"> Mostrar quantidade de amigos</label>
+          <label><input name="mostrar_conquistas" type="checkbox"> Mostrar conquistas</label>
+          <label><input name="mostrar_progresso" type="checkbox"> Mostrar progresso no Nexa Quest</label>
+          <p>Seu e-mail nunca é exibido publicamente.</p>
         </fieldset>
         <div class="profile-form-actions">
           <button class="btn" type="submit">Salvar alterações</button>
@@ -94,52 +81,39 @@
         </div>
       </form>
     </section>
-
-    <div class="player-profile-sections">
-      <section id="conquistas" class="profile-content-card" aria-labelledby="profile-achievements-title">
-        <div class="profile-section-heading">
-          <div><p class="feed-eyebrow">MARCOS DA JORNADA</p><h2 id="profile-achievements-title">Conquistas e medalhas</h2></div>
-          <strong class="profile-section-count" data-achievement-count></strong>
+    <div class="nq-tabs pf-tabs" role="tablist" aria-label="Seções do perfil" id="profile-tabs">
+      <button type="button" role="tab" id="tab-publicacoes" aria-controls="publicacoes" aria-selected="true" data-tab="publicacoes">Publicações</button>
+      <button type="button" role="tab" id="tab-projetos" aria-controls="projetos" aria-selected="false" data-tab="projetos">Projetos</button>
+      <button type="button" role="tab" id="tab-conquistas" aria-controls="conquistas" aria-selected="false" data-tab="conquistas">Conquistas</button>
+      <button type="button" role="tab" id="tab-jornada" aria-controls="jornada" aria-selected="false" data-tab="jornada">Atividade</button>
+    </div>
+    <div class="pf-panels">
+      <section class="pf-panel is-active" id="publicacoes" role="tabpanel" aria-labelledby="tab-publicacoes">
+        <div id="feed-list" class="feed-list" aria-live="polite" aria-busy="true">
+          <div class="feed-loading" role="status"><div class="skeleton-row"><i></i><i></i></div></div>
         </div>
-        <div class="profile-achievements" data-profile-achievements aria-live="polite">
-          <p class="feed-loading">Carregando conquistas…</p>
-        </div>
+        <p id="feed-status" class="feed-status" role="status" aria-live="polite"></p>
+        <button id="feed-load-more" class="feed-load-more" type="button" hidden>Carregar mais publicações</button>
       </section>
 
-      <section id="jornada" class="profile-content-card" aria-labelledby="profile-progress-title">
-        <div class="profile-section-heading">
-          <div><p class="feed-eyebrow">NEXA QUEST</p><h2 id="profile-progress-title">Progresso no jogo</h2></div>
-        </div>
-        <div class="profile-progress" data-profile-progress>
-          <p class="feed-loading">Carregando progresso…</p>
-        </div>
+      <section class="pf-panel" id="projetos" role="tabpanel" aria-labelledby="tab-projetos">
+        <div class="nq-panel-head"><h2>Projetos publicados</h2><a class="btn-soft btn-sm" href="criar-projeto.html">Novo projeto</a></div>
+        <p data-profile-projects-status class="feed-status" role="status" aria-live="polite"></p>
+        <div class="project-grid" data-profile-projects aria-live="polite" aria-busy="true"></div>
+        <a class="profile-text-button" data-profile-projects-link href="explorar-projetos.html">Ver todos os projetos</a>
+      </section>
+
+      <section class="pf-panel" id="conquistas" role="tabpanel" aria-labelledby="tab-conquistas">
+        <div class="nq-panel-head"><h2>Conquistas</h2><strong class="profile-section-count" data-achievement-count></strong></div>
+        <div class="profile-achievements" data-profile-achievements aria-live="polite"></div>
+      </section>
+
+      <section class="pf-panel" id="jornada" role="tabpanel" aria-labelledby="tab-jornada">
+        <div class="nq-panel-head"><h2>Atividade no Nexa Quest</h2><a class="btn-soft btn-sm" data-profile-game-link href="estatisticas.html">Ver detalhes</a></div>
+        <div data-profile-progress aria-live="polite"></div>
       </section>
     </div>
-
-    <section id="projetos" class="profile-content-card profile-projects" aria-labelledby="profile-projects-title">
-      <div class="profile-section-heading">
-        <div><p class="feed-eyebrow">CRIAÇÕES DA COMUNIDADE</p><h2 id="profile-projects-title">Projetos publicados</h2></div>
-        <a class="btn btn-soft" href="meus-projetos.html">Meus projetos</a>
-      </div>
-      <p data-profile-projects-status class="feed-status" role="status" aria-live="polite"></p>
-      <div class="project-grid profile-project-grid" data-profile-projects aria-live="polite" aria-busy="true">
-        <p class="feed-loading">Carregando projetos públicos…</p>
-      </div>
-      <a class="profile-text-button" data-profile-projects-link href="explorar-projetos.html">Ver todos os projetos</a>
-    </section>
-
-    <section class="feed-section profile-publications" id="publicacoes" aria-labelledby="profile-posts-title">
-      <div class="feed-section-heading">
-        <div><p class="feed-eyebrow">NA COMUNIDADE</p><h2 id="profile-posts-title">Publicações</h2></div>
-      </div>
-      <div id="feed-list" class="feed-list" aria-live="polite" aria-busy="true">
-        <div class="feed-loading" role="status">Carregando publicações…</div>
-      </div>
-      <p id="feed-status" class="feed-status" role="status" aria-live="polite"></p>
-      <button id="feed-load-more" class="feed-load-more" type="button" hidden>Carregar mais publicações</button>
-    </section>
   </main>
-  <footer data-component="footer"></footer>
 </body>
 
 </html>
