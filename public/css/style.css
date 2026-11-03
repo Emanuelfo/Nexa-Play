@@ -1776,7 +1776,6 @@ main {
     color: #fff;
     border: 2px solid var(--btn);
     box-shadow: 0 8px 22px var(--glow2);
-    margin: 30px 0px
 }
 
 .btn:not(.btn-line):not(.btn-soft):hover {
@@ -1818,6 +1817,10 @@ main {
 
 .btn:hover svg {
     translate: 0 0
+}
+
+a.btn.btn-azul {
+    margin-top: 1.2rem;
 }
 
 /* foco visível com contraste em fundo claro e escuro */
