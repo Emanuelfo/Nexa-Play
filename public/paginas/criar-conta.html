@@ -29,8 +29,12 @@
                         src="../assets/imagens/logo-escura-quest.svg">
                     
                 </div>
+                <div class="field"><label class="sr-only" for="nome_completo">Nome completo</label><input
+                        class="input" id="nome_completo" name="nome_completo" type="text"
+                        placeholder="Nome completo" autocomplete="name" required maxlength="100"><span class="err"
+                        id="nome_completo-err"></span></div>
                 <div class="field"><label class="sr-only" for="nome_usuario">Nome de usuário</label><input class="input"
-                            id="nome_usuario" name="nome_usuario" type="text" placeholder="Nome de usuário (3-30 caracteres)"
+                            id="nome_usuario" name="nome_usuario" type="text" placeholder="Nome de usuário"
                             autocomplete="username" required minlength="3" maxlength="30" pattern="[A-Za-z0-9_]{3,30}"><span class="err" id="nome_usuario-err"></span></div>
                 <div class="field"><label class="sr-only" for="email">E-mail</label><input class="input"
                         id="email" name="email" type="email" placeholder="E-mail" autocomplete="email"

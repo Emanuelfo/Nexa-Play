@@ -22,11 +22,14 @@ function gerarToken(usuario, lembrar) {
 
 async function cadastrar(req, res) {
   try {
-    const { nome_usuario, email, senha, lembrar } = req.body;
+    const { nome_completo, nome_usuario, email, senha, lembrar } = req.body;
 
-    const nomeExibicao = typeof nome_usuario === "string" ? nome_usuario.trim() : "";
-    const nomeUsuario = nomeExibicao.toLowerCase();
+    const nomeExibicao = typeof nome_completo === "string" ? nome_completo.trim() : "";
+    const nomeUsuario = typeof nome_usuario === "string" ? nome_usuario.trim().toLowerCase() : "";
     const emailNorm = typeof email === "string" ? email.trim().toLowerCase() : "";
+    if (!nomeExibicao || nomeExibicao.length > 100) {
+      return res.status(400).json({ mensagem: "Informe seu nome completo (até 100 caracteres)." });
+    }
     if (!/^[a-z0-9_]{3,30}$/.test(nomeUsuario)) {
       return res.status(400).json({ mensagem: "O nome de usuário deve ter de 3 a 30 caracteres: letras, números ou _." });
     }

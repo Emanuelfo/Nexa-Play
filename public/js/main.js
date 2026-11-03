@@ -35,7 +35,12 @@ function renderSocialShell(host, user) {
       <button class="social-notifications" type="button" disabled aria-label="Notificações indisponíveis nesta versão" title="Notificações indisponíveis nesta versão">${icon('<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>')}</button>
       <div class="user-area">
         <button class="user-btn" id="user-btn" aria-haspopup="true" aria-expanded="false" aria-label="Abrir menu da conta"></button>
-        <div class="user-menu" id="user-menu"><a href="${profile}">Meu perfil</a><button type="button" id="logout">Sair da conta</button></div>
+        <div class="user-menu" id="user-menu" aria-label="Menu da conta">
+          <a href="${profile}">Meu perfil</a>
+          <a href="${root}paginas/meus-projetos.html">Meus projetos</a>
+          <a href="${root}paginas/estatisticas.html">Jornada no jogo</a>
+          <button type="button" id="logout">Sair da conta</button>
+        </div>
       </div>
     </div>
   </div>`;
@@ -109,8 +114,8 @@ function renderHeader() {
   host.className = 'site-header';
   host.innerHTML = `<div class="wrap"><a class="brand" href="${home}" aria-label="Nexa Quest — início"><img src="${r}assets/imagens/logo-escura-quest.svg" alt="Nexa Play" width="157" height="84"></a>
   <nav class="nav" id="nav" aria-label="Principal">${user
-    ? link(home, 'Início', 'inicio') + link(perfil + '#missoes', 'Missões', 'missoes') + link(perfil + '#desafios', 'Desafios', 'desafios') + link(perfil + '#comunidade', 'Comunidade', 'comunidade') + link(perfil, 'Meu Perfil', 'perfil')
-    : link(home, 'Início', 'inicio') + link(r + 'index.html#como-funciona', 'Como funciona', 'como') + link(r + 'index.html#comunidade', 'Comunidade', 'comunidade') + link(r + 'paginas/sobre-nexa-play.html', 'Sobre', 'sobre')}</nav>
+    ? link(home, 'Início', 'inicio') + link(perfil + '#missoes', 'Missões', 'missoes') + link(perfil + '#desafios', 'Desafios', 'desafios') + link(perfil, 'Meu Perfil', 'perfil')
+    : link(home, 'Início', 'inicio') + link(r + 'paginas/sobre-nexa-play.html', 'Sobre', 'sobre') + link(r + 'paginas/login.html', 'Login', 'login')}</nav>
   <div class="user-area">${user
       ? `<button class="user-btn" id="user-btn" aria-haspopup="true" aria-expanded="false" aria-label="Menu de ${user.nome_usuario}">${inicial}</button><div class="user-menu" id="user-menu"><a href="${r}paginas/inicio.html">Meu início</a><a href="${perfil}">Meu perfil</a><button type="button" id="logout">Sair</button></div>`
       : `<a class="user-btn" href="${r}paginas/login.html" aria-label="Entrar" title="Entrar">${inicial}</a>`}
@@ -188,15 +193,17 @@ function initRegister() {
   });
   f.addEventListener('submit', async e => {
     e.preventDefault();
+    const nomeCompleto = f.nome_completo.value.trim();
     const nomeUsuario = f.nome_usuario.value.trim();
     const email = f.email.value.trim();
-    const ok = [NP.setErr(f.nome_usuario, /^[A-Za-z0-9_]{3,30}$/.test(nomeUsuario) ? '' : 'Use de 3 a 30 letras, números ou _ no nome de usuário.'),
+    const ok = [NP.setErr(f.nome_completo, nomeCompleto.length > 0 && nomeCompleto.length <= 100 ? '' : 'Informe seu nome completo (até 100 caracteres).'),
+    NP.setErr(f.nome_usuario, /^[A-Za-z0-9_]{3,30}$/.test(nomeUsuario) ? '' : 'Use de 3 a 30 letras, números ou _ no nome de usuário.'),
     NP.setErr(f.email, NP.isEmail(email) ? '' : 'Informe um e-mail válido.'),
     NP.setErr(f.senha, f.senha.value.length < 6 ? 'A senha precisa ter ao menos 6 caracteres.' : ''),
     validarConfirmacao()].every(Boolean);
     if (!ok) return NP.status($('#cadastro-status'), 'Revise os campos destacados.', false);
     const btn = $('button[type=submit]', f); btn.disabled = true; NP.status($('#cadastro-status'), 'Criando sua conta…', true);
-    const r = await NP.api('/usuarios', { method: 'POST', body: { nome_usuario: nomeUsuario, email, senha: f.senha.value, lembrar: true } });
+    const r = await NP.api('/usuarios', { method: 'POST', body: { nome_completo: nomeCompleto, nome_usuario: nomeUsuario, email, senha: f.senha.value, lembrar: true } });
     if (!r.ok) {
       btn.disabled = false;
       if (r.status === 409) {

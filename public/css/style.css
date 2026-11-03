@@ -105,12 +105,11 @@ p {
     color: #fff;
     background: linear-gradient(180deg, #1d3a8f, #0a1f5c);
     box-shadow: 0 6px 18px rgba(10, 31, 92, .28);
-    transition: transform .15s, box-shadow .15s, filter .15s
+    transition: background-color .18s, border-color .18s, color .18s
 }
 
 .btn:hover {
-    transform: translateY(-2px);
-    filter: brightness(1.12)
+    filter: none
 }
 
 .btn[disabled] {
@@ -1205,35 +1204,20 @@ dialog h2 {
 .btn {
     position: relative;
     overflow: hidden;
-    will-change: transform;
-    transition: transform .35s var(--ease), box-shadow .3s, filter .2s
 }
 
 .btn::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, .35) 50%, transparent 70%);
-    transform: translateX(-120%);
-    transition: transform .6s var(--ease)
-}
-
-.btn:hover::after {
-    transform: translateX(120%)
+    display: none
 }
 
 .btn:active {
-    transform: scale(.96)
+    transform: none
 }
 
 .btn-glow {
     background: linear-gradient(135deg, var(--cyan), var(--azul));
     color: var(--night);
     box-shadow: 0 0 0 0 var(--glow), 0 10px 30px rgba(31, 111, 224, .45)
-}
-
-.btn-glow:hover {
-    box-shadow: 0 0 0 8px rgba(76, 195, 255, .18), 0 14px 40px rgba(31, 111, 224, .6)
 }
 
 .btn-row {
@@ -1771,14 +1755,15 @@ main {
     background: var(--btn);
     color: #fff;
     border: 2px solid var(--btn);
-    box-shadow: 0 8px 22px var(--glow2)
+    box-shadow: 0 8px 22px var(--glow2);
+    margin: 30px 0px
 }
 
 .btn:not(.btn-line):not(.btn-soft):hover {
     background: var(--btn-hi);
     border-color: var(--btn-hi);
     filter: none;
-    box-shadow: 0 0 0 6px rgba(61, 120, 255, .22), 0 14px 34px var(--glow2)
+    box-shadow: 0 8px 22px var(--glow2)
 }
 
 .btn.btn-line {
@@ -1808,12 +1793,11 @@ main {
 .btn svg {
     width: 18px;
     height: 18px;
-    flex: none;
-    transition: translate .3s var(--ease)
+    flex: none
 }
 
 .btn:hover svg {
-    translate: 4px 0
+    translate: 0 0
 }
 
 /* foco visível com contraste em fundo claro e escuro */
@@ -2985,4 +2969,145 @@ main {
 
 #ja-tem-conta {
     padding:5px;
+}
+
+/* Landing feature sequence: editorial columns instead of matching dark tiles. */
+body[data-page="inicio"]:not([data-protected]) .features {
+    background: #f4f4f0;
+    color: #202b34
+}
+
+body[data-page="inicio"]:not([data-protected]) .f-head {
+    align-items: end
+}
+
+body[data-page="inicio"]:not([data-protected]) .f-head p {
+    border-left-color: #9ab0a8
+}
+
+body[data-page="inicio"]:not([data-protected]) .fgrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+    border-block: 1px solid #cbd4cf
+}
+
+body[data-page="inicio"]:not([data-protected]) .fcard {
+    min-height: 340px;
+    padding: 1.35rem 1.15rem 1.1rem;
+    border: 0;
+    border-right: 1px solid #d5dcd7;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    color: #293943;
+    transition: none
+}
+
+body[data-page="inicio"]:not([data-protected]) .fcard:first-child {
+    padding-left: 0
+}
+
+body[data-page="inicio"]:not([data-protected]) .fcard:last-child {
+    padding-right: 0;
+    border-right: 0
+}
+
+body[data-page="inicio"]:not([data-protected]) .fcard::before,
+body[data-page="inicio"]:not([data-protected]) .fcard::after {
+    display: none
+}
+
+body[data-page="inicio"]:not([data-protected]) .fcard:hover {
+    transform: none;
+    border-color: #d5dcd7;
+    box-shadow: none
+}
+
+body[data-page="inicio"]:not([data-protected]) .fc-num,
+body[data-page="inicio"]:not([data-protected]) .fcard:hover .fc-num {
+    color: #8ca49b;
+    -webkit-text-stroke: 0
+}
+
+body[data-page="inicio"]:not([data-protected]) .fc-ico,
+body[data-page="inicio"]:not([data-protected]) .fcard:hover .fc-ico {
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #4f7881;
+    transform: none
+}
+
+body[data-page="inicio"]:not([data-protected]) .fcard h3 {
+    color: #203b50;
+    font-size: 1.02rem;
+    letter-spacing: -.015em
+}
+
+body[data-page="inicio"]:not([data-protected]) .fcard p {
+    color: #5e6d70;
+    font-size: .86rem
+}
+
+body[data-page="inicio"]:not([data-protected]) .fc-art {
+    padding: .8rem 0 0;
+    border: 0;
+    border-top: 1px solid #d5dcd7;
+    border-radius: 0;
+    background: transparent
+}
+
+body[data-page="inicio"]:not([data-protected]) .fcard.cta {
+    padding-left: 1.35rem;
+    border-left: 2px solid #789c94
+}
+
+body[data-page="inicio"]:not([data-protected]) #gamificacao .panel {
+    margin-block: 0;
+    border-radius: 3px;
+    box-shadow: none
+}
+
+@media (max-width: 1100px) {
+    body[data-page="inicio"]:not([data-protected]) .fgrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+    }
+
+    body[data-page="inicio"]:not([data-protected]) .fcard:nth-child(2) {
+        border-right: 0
+    }
+
+    body[data-page="inicio"]:not([data-protected]) .fcard:nth-child(n + 3) {
+        border-top: 1px solid #d5dcd7
+    }
+
+    body[data-page="inicio"]:not([data-protected]) .fcard:nth-child(3) {
+        padding-left: 0
+    }
+}
+
+@media (max-width: 640px) {
+    body[data-page="inicio"]:not([data-protected]) .fgrid {
+        grid-template-columns: minmax(0, 1fr)
+    }
+
+    body[data-page="inicio"]:not([data-protected]) .fcard,
+    body[data-page="inicio"]:not([data-protected]) .fcard:first-child,
+    body[data-page="inicio"]:not([data-protected]) .fcard:last-child,
+    body[data-page="inicio"]:not([data-protected]) .fcard.cta {
+        min-height: 0;
+        padding: 1.1rem 0;
+        border: 0;
+        border-bottom: 1px solid #d5dcd7
+    }
+
+    body[data-page="inicio"]:not([data-protected]) .fcard.cta {
+        border-bottom: 2px solid #789c94
+    }
+
+    body[data-page="inicio"]:not([data-protected]) .fcard:last-child {
+        border-bottom: 0
+    }
 }

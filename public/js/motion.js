@@ -96,11 +96,6 @@
       const art = $('.stage .hero-art'); if (art) tilt(hero, $('img', art), 14);
       /* Brilho que segue o cursor nos cards de recursos */
       $$('.fcard').forEach(c => c.addEventListener('pointermove', e => { const r = c.getBoundingClientRect(); c.style.setProperty('--mx', (e.clientX - r.left) + 'px'); c.style.setProperty('--my', (e.clientY - r.top) + 'px'); }));
-      /* Botões magnéticos */
-      $$('.btn').forEach(b => {
-        b.addEventListener('pointermove', e => { const r = b.getBoundingClientRect(); b.style.translate = ((e.clientX - r.left - r.width / 2) * .2) + 'px ' + ((e.clientY - r.top - r.height / 2) * .3) + 'px'; });
-        b.addEventListener('pointerleave', () => { b.style.translate = ''; });
-      });
     }
   });
 })();
