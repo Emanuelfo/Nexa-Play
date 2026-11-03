@@ -36,8 +36,8 @@ async function obterAmizade(usuarioId, outroId) {
   const [relacao] = await sequelize.query(`
     SELECT solicitante_id, destinatario_id, status
     FROM amizades
-    WHERE LEAST(solicitante_id, destinatario_id) = LEAST(:usuarioId, :outroId)
-      AND GREATEST(solicitante_id, destinatario_id) = GREATEST(:usuarioId, :outroId)
+    WHERE LEAST(solicitante_id, destinatario_id) = LEAST(CAST(:usuarioId AS bigint), CAST(:outroId AS bigint))
+      AND GREATEST(solicitante_id, destinatario_id) = GREATEST(CAST(:usuarioId AS bigint), CAST(:outroId AS bigint))
   `, {
     replacements: { usuarioId, outroId },
     type: QueryTypes.SELECT,
@@ -383,8 +383,8 @@ async function removerAmizade(req, res) {
         OR
         (solicitante_id = :outroId AND destinatario_id = :usuarioId AND status = 'pendente')
         OR
-        (LEAST(solicitante_id, destinatario_id) = LEAST(:usuarioId, :outroId)
-          AND GREATEST(solicitante_id, destinatario_id) = GREATEST(:usuarioId, :outroId)
+        (LEAST(solicitante_id, destinatario_id) = LEAST(CAST(:usuarioId AS bigint), CAST(:outroId AS bigint))
+          AND GREATEST(solicitante_id, destinatario_id) = GREATEST(CAST(:usuarioId AS bigint), CAST(:outroId AS bigint))
           AND status = 'aceita')
       )
       RETURNING id
@@ -460,8 +460,8 @@ async function buscarUsuarios(req, res) {
         END AS relacao
       FROM usuarios u
       LEFT JOIN amizades a
-        ON LEAST(a.solicitante_id, a.destinatario_id) = LEAST(:usuarioId, u.id)
-       AND GREATEST(a.solicitante_id, a.destinatario_id) = GREATEST(:usuarioId, u.id)
+        ON LEAST(a.solicitante_id, a.destinatario_id) = LEAST(CAST(:usuarioId AS bigint), u.id)
+       AND GREATEST(a.solicitante_id, a.destinatario_id) = GREATEST(CAST(:usuarioId AS bigint), u.id)
       WHERE u.id <> :usuarioId
         AND (
           u.nome_usuario ILIKE :termo
@@ -493,8 +493,8 @@ async function sugerirUsuarios(req, res) {
         AND NOT EXISTS (
           SELECT 1
           FROM amizades a
-          WHERE LEAST(a.solicitante_id, a.destinatario_id) = LEAST(:usuarioId, u.id)
-            AND GREATEST(a.solicitante_id, a.destinatario_id) = GREATEST(:usuarioId, u.id)
+          WHERE LEAST(a.solicitante_id, a.destinatario_id) = LEAST(CAST(:usuarioId AS bigint), u.id)
+            AND GREATEST(a.solicitante_id, a.destinatario_id) = GREATEST(CAST(:usuarioId AS bigint), u.id)
         )
       ORDER BY u.criado_em DESC, u.id DESC
       LIMIT 12
