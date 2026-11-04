@@ -110,3 +110,10 @@ html[data-social-theme][data-theme="dark"] .theme-toggle [data-theme-icon="sun"]
     transition: background-color .18s ease, color .18s ease, border-color .18s ease;
   }
 }
+
+@media (max-width: 699px) {
+  html[data-social-theme] .theme-toggle {
+    width: 40px;
+    height: 40px;
+  }
+}
