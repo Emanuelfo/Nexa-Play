@@ -26,8 +26,9 @@
         <textarea id="feed-post-text" name="texto" maxlength="2000" rows="1" placeholder="O que você está criando?" required></textarea>
       </div>
       <div class="composer-foot">
-        <span class="composer-count" id="feed-post-count" aria-live="off">0/2000</span>
-        <button class="btn" type="submit">Publicar</button>
+        <span class="composer-hint">Ctrl + Enter para publicar</span>
+        <span class="composer-count" id="feed-post-count" aria-live="off" hidden>0/2000</span>
+        <button class="btn" type="submit" disabled>Publicar</button>
       </div>
       <p id="feed-post-status" class="feed-status" role="status" aria-live="polite"></p>
     </form>

@@ -53,6 +53,112 @@ function formatRelative(value) {
   return new Intl.DateTimeFormat('pt-BR', sameYear ? { day: 'numeric', month: 'short' } : { day: 'numeric', month: 'short', year: 'numeric' }).format(date).replace('.', '');
 }
 
+
+/* ---------- Auxiliares da rede social ---------- */
+function autosizeField(field, max = 260) {
+  field.style.height = 'auto';
+  const border = field.offsetHeight - field.clientHeight;
+  field.style.height = `${Math.min(field.scrollHeight + border, max)}px`;
+}
+
+function setFriendsBadge(total) {
+  $$('[data-friends-badge]').forEach(badge => {
+    badge.hidden = !total;
+    badge.textContent = total > 9 ? '9+' : String(total);
+    badge.closest('a')?.setAttribute('aria-label', total
+      ? `Pessoas, ${total} ${total === 1 ? 'solicitação pendente' : 'solicitações pendentes'}`
+      : 'Pessoas');
+  });
+}
+
+/* Busca do topo: sugere pessoas enquanto digita; Enter sem seleção abre a página Pessoas. */
+function initSearchSuggest(form, root) {
+  const input = $('input', form);
+  const box = $('.nq-suggest', form);
+  if (!input || !box) return;
+  let timer = null;
+  let sequence = 0;
+  let active = -1;
+  const rows = () => [...box.querySelectorAll('[role="option"]')];
+  const close = () => {
+    box.hidden = true;
+    input.setAttribute('aria-expanded', 'false');
+    input.removeAttribute('aria-activedescendant');
+    active = -1;
+  };
+  const highlight = index => {
+    const list = rows();
+    active = index;
+    list.forEach((row, i) => {
+      row.classList.toggle('is-active', i === index);
+      row.setAttribute('aria-selected', String(i === index));
+    });
+    if (index >= 0) input.setAttribute('aria-activedescendant', list[index].id);
+    else input.removeAttribute('aria-activedescendant');
+  };
+  const show = (users, term) => {
+    box.replaceChildren();
+    users.slice(0, 5).forEach((person, index) => {
+      const row = document.createElement('a');
+      row.id = `nq-suggest-${index}`;
+      row.className = 'nq-suggest-item';
+      row.setAttribute('role', 'option');
+      row.setAttribute('aria-selected', 'false');
+      row.href = profileHref(person);
+      const text = document.createElement('span');
+      text.className = 'nq-suggest-text';
+      const name = document.createElement('strong');
+      name.textContent = person.nome_exibicao || person.nome_usuario;
+      const handle = document.createElement('small');
+      handle.textContent = `@${person.nome_usuario}`;
+      text.append(name, handle);
+      row.append(avatarEl(person, 32), text);
+      box.append(row);
+    });
+    if (users.length) {
+      const all = document.createElement('a');
+      all.id = 'nq-suggest-all';
+      all.className = 'nq-suggest-all';
+      all.setAttribute('role', 'option');
+      all.setAttribute('aria-selected', 'false');
+      all.href = `${root}paginas/amigos.html?q=${encodeURIComponent(term)}`;
+      all.textContent = `Ver todos os resultados`;
+      box.append(all);
+    } else {
+      const empty = document.createElement('p');
+      empty.className = 'nq-suggest-empty';
+      empty.textContent = 'Nenhuma pessoa encontrada.';
+      box.append(empty);
+    }
+    box.hidden = false;
+    input.setAttribute('aria-expanded', 'true');
+    active = -1;
+  };
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    const term = input.value.trim().replace(/^@/, '');
+    if (term.length < 2) { sequence += 1; close(); return; }
+    timer = setTimeout(async () => {
+      const current = ++sequence;
+      const response = await NP.api(`/usuarios/buscar?q=${encodeURIComponent(term)}`);
+      if (current !== sequence || document.activeElement !== input) return;
+      if (!response.ok || !Array.isArray(response.data.usuarios)) { close(); return; }
+      show(response.data.usuarios, term);
+    }, 250);
+  });
+  input.addEventListener('keydown', event => {
+    const list = rows();
+    if (event.key === 'Escape' && !box.hidden) { event.preventDefault(); close(); return; }
+    if (box.hidden || !list.length) return;
+    if (event.key === 'ArrowDown') { event.preventDefault(); highlight((active + 1) % list.length); }
+    else if (event.key === 'ArrowUp') { event.preventDefault(); highlight((active - 1 + list.length) % list.length); }
+    else if (event.key === 'Enter' && active >= 0) { event.preventDefault(); location.href = list[active].href; }
+  });
+  document.addEventListener('click', event => {
+    if (!(event.target instanceof Element) || !event.target.closest('.nq-search')) close();
+  });
+}
+
 let ownProfilePromise = null;
 let publicProfilePromise = null;
 function loadOwnProfileResponse(retry = false) {
@@ -127,6 +233,7 @@ async function railRelationAction(person, button) {
     return;
   }
   button.textContent = 'Enviada';
+  NP.toast('Solicitação enviada.');
 }
 
 function renderRailSuggestions(box) {
@@ -163,12 +270,12 @@ function renderSocialShell(host, user) {
     { key: 'inicio', label: 'Início', href: `${root}paginas/inicio.html`, path: NQ_ICON.home },
     { key: 'projetos-explorar', label: 'Explorar', href: `${root}paginas/explorar-projetos.html`, path: NQ_ICON.explore },
     { key: 'amigos', label: 'Pessoas', href: `${root}paginas/amigos.html`, path: NQ_ICON.people },
-    { key: 'meus-projetos', label: 'Projetos', href: `${root}paginas/meus-projetos.html`, path: NQ_ICON.projects },
+    { key: 'meus-projetos', label: 'Meus projetos', href: `${root}paginas/meus-projetos.html`, path: NQ_ICON.projects },
     { key: 'perfil', label: 'Perfil', href: profile, path: NQ_ICON.user },
   ];
   const activeMap = { 'perfil-publico': null, 'estatisticas-jogo': 'perfil', 'projeto-detalhe': 'projetos-explorar', 'projeto-criar': 'meus-projetos' };
   const activeKey = page in activeMap ? activeMap[page] : page;
-  const link = (item, extra = '') => `<a href="${item.href}" title="${item.label}"${activeKey === item.key ? ' aria-current="page"' : ''}${extra}>${nqSvg(item.path)}<span>${item.label}</span></a>`;
+  const link = (item, extra = '') => `<a href="${item.href}" title="${item.label}"${activeKey === item.key ? ' aria-current="page"' : ''}${extra}>${nqSvg(item.path)}<span>${item.label}</span>${item.key === 'amigos' ? '<b class="nq-badge" data-friends-badge hidden aria-hidden="true"></b>' : ''}</a>`;
   const publishHref = `${root}paginas/inicio.html?novo=1`;
   const initial = user.nome_usuario.charAt(0).toUpperCase();
 
@@ -178,7 +285,8 @@ function renderSocialShell(host, user) {
     <form class="nq-search" role="search" action="${root}paginas/amigos.html">
       ${nqSvg(NQ_ICON.search)}
       <label class="sr-only" for="nq-search-input">Buscar pessoas</label>
-      <input id="nq-search-input" name="q" type="search" minlength="2" maxlength="100" placeholder="Buscar pessoas" autocomplete="off">
+      <input id="nq-search-input" name="q" type="search" minlength="2" maxlength="100" placeholder="Buscar pessoas" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="nq-suggest">
+      <div class="nq-suggest" id="nq-suggest" role="listbox" aria-label="Pessoas encontradas" hidden></div>
     </form>
     <div class="nq-top-actions">
       <button class="theme-toggle" data-theme-toggle type="button" aria-label="Alternar entre modo claro e escuro" title="Ativar modo escuro" aria-pressed="false">
@@ -198,6 +306,7 @@ function renderSocialShell(host, user) {
       </div>
     </div>
   </div>`;
+  initSearchSuggest($('.nq-search', host), root);
   document.dispatchEvent(new Event('np:social-theme-controls-ready'));
   const accountButton = $('#user-btn');
   const accountMenu = $('#user-menu');
@@ -266,6 +375,20 @@ function renderSocialShell(host, user) {
     renderRailSuggestions($('[data-rail-people]', side).closest('.nq-box'));
   }
   document.body.append(tabbar);
+
+  // Aviso de solicitações de amizade pendentes na navegação.
+  NP.api('/me/amizades').then(response => {
+    if (response.ok && Array.isArray(response.data.recebidas)) setFriendsBadge(response.data.recebidas.length);
+  });
+
+  // Tocar no item da página atual leva ao topo em vez de recarregar.
+  $$('.nq-nav a[aria-current="page"], .nq-tabbar a[aria-current="page"]').forEach(anchor => {
+    if (anchor.hasAttribute('data-publish') || new URL(anchor.href).pathname !== location.pathname) return;
+    anchor.addEventListener('click', event => {
+      event.preventDefault();
+      window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    });
+  });
 
   // Publicar: na própria página do feed, apenas leva o foco ao campo de texto.
   $$('[data-publish]').forEach(anchor => anchor.addEventListener('click', event => {
@@ -527,36 +650,72 @@ function renderFeedComment(comment) {
   return item;
 }
 
+const FEED_ICON = {
+  like: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8z"/>',
+  comment: '<path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z"/>',
+  share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.7 6.8-4.4m-6.8 7 6.8 4.3"/>',
+};
+
+function feedActionButton(iconPath, count) {
+  const button = document.createElement('button');
+  button.className = 'feed-action';
+  button.type = 'button';
+  button.innerHTML = nqSvg(iconPath);
+  if (count !== null) {
+    const number = document.createElement('span');
+    number.className = 'feed-action-count';
+    number.textContent = count > 0 ? String(count) : '';
+    button.append(number);
+  }
+  return button;
+}
+
 function renderFeedPost(post) {
   const item = document.createElement('article');
   item.className = 'feed-post';
   item.id = `publicacao-${post.id}`;
   item.dataset.postId = post.id;
 
-  const heading = document.createElement('header');
-  heading.className = 'feed-post-header';
   const avatarLink = document.createElement('a');
   avatarLink.className = 'feed-avatar';
   avatarLink.href = profileHref(post.autor);
   avatarLink.setAttribute('aria-label', `Ver perfil de ${post.autor.nome_usuario || 'usuário'}`);
   avatarLink.append(avatarEl(post.autor, 40));
-  const authorMeta = document.createElement('div');
-  authorMeta.className = 'feed-post-author-meta';
-  authorMeta.append(makeProfileAnchor(post.autor, 'feed-post-author'));
-  const sub = document.createElement('div');
-  sub.className = 'feed-post-sub';
+
+  const main = document.createElement('div');
+  main.className = 'feed-post-main';
+
+  const heading = document.createElement('header');
+  heading.className = 'feed-post-header';
+  const handle = document.createElement('span');
+  handle.className = 'feed-post-handle';
+  handle.textContent = `@${post.autor.nome_usuario || 'usuario'}`;
   const date = document.createElement('time');
+  date.className = 'feed-post-time';
   date.dateTime = post.criado_em || '';
   date.title = formatSocialDate(post.criado_em);
   date.textContent = formatRelative(post.criado_em);
-  sub.append(`@${post.autor.nome_usuario || 'usuario'} · `, date);
-  authorMeta.append(sub);
-  heading.append(avatarLink, authorMeta);
+  heading.append(makeProfileAnchor(post.autor, 'feed-post-author'), handle, date);
 
+  const body = post.texto || '';
   const text = document.createElement('p');
   text.className = 'feed-post-text';
-  text.textContent = post.texto || '';
-  item.append(heading, text);
+  text.textContent = body;
+  main.append(heading, text);
+  if (body.length > 420 || (body.match(/\n/g) || []).length > 6) {
+    text.classList.add('is-clamped');
+    const expand = document.createElement('button');
+    expand.type = 'button';
+    expand.className = 'feed-more';
+    expand.textContent = 'Ver mais';
+    expand.setAttribute('aria-expanded', 'false');
+    expand.addEventListener('click', () => {
+      const collapsed = text.classList.toggle('is-clamped');
+      expand.textContent = collapsed ? 'Ver mais' : 'Ver menos';
+      expand.setAttribute('aria-expanded', String(!collapsed));
+    });
+    main.append(expand);
+  }
 
   if (post.conquista && post.conquista.titulo) {
     const achievement = document.createElement('div');
@@ -572,9 +731,9 @@ function renderFeedPost(post) {
     kind.textContent = 'Conquista desbloqueada';
     info.append(name, kind);
     achievement.append(badge, info);
-    item.append(achievement);
+    main.append(achievement);
   }
-  addSafeImage(item, post.imagem_url, post.imagem_alt);
+  addSafeImage(main, post.imagem_url, post.imagem_alt);
   if (post.projeto && typeof post.projeto.titulo === 'string' && typeof post.projeto.url === 'string') {
     let projectUrl;
     try {
@@ -601,139 +760,36 @@ function renderFeedPost(post) {
         projectLink.target = '_blank';
         projectLink.rel = 'noopener noreferrer';
       }
-      item.append(projectLink);
+      main.append(projectLink);
     }
   }
 
   const actions = document.createElement('div');
   actions.className = 'feed-post-actions';
-  const like = document.createElement('button');
-  like.className = 'feed-action';
-  like.type = 'button';
+  let likeCount = Number(post.curtidas) || 0;
+  let commentTotal = Number(post.quantidade_comentarios) || 0;
+  const like = feedActionButton(FEED_ICON.like, likeCount);
   like.dataset.feedLike = '';
-  like.setAttribute('aria-pressed', String(Boolean(post.curtida_pelo_usuario)));
-  like.setAttribute('aria-label', post.curtida_pelo_usuario ? 'Remover curtida' : 'Curtir publicação');
-  like.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8z"/></svg>';
-  like.append(document.createTextNode(` ${Number(post.curtidas) || 0}`));
-  const commentsButton = document.createElement('button');
-  commentsButton.className = 'feed-action';
-  commentsButton.type = 'button';
+  const likeNumber = like.querySelector('.feed-action-count');
+  const paintLike = liked => {
+    like.setAttribute('aria-pressed', String(liked));
+    like.setAttribute('aria-label', `${liked ? 'Remover curtida' : 'Curtir publicação'} (${likeCount})`);
+    likeNumber.textContent = likeCount > 0 ? String(likeCount) : '';
+  };
+  paintLike(Boolean(post.curtida_pelo_usuario));
+  const commentsButton = feedActionButton(FEED_ICON.comment, commentTotal);
   commentsButton.dataset.feedCommentsToggle = '';
   commentsButton.setAttribute('aria-expanded', 'false');
-  commentsButton.setAttribute('aria-label', `${Number(post.quantidade_comentarios) || 0} comentários`);
-  commentsButton.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z"/></svg>';
-  commentsButton.append(document.createTextNode(` ${Number(post.quantidade_comentarios) || 0}`));
-  const share = document.createElement('button');
-  share.className = 'feed-action';
-  share.type = 'button';
+  const commentsNumber = commentsButton.querySelector('.feed-action-count');
+  const paintComments = () => {
+    commentsNumber.textContent = commentTotal > 0 ? String(commentTotal) : '';
+    commentsButton.setAttribute('aria-label', `Comentários (${commentTotal})`);
+  };
+  paintComments();
+  const share = feedActionButton(FEED_ICON.share, null);
   share.dataset.feedShare = '';
   share.setAttribute('aria-label', 'Compartilhar publicação');
-  share.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.7 6.8-4.4m-6.8 7 6.8 4.3"/></svg><span class="sr-only">Compartilhar</span>';
   actions.append(like, commentsButton, share);
-  const currentUser = NP.currentUser();
-  if (currentUser && String(currentUser.id) === String(post.autor.id)) {
-    const editDeadline = new Date(post.criado_em).getTime() + 30 * 60 * 1000;
-    if (Number.isFinite(editDeadline) && Date.now() < editDeadline) {
-      const editButton = document.createElement('button');
-      editButton.className = 'feed-action';
-      editButton.type = 'button';
-      editButton.dataset.feedEdit = '';
-      editButton.setAttribute('aria-label', 'Editar publicação');
-      editButton.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg><span>Editar</span>';
-      editButton.addEventListener('click', () => {
-        const form = document.createElement('form');
-        form.className = 'feed-edit-form';
-        const input = document.createElement('textarea');
-        input.name = 'texto';
-        input.maxLength = 2000;
-        input.rows = 4;
-        input.value = post.texto || '';
-        input.setAttribute('aria-label', 'Editar texto da publicação');
-        input.required = true;
-        const controls = document.createElement('div');
-        controls.className = 'feed-edit-controls';
-        const status = document.createElement('p');
-        status.className = 'feed-status';
-        status.setAttribute('role', 'status');
-        status.setAttribute('aria-live', 'polite');
-        const save = document.createElement('button');
-        save.className = 'btn btn-sm';
-        save.type = 'submit';
-        save.textContent = 'Salvar';
-        const cancel = document.createElement('button');
-        cancel.className = 'btn-soft btn-sm';
-        cancel.type = 'button';
-        cancel.textContent = 'Cancelar';
-        cancel.addEventListener('click', () => {
-          form.remove();
-          text.hidden = false;
-          editButton.hidden = false;
-          like.disabled = false;
-          commentsButton.disabled = false;
-          share.disabled = false;
-        });
-        controls.append(save, cancel);
-        form.append(input, controls, status);
-        text.hidden = true;
-        editButton.hidden = true;
-        like.disabled = true;
-        commentsButton.disabled = true;
-        share.disabled = true;
-        item.insertBefore(form, actions);
-        input.focus();
-        form.addEventListener('submit', async event => {
-          event.preventDefault();
-          const texto = input.value.trim();
-          if (!texto) {
-            status.textContent = 'A publicação não pode ficar vazia.';
-            return;
-          }
-          save.disabled = true;
-          cancel.disabled = true;
-          const response = await NP.api(`/publicacoes/${encodeURIComponent(post.id)}`, {
-            method: 'PUT',
-            body: { texto },
-          });
-          save.disabled = false;
-          cancel.disabled = false;
-          if (!response.ok || !response.data.publicacao) {
-            status.textContent = response.data.mensagem || 'Não foi possível editar a publicação.';
-            return;
-          }
-          post.texto = response.data.publicacao.texto;
-          text.textContent = post.texto;
-          form.remove();
-          text.hidden = false;
-          editButton.hidden = false;
-          like.disabled = false;
-          commentsButton.disabled = false;
-          share.disabled = false;
-          NP.toast('Publicação atualizada.');
-        });
-      });
-      actions.append(editButton);
-    }
-
-    const deleteButton = document.createElement('button');
-    deleteButton.className = 'feed-action';
-    deleteButton.type = 'button';
-    deleteButton.dataset.feedDelete = '';
-    deleteButton.setAttribute('aria-label', 'Apagar publicação');
-    deleteButton.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v6m6-6v6"/></svg><span>Apagar</span>';
-    deleteButton.addEventListener('click', async () => {
-      if (!window.confirm('Deseja apagar esta publicação? Esta ação não pode ser desfeita.')) return;
-      deleteButton.disabled = true;
-      const response = await NP.api(`/publicacoes/${encodeURIComponent(post.id)}`, { method: 'DELETE' });
-      deleteButton.disabled = false;
-      if (!response.ok) {
-        NP.toast(response.data.mensagem || 'Não foi possível apagar a publicação.');
-        return;
-      }
-      item.remove();
-      NP.toast('Publicação apagada.');
-    });
-    actions.append(deleteButton);
-  }
 
   const comments = document.createElement('section');
   comments.className = 'feed-comments';
@@ -759,16 +815,27 @@ function renderFeedPost(post) {
   commentInput.name = 'texto';
   commentInput.maxLength = 1000;
   commentInput.rows = 1;
-  commentInput.placeholder = 'Adicione um comentário…';
+  commentInput.placeholder = 'Escreva um comentário…';
   commentInput.setAttribute('aria-label', 'Escreva um comentário');
   commentInput.required = true;
   const commentSubmit = document.createElement('button');
   commentSubmit.className = 'btn btn-sm';
   commentSubmit.type = 'submit';
+  commentSubmit.disabled = true;
   commentSubmit.textContent = 'Comentar';
-  commentForm.append(commentInput, commentSubmit);
+  const formAvatar = avatarEl(NP.currentUser() || {}, 32);
+  commentForm.append(formAvatar, commentInput, commentSubmit);
   comments.append(commentList, commentMore, commentStatus, commentForm);
-  item.append(actions, comments);
+  main.append(actions, comments);
+  item.append(avatarLink, main);
+
+  commentInput.addEventListener('input', () => {
+    commentSubmit.disabled = !commentInput.value.trim();
+    autosizeField(commentInput, 160);
+  });
+  commentInput.addEventListener('keydown', event => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') commentForm.requestSubmit();
+  });
 
   let commentsCursor = null;
   let commentsLoaded = false;
@@ -796,54 +863,70 @@ function renderFeedPost(post) {
       ? ''
       : 'Nenhum comentário ainda. Comece a conversa.';
   };
+  let ownAvatarLoaded = false;
   commentsButton.addEventListener('click', async () => {
     const open = comments.hidden;
     comments.hidden = !open;
     commentsButton.setAttribute('aria-expanded', String(open));
+    if (open) commentInput.focus({ preventScroll: true });
+    if (open && !ownAvatarLoaded) {
+      ownAvatarLoaded = true;
+      loadOwnProfile().then(own => { if (own) formAvatar.replaceWith(avatarEl(own, 32)); });
+    }
     if (open && !commentsLoaded) await loadComments(true);
-    if (open) commentInput.focus();
   });
   commentMore.addEventListener('click', () => loadComments());
   commentForm.addEventListener('submit', async event => {
     event.preventDefault();
     const texto = commentInput.value.trim();
-    if (!texto) return;
+    if (!texto || commentForm.dataset.busy) return;
+    commentForm.dataset.busy = '1';
     commentSubmit.disabled = true;
+    commentSubmit.textContent = 'Enviando…';
     const response = await NP.api(`/publicacoes/${encodeURIComponent(post.id)}/comentarios`, {
       method: 'POST',
       body: { texto },
     });
-    commentSubmit.disabled = false;
+    delete commentForm.dataset.busy;
+    commentSubmit.textContent = 'Comentar';
     if (!response.ok || !response.data.comentario) {
+      commentSubmit.disabled = false;
       commentStatus.textContent = response.data.mensagem || 'Não foi possível publicar o comentário.';
       return;
     }
     commentInput.value = '';
+    commentInput.style.height = '';
     commentStatus.textContent = '';
-    if (!comments.hidden) {
-      if (!commentsLoaded) await loadComments(true);
-      else commentList.prepend(renderFeedComment(response.data.comentario));
-    }
-    const total = Number(commentsButton.dataset.count || post.quantidade_comentarios || 0) + 1;
-    commentsButton.dataset.count = String(total);
-    commentsButton.lastChild.textContent = ` ${total}`;
-    commentsButton.setAttribute('aria-label', `${total} comentários`);
+    if (!commentsLoaded) await loadComments(true);
+    else commentList.prepend(renderFeedComment(response.data.comentario));
+    commentTotal += 1;
+    paintComments();
   });
 
+  let likeBusy = false;
   like.addEventListener('click', async () => {
-    like.disabled = true;
-    const liked = like.getAttribute('aria-pressed') === 'true';
+    if (likeBusy) return;
+    likeBusy = true;
+    const wasLiked = like.getAttribute('aria-pressed') === 'true';
+    const previous = likeCount;
+    likeCount = Math.max(0, previous + (wasLiked ? -1 : 1));
+    paintLike(!wasLiked); // atualização imediata; volta ao estado anterior se a API falhar
+    if (!wasLiked) {
+      like.classList.add('is-pop');
+      like.addEventListener('animationend', () => like.classList.remove('is-pop'), { once: true });
+    }
     const response = await NP.api(`/publicacoes/${encodeURIComponent(post.id)}/curtida`, {
-      method: liked ? 'DELETE' : 'PUT',
+      method: wasLiked ? 'DELETE' : 'PUT',
     });
-    like.disabled = false;
+    likeBusy = false;
     if (!response.ok || typeof response.data.curtida !== 'boolean') {
+      likeCount = previous;
+      paintLike(wasLiked);
       NP.toast(response.data.mensagem || 'Não foi possível atualizar a curtida.');
       return;
     }
-    like.setAttribute('aria-pressed', String(response.data.curtida));
-    like.setAttribute('aria-label', response.data.curtida ? 'Remover curtida' : 'Curtir publicação');
-    like.lastChild.textContent = ` ${Number(response.data.curtidas) || 0}`;
+    likeCount = Number(response.data.curtidas) || 0;
+    paintLike(response.data.curtida);
   });
   share.addEventListener('click', async () => {
     const url = new URL(`${NP.root()}paginas/inicio.html`, location.href);
@@ -983,8 +1066,16 @@ function initFeed() {
       const message = document.createElement('p');
       message.textContent = userId
         ? 'As publicações desta pessoa aparecerão aqui.'
-        : 'Publique a primeira ideia da comunidade ou siga alguém em Pessoas.';
+        : 'Publique a primeira ideia da comunidade ou adicione amigos em Pessoas.';
       empty.append(title, message);
+      if (!userId && input) {
+        const write = document.createElement('button');
+        write.type = 'button';
+        write.className = 'btn-soft btn-sm';
+        write.textContent = 'Escrever publicação';
+        write.addEventListener('click', () => input.focus());
+        empty.append(write);
+      }
       list.append(empty);
     } else if (!reset && response.data.publicacoes.length === 0) {
       more.hidden = true;
@@ -992,54 +1083,80 @@ function initFeed() {
   };
 
   more.addEventListener('click', () => loadPage());
+  if ('IntersectionObserver' in window) {
+    // Carrega a próxima página ao chegar perto do fim; o botão continua como alternativa.
+    new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting) && !more.hidden && !loading && more.textContent === 'Carregar mais publicações') loadPage();
+    }, { rootMargin: '480px 0px' }).observe(more);
+  }
   if (form) {
     const count = $('#feed-post-count');
+    const submit = $('button[type="submit"]', form);
     const open = () => form.classList.add('is-open');
     const refresh = () => {
+      const length = input.value.length;
       if (count) {
-        count.textContent = `${input.value.length}/2000`;
-        count.classList.toggle('is-near', input.value.length > 1800);
+        count.textContent = `${length}/2000`;
+        count.hidden = length < 1500;
+        count.classList.toggle('is-near', length > 1800);
       }
+      submit.disabled = !input.value.trim() || Boolean(submit.dataset.busy);
+      autosizeField(input);
     };
     input.addEventListener('focus', open);
     input.addEventListener('input', () => { open(); refresh(); });
     input.addEventListener('keydown', event => {
       if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') form.requestSubmit();
+      if (event.key === 'Escape' && !input.value.trim()) input.blur();
     });
+    form.addEventListener('focusout', event => {
+      if (!input.value.trim() && !form.contains(event.relatedTarget)) form.classList.remove('is-open');
+    });
+    refresh();
     if (new URLSearchParams(location.search).get('novo') === '1') setTimeout(() => input.focus(), 150);
     form.addEventListener('submit', async event => {
       event.preventDefault();
       const texto = input.value.trim();
-      if (!texto) {
-        NP.status(formStatus, 'Escreva algo antes de publicar.', false);
-        return;
-      }
-      const button = $('button[type="submit"]', form);
-      button.disabled = true;
-      NP.status(formStatus, 'Publicando…', true);
+      if (!texto || submit.dataset.busy) return;
+      submit.dataset.busy = '1';
+      submit.disabled = true;
+      submit.textContent = 'Publicando…';
+      NP.status(formStatus, '', true);
       const response = await NP.api('/publicacoes', { method: 'POST', body: { texto } });
-      button.disabled = false;
+      delete submit.dataset.busy;
+      submit.textContent = 'Publicar';
       if (!response.ok || !response.data.publicacao) {
-        NP.status(formStatus, response.data.mensagem || 'Não foi possível publicar.', false);
+        submit.disabled = false;
+        NP.status(formStatus, response.data.mensagem || 'Não foi possível publicar. Seu texto foi mantido.', false);
         return;
       }
       input.value = '';
+      input.style.height = '';
       form.classList.remove('is-open');
       input.blur();
-      if (count) count.textContent = '0/2000';
-      NP.status(formStatus, 'Publicado.', true);
-      const empty = list.querySelector('.feed-empty');
-      if (empty) empty.remove();
-      list.prepend(renderFeedPost(response.data.publicacao));
-      setTimeout(() => { if (formStatus) formStatus.textContent = ''; }, 3500);
+      refresh();
+      NP.toast('Publicado.');
+      list.querySelector('.feed-empty')?.remove();
+      const fresh = renderFeedPost(response.data.publicacao);
+      fresh.classList.add('is-new');
+      list.prepend(fresh);
     });
   }
   loadPage(true);
 }
 
-function setProfileStat(container, label, value, detail) {
-  const stat = document.createElement('div');
-  stat.className = 'player-stat';
+function setProfileStat(container, label, value, detail, action) {
+  const stat = document.createElement(action ? (action.href ? 'a' : 'button') : 'div');
+  stat.className = action ? 'player-stat is-link' : 'player-stat';
+  if (action?.href) stat.href = action.href;
+  if (action && !action.href) {
+    stat.type = 'button';
+    stat.addEventListener('click', () => {
+      if (document.getElementById(action.tab)?.hidden) return;
+      profileTabs?.select(action.tab);
+      $('#profile-tabs')?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    });
+  }
   const name = document.createElement('span');
   name.textContent = label;
   const total = document.createElement('strong');
@@ -1258,9 +1375,9 @@ function renderProfileData(profile, ownProfile) {
   stats.replaceChildren();
   const values = profile.estatisticas;
   if (values) {
-    if (values.amigos !== null) setProfileStat(stats, 'amigos', Number(values.amigos).toLocaleString('pt-BR'));
-    if (values.conquistas !== null) setProfileStat(stats, 'conquistas', Number(values.conquistas).toLocaleString('pt-BR'));
-    if (values.pontos !== null) setProfileStat(stats, 'pontos', Number(values.pontos).toLocaleString('pt-BR'));
+    if (values.amigos !== null) setProfileStat(stats, 'amigos', Number(values.amigos).toLocaleString('pt-BR'), null, ownProfile ? { href: `${NP.root()}paginas/amigos.html` } : null);
+    if (values.conquistas !== null) setProfileStat(stats, 'conquistas', Number(values.conquistas).toLocaleString('pt-BR'), null, { tab: 'conquistas' });
+    if (values.pontos !== null) setProfileStat(stats, 'pontos', Number(values.pontos).toLocaleString('pt-BR'), null, { tab: 'jornada' });
   }
   stats.hidden = !stats.childElementCount;
 
@@ -1876,33 +1993,28 @@ function carregarProjetosPerfil(profile, retry = false) {
 function projectCard(project, myProject = false) {
   const card = document.createElement('article');
   card.className = 'project-card';
-  const cover = document.createElement('a');
-  cover.className = 'project-card-cover';
-  cover.href = projectLink(project);
   const imageUrl = safeHttpsUrl(project.imagem_url);
   if (imageUrl) {
+    const cover = document.createElement('a');
+    cover.className = 'project-card-cover';
+    cover.href = projectLink(project);
+    cover.tabIndex = -1;
+    cover.setAttribute('aria-hidden', 'true');
     const image = document.createElement('img');
     image.src = imageUrl;
     image.alt = '';
     image.loading = 'lazy';
-    image.onerror = () => {
-      const placeholder = document.createElement('span');
-      placeholder.className = 'project-placeholder';
-      placeholder.textContent = project.categoria || 'PROJETO NEXA QUEST';
-      cover.replaceChildren(placeholder);
-    };
+    image.onerror = () => { cover.remove(); card.classList.add('is-textual'); };
     cover.append(image);
+    card.append(cover);
   } else {
-    const placeholder = document.createElement('span');
-    placeholder.className = 'project-placeholder';
-    placeholder.textContent = project.categoria || 'PROJETO NEXA QUEST';
-    cover.append(placeholder);
+    card.classList.add('is-textual');
   }
   const body = document.createElement('div');
   body.className = 'project-card-body';
   const tags = document.createElement('div');
   tags.className = 'project-card-tags';
-  [project.categoria, project.visibilidade === 'privado' ? 'Privado' : 'Público', project.tipo === 'equipe' ? 'Equipe' : 'Individual']
+  [project.categoria, project.visibilidade === 'privado' ? 'Privado' : null, project.tipo === 'equipe' ? 'Equipe' : 'Individual']
     .filter(Boolean)
     .forEach(label => {
       const badge = document.createElement('span');
@@ -1920,21 +2032,14 @@ function projectCard(project, myProject = false) {
   const owner = document.createElement('div');
   owner.className = 'project-card-owner';
   const ownerLink = makeProfileAnchor(project.proprietario || {}, 'project-owner-link');
-  if (project.proprietario?.avatar_url && safeHttpsUrl(project.proprietario.avatar_url)) {
-    const avatar = document.createElement('img');
-    avatar.src = safeHttpsUrl(project.proprietario.avatar_url);
-    avatar.alt = '';
-    avatar.loading = 'lazy';
-    avatar.onerror = () => avatar.remove();
-    ownerLink.prepend(avatar);
-  }
+  ownerLink.prepend(avatarEl(project.proprietario || {}, 22));
   owner.append(ownerLink);
   const meta = document.createElement('span');
   const members = Number(project.total_participantes) || 0;
   meta.textContent = `${members} ${members === 1 ? 'integrante' : 'integrantes'}`;
   owner.append(meta);
   body.append(tags, title, description, owner);
-  card.append(cover, body);
+  card.append(body);
 
   if (myProject) {
     const participation = project.participacao;
@@ -2124,16 +2229,16 @@ async function executarAcaoAmizade(user, action) {
   const response = await NP.api(`/usuarios/${encodeURIComponent(user.id)}/amizade`, { method });
   friendActionInProgress = false;
   if (!response.ok) {
-    NP.status(status, response.data.mensagem || 'Não foi possível atualizar esta amizade.', false);
+    NP.toast(response.data.mensagem || 'Não foi possível atualizar esta amizade.');
     return;
   }
-  NP.status(status, {
+  NP.toast({
     enviar: 'Solicitação enviada.',
     aceitar: 'Solicitação aceita. Vocês agora são amigos.',
     recusar: 'Solicitação recusada.',
     cancelar: 'Solicitação cancelada.',
     remover: 'Amizade removida.',
-  }[action], true);
+  }[action]);
   await Promise.all([carregarPainelAmizades(), carregarSugestoesAmizade()]);
   if (friendSearchHasResults) await pesquisarAmigos($('#friends-search-input').value);
 }
@@ -2170,6 +2275,7 @@ async function carregarPainelAmizades() {
   $('#friend-requests-received-count').textContent = String(received.length);
   $('#friend-requests-sent-count').textContent = String(sent.length);
   $('#friend-requests-received-count').classList.toggle('is-alert', received.length > 0);
+  setFriendsBadge(received.length);
   if (!friendsTabsOpened) {
     friendsTabsOpened = true;
     if (received.length > 0 && !new URLSearchParams(location.search).get('q')) friendsTabs?.select('friend-requests-received');
@@ -2412,6 +2518,11 @@ function renderProjectDetails(project) {
   owner.textContent = project.proprietario?.nome_exibicao || `@${project.proprietario?.nome_usuario || 'jogador'}`;
   const image = $('[data-project-image]');
   setProfileImage(image, project.imagem_url);
+  const detailCover = $('[data-project-cover]');
+  if (detailCover) {
+    detailCover.hidden = !safeHttpsUrl(project.imagem_url);
+    image.addEventListener('error', () => { detailCover.hidden = true; }, { once: true });
+  }
   $('[data-project-external]').hidden = !safeHttpsUrl(project.link_externo);
   if (safeHttpsUrl(project.link_externo)) $('[data-project-external]').href = safeHttpsUrl(project.link_externo);
 
