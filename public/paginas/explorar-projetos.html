@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-social-theme data-theme="light">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <script src="../js/theme.js"></script>
+  <title>Explorar | Nexa Quest</title>
+  <meta name="description" content="Descubra projetos públicos da comunidade Nexa Quest.">
+  <link rel="icon" href="../assets/icones/favicon.svg">
+  <link rel="stylesheet" href="../css/social.css">
+  <link rel="stylesheet" href="../css/theme.css">
+  <script src="../js/functions.js" defer></script>
+  <script src="../js/main.js" defer></script>
+</head>
+
+<body data-page="projetos-explorar" data-root="../" data-protected="1">
+  <a class="sr-only" href="#conteudo">Ir para o conteúdo</a>
+  <header data-component="header"></header>
+  <main id="conteudo">
+    <div class="nq-pagehead">
+      <h1>Explorar projetos</h1>
+      <div class="nq-pagehead-actions"><a class="btn" href="criar-projeto.html">Criar projeto</a></div>
+    </div>
+    <form id="project-search-form" class="projects-filters" role="search">
+      <label class="sr-only" for="project-search">Buscar projetos</label>
+      <input id="project-search" name="q" type="search" maxlength="100" placeholder="Buscar por título ou descrição">
+      <input id="project-category" name="categoria" type="hidden" value="">
+      <button class="btn-soft btn" type="submit">Buscar</button>
+    </form>
+    <div class="chips" role="group" aria-label="Filtrar por categoria" id="project-chips"><button class="chip"
+        type="button" aria-pressed="true" data-cat="">Todos</button><button class="chip" type="button"
+        aria-pressed="false" data-cat="Jogos">Jogos</button><button class="chip" type="button" aria-pressed="false"
+        data-cat="Arte e design">Arte e design</button><button class="chip" type="button" aria-pressed="false"
+        data-cat="Programação">Programação</button><button class="chip" type="button" aria-pressed="false"
+        data-cat="Educação">Educação</button><button class="chip" type="button" aria-pressed="false"
+        data-cat="Música">Música</button><button class="chip" type="button" aria-pressed="false"
+        data-cat="Outros">Outros</button></div>
+    <p id="projects-status" class="feed-status" role="status" aria-live="polite"></p>
+    <section class="project-grid" id="project-list" aria-label="Projetos públicos" aria-live="polite" aria-busy="true">
+    </section>
+    <button id="projects-load-more" class="feed-load-more" type="button" hidden>Carregar mais projetos</button>
+  </main>
+</body>
+
+</html>

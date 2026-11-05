@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-social-theme data-theme="light">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <script src="../js/theme.js"></script>
+  <title>Início | Nexa Quest</title>
+  <meta name="description" content="Publicações da comunidade Nexa Quest.">
+  <link rel="icon" href="../assets/icones/favicon.svg">
+  <link rel="stylesheet" href="../css/social.css">
+  <link rel="stylesheet" href="../css/theme.css">
+  <script src="../js/functions.js" defer></script>
+  <script src="../js/main.js" defer></script>
+</head>
+
+<body data-page="inicio" data-root="../" data-protected="1">
+  <a class="sr-only" href="#conteudo">Ir para o conteúdo</a>
+  <header data-component="header"></header>
+  <main id="conteudo">
+    <h1 class="sr-only">Início</h1>
+    <form id="feed-post-form" class="feed-composer">
+      <div class="composer-row">
+        <span data-composer-avatar></span>
+        <label class="sr-only" for="feed-post-text">Escreva uma publicação</label>
+        <textarea id="feed-post-text" name="texto" maxlength="2000" rows="1" placeholder="O que você está criando?"
+          required></textarea>
+      </div>
+      <div class="composer-foot">
+        <span class="composer-hint">Ctrl + Enter para publicar</span>
+        <span class="composer-count" id="feed-post-count" aria-live="off" hidden>0/2000</span>
+        <button class="btn" type="submit" disabled>Publicar</button>
+      </div>
+      <p id="feed-post-status" class="feed-status" role="status" aria-live="polite"></p>
+    </form>
+    <section id="publicacoes" aria-label="Publicações">
+      <div id="feed-list" class="feed-list" aria-live="polite" aria-busy="true">
+        <div class="feed-loading" aria-hidden="true">
+          <article class="feed-skeleton-post">
+            <div class="feed-skeleton-heading"><i></i><span><i></i><i></i></span></div><i
+              class="feed-skeleton-line"></i><i class="feed-skeleton-line short"></i>
+            <div class="feed-skeleton-actions"><i></i><i></i></div>
+          </article>
+          <article class="feed-skeleton-post">
+            <div class="feed-skeleton-heading"><i></i><span><i></i><i></i></span></div><i
+              class="feed-skeleton-line"></i><i class="feed-skeleton-line short"></i>
+            <div class="feed-skeleton-actions"><i></i><i></i></div>
+          </article>
+        </div>
+      </div>
+      <p id="feed-status" class="feed-status" role="status" aria-live="polite"></p>
+      <button id="feed-load-more" class="feed-load-more" type="button" hidden>Carregar mais publicações</button>
+    </section>
+  </main>
+</body>
+
+</html>

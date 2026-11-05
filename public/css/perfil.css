@@ -1,0 +1,51 @@
+/* Nexa Quest — Meu Perfil: apenas o avatar e a barra de progresso; todo o resto reutiliza os componentes do site. */
+.pf-id {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem
+}
+
+.pf-avatar {
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #fff;
+    background: linear-gradient(165deg, var(--azul), var(--navy));
+    border: 3px solid var(--cyan);
+    box-shadow: 0 8px 22px rgba(46, 74, 174, .28)
+}
+
+.pf-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover
+}
+
+.pf-bar {
+    height: 10px;
+    border-radius: 99px;
+    background: var(--sky2);
+    overflow: hidden;
+    margin: .6rem 0 .4rem
+}
+
+.pf-bar i {
+    display: block;
+    height: 100%;
+    width: var(--w, 0%);
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--azul), var(--cyan));
+    transition: width .8s ease
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-bar i {
+        transition: none
+    }
+}
