@@ -23,7 +23,8 @@
       <div class="composer-row">
         <span data-composer-avatar></span>
         <label class="sr-only" for="feed-post-text">Escreva uma publicação</label>
-        <textarea id="feed-post-text" name="texto" maxlength="2000" rows="1" placeholder="O que você está criando?" required></textarea>
+        <textarea id="feed-post-text" name="texto" maxlength="2000" rows="1" placeholder="O que você está criando?"
+          required></textarea>
       </div>
       <div class="composer-foot">
         <span class="composer-hint">Ctrl + Enter para publicar</span>
@@ -34,9 +35,17 @@
     </form>
     <section id="publicacoes" aria-label="Publicações">
       <div id="feed-list" class="feed-list" aria-live="polite" aria-busy="true">
-      <div class="feed-loading" aria-hidden="true">
-        <article class="feed-skeleton-post"><div class="feed-skeleton-heading"><i></i><span><i></i><i></i></span></div><i class="feed-skeleton-line"></i><i class="feed-skeleton-line short"></i><div class="feed-skeleton-actions"><i></i><i></i></div></article>
-        <article class="feed-skeleton-post"><div class="feed-skeleton-heading"><i></i><span><i></i><i></i></span></div><i class="feed-skeleton-line"></i><i class="feed-skeleton-line short"></i><div class="feed-skeleton-actions"><i></i><i></i></div></article>
+        <div class="feed-loading" aria-hidden="true">
+          <article class="feed-skeleton-post">
+            <div class="feed-skeleton-heading"><i></i><span><i></i><i></i></span></div><i
+              class="feed-skeleton-line"></i><i class="feed-skeleton-line short"></i>
+            <div class="feed-skeleton-actions"><i></i><i></i></div>
+          </article>
+          <article class="feed-skeleton-post">
+            <div class="feed-skeleton-heading"><i></i><span><i></i><i></i></span></div><i
+              class="feed-skeleton-line"></i><i class="feed-skeleton-line short"></i>
+            <div class="feed-skeleton-actions"><i></i><i></i></div>
+          </article>
         </div>
       </div>
       <p id="feed-status" class="feed-status" role="status" aria-live="polite"></p>

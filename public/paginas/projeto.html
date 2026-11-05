@@ -35,37 +35,47 @@
         <p class="project-owner-line">Por <a data-project-owner href="#">—</a></p>
         <p class="project-description" data-project-description></p>
         <div class="project-detail-actions">
-          <a class="btn" data-project-external href="#" target="_blank" rel="noopener noreferrer" hidden>Abrir projeto</a>
+          <a class="btn" data-project-external href="#" target="_blank" rel="noopener noreferrer" hidden>Abrir
+            projeto</a>
           <button class="btn" type="button" data-project-join hidden>Solicitar participação</button>
           <button class="btn-soft" type="button" data-project-cancel hidden>Cancelar solicitação</button>
-          <button class="btn-soft" type="button" data-project-edit-toggle aria-expanded="false" aria-controls="project-edit-panel" hidden>Editar projeto</button>
+          <button class="btn-soft" type="button" data-project-edit-toggle aria-expanded="false"
+            aria-controls="project-edit-panel" hidden>Editar projeto</button>
         </div>
       </div>
     </article>
 
-    <section id="project-edit-panel" class="project-form-card" hidden aria-labelledby="edit-project-title" style="margin-top:1rem">
+    <section id="project-edit-panel" class="project-form-card" hidden aria-labelledby="edit-project-title"
+      style="margin-top:1rem">
       <h2 id="edit-project-title">Editar informações</h2>
       <form id="project-edit-form" class="project-form"></form>
     </section>
 
     <div class="project-detail-grid">
       <section class="project-panel" aria-labelledby="participants-title">
-        <header class="project-panel-heading"><h2 id="participants-title">Equipe</h2><strong data-project-member-count></strong></header>
+        <header class="project-panel-heading">
+          <h2 id="participants-title">Equipe</h2><strong data-project-member-count></strong>
+        </header>
         <div data-project-participants class="project-people"></div>
         <div data-project-invite-section hidden>
           <form id="project-invite-form" class="project-invite-form">
             <label for="project-invite-username">Convidar por nome de usuário</label>
-            <div><input id="project-invite-username" name="nome_usuario" required minlength="3" maxlength="30" pattern="[A-Za-z0-9_]{3,30}" placeholder="nome_de_usuario"><button class="btn-soft btn-sm" type="submit">Convidar</button></div>
+            <div><input id="project-invite-username" name="nome_usuario" required minlength="3" maxlength="30"
+                pattern="[A-Za-z0-9_]{3,30}" placeholder="nome_de_usuario"><button class="btn-soft btn-sm"
+                type="submit">Convidar</button></div>
           </form>
           <p id="project-invite-status" class="feed-status" role="status" aria-live="polite"></p>
           <div data-project-requests class="project-requests"></div>
         </div>
       </section>
       <section class="project-panel project-updates" aria-labelledby="updates-title">
-        <header class="project-panel-heading"><h2 id="updates-title">Atualizações</h2></header>
+        <header class="project-panel-heading">
+          <h2 id="updates-title">Atualizações</h2>
+        </header>
         <form id="project-update-form" class="project-update-form" hidden>
           <label for="project-update-text">Compartilhe um avanço com a equipe</label>
-          <textarea id="project-update-text" name="texto" rows="3" maxlength="2000" required placeholder="O que mudou no projeto?"></textarea>
+          <textarea id="project-update-text" name="texto" rows="3" maxlength="2000" required
+            placeholder="O que mudou no projeto?"></textarea>
           <button class="btn btn-sm" type="submit">Publicar atualização</button>
           <p id="project-update-status" class="feed-status" role="status" aria-live="polite"></p>
         </form>

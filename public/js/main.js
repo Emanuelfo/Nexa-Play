@@ -19,10 +19,19 @@ function userInitial(user) {
   return (user?.nome_exibicao || user?.nome_usuario || '?').trim().charAt(0).toUpperCase() || '?';
 }
 
+/* Tom estável (0–5) derivado do nome de usuário: dá ritmo visual ao feed sem depender de foto. */
+function avatarTone(user) {
+  const key = String(user?.nome_usuario || user?.nome_exibicao || '?');
+  let hash = 0;
+  for (let i = 0; i < key.length; i += 1) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+  return String(hash % 6);
+}
+
 function avatarEl(user, size = 40, tag = 'span') {
   const el = document.createElement(tag);
   el.className = 'nq-avatar';
   el.style.setProperty('--s', `${size}px`);
+  el.dataset.tone = avatarTone(user);
   const initial = userInitial(user);
   const url = safeHttpsUrl(user?.avatar_url);
   if (url) {
@@ -363,10 +372,11 @@ function renderSocialShell(host, user) {
         <ul class="nq-people" data-rail-people></ul>
         <a class="nq-more" href="${root}paginas/amigos.html">Ver mais pessoas</a>
       </section>
-      <section class="nq-box" aria-labelledby="rail-game-title">
-        <h2 id="rail-game-title">Nexa Quest</h2>
-        <p class="nq-muted">Continue sua jornada e desbloqueie novas conquistas.</p>
-        <a class="btn btn-sm" href="#" data-game style="margin-top:.75rem">Acessar o jogo</a>
+      <section class="nq-box nq-game" aria-labelledby="rail-game-title">
+        <img class="nq-game-mascot" src="${root}assets/imagens/golfinho-fone.svg" alt="" width="120" height="76">
+        <h2 id="rail-game-title">Continue sua jornada</h2>
+        <p>Novas missões e conquistas esperam por você no Nexa Quest.</p>
+        <a class="btn btn-sm" href="#" data-game>Acessar o jogo</a>
       </section>`;
     shell.append(side);
     $('[data-rail-avatar]', side).replaceWith(avatarEl({ nome_usuario: user.nome_usuario }, 48));
@@ -1357,6 +1367,7 @@ function renderProfileData(profile, ownProfile) {
   setProfileImage(cover, profile.capa_url);
   setProfileImage(avatar, profile.avatar_url);
   const initial = $('[data-avatar-initial]', card);
+  $('[data-profile-avatar]', card)?.setAttribute('data-tone', avatarTone(profile));
   if (initial) {
     initial.textContent = (profile.nome_exibicao || profile.nome_usuario || '?').charAt(0).toUpperCase();
     initial.hidden = false;
@@ -1461,6 +1472,7 @@ function renderProfilePreview(user) {
   $('[data-profile-name]', card).textContent = name;
   $('[data-profile-handle]', card).textContent = `@${user.nome_usuario || ''}`;
   const initial = $('[data-avatar-initial]', card);
+  $('[data-profile-avatar]', card)?.setAttribute('data-tone', avatarTone(user));
   if (initial) {
     initial.textContent = name.charAt(0).toUpperCase();
     initial.hidden = false;
@@ -2036,7 +2048,7 @@ function projectCard(project, myProject = false) {
   owner.append(ownerLink);
   const meta = document.createElement('span');
   const members = Number(project.total_participantes) || 0;
-  meta.textContent = `${members} ${members === 1 ? 'integrante' : 'integrantes'}`;
+  meta.textContent = project.tipo === 'individual' ? 'Individual' : `${members} ${members === 1 ? 'integrante' : 'integrantes'}`;
   owner.append(meta);
   body.append(tags, title, description, owner);
   card.append(body);

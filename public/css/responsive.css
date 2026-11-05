@@ -285,6 +285,7 @@
     border-radius: 28px
   }
 }
+
 @media (max-width:860px) {
   .sec.sobre {
     min-height: 0;
@@ -535,7 +536,7 @@
     padding-block: 3rem
   }
 
-  .m-stage > * {
+  .m-stage>* {
     --rail: 2.8rem;
     --big: clamp(2rem, 11cqi, 3rem)
   }
@@ -681,6 +682,7 @@
 }
 
 @media (max-width:360px) {
+
   .stage h1,
   .about-hero.stage h1 {
     font-size: 1.85rem
@@ -694,7 +696,7 @@
     padding-inline: .9rem
   }
 
-  .m-stage > * {
+  .m-stage>* {
     --rail: 2.45rem;
     --big: clamp(1.8rem, 10.5cqi, 2.5rem)
   }
