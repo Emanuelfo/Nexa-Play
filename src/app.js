@@ -20,7 +20,7 @@ if (Buffer.byteLength(process.env.JWT_SECRET || "", "utf8") < 32) {
 
 const app = express();
 const frontendOrigins = new Set([
-  "https://nexaquest.netlify.app",
+  "https://nexa-play.onrender.com/",
   ...((process.env.CORS_ORIGINS || "").split(",").map(origin => origin.trim()).filter(Boolean)),
 ]);
 const apiRateLimit = createRateLimiter({
