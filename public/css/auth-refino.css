@@ -1,0 +1,103 @@
+/* Login e Cadastro: refinos pontuais sobre a estrutura existente
+   (fundo azul escuro, mensagem à esquerda, formulário à direita).
+   Carregado depois de area-logada.css. Não altera o comportamento dos formulários. */
+
+body[data-page="auth"] {
+  --auth-display: 'Nexa Fredoka', 'Fredoka', 'Trebuchet MS', system-ui, sans-serif;
+  --auth-text: 'Nexa Inter', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --auth-edge: #0b2a9e;
+  --auth-line: #d3dff3;
+}
+
+/* hierarquia: título expressivo, texto de apoio legível */
+body[data-page="auth"] .auth-copy h1 {
+  font-family: var(--auth-display);
+  font-weight: 700;
+  letter-spacing: .005em;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+body[data-page="auth"] .auth-copy h1 b { -webkit-text-stroke: 0; }
+
+/* cartão do formulário */
+body[data-page="auth"] .card {
+  width: min(100%, 440px);
+  border-radius: 24px;
+  box-shadow: 0 18px 48px rgb(2 12 45 / 28%);
+}
+body[data-page="auth"] .card form { gap: .65rem; }
+
+/* campos: todos com a mesma altura, borda e foco */
+body[data-page="auth"] .field { gap: .3rem; }
+body[data-page="auth"] .input {
+  min-height: 50px;
+  border: 1.5px solid var(--auth-line);
+  border-radius: 14px;
+  font-family: var(--auth-text);
+  font-weight: 500;
+}
+body[data-page="auth"] .input:hover { border-color: #b9cbee; }
+body[data-page="auth"] .input:focus-visible {
+  border-color: var(--blue, #1f5eff);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgb(31 94 255 / 18%);
+  outline: none;
+}
+body[data-page="auth"] .input[aria-invalid="true"] { border-color: #ae2434; }
+body[data-page="auth"] .input::placeholder { color: #5b6a88; }
+body[data-page="auth"] .err {
+  min-height: 0;
+  padding-left: .25rem;
+  font-size: .8125rem;
+  line-height: 1.35;
+}
+body[data-page="auth"] .err:empty { display: none; }
+body[data-page="auth"] .status { min-height: 0; font-size: .875rem; text-align: center; }
+body[data-page="auth"] .status:empty { display: none; }
+
+/* "lembrar de mim" com área de toque confortável */
+body[data-page="auth"] .line-row { font-size: .875rem; }
+body[data-page="auth"] .line-row label { min-height: 44px; color: var(--app-ink, #091e5b); }
+
+/* botões: mesmo vocabulário das páginas públicas */
+body[data-page="auth"] .btn {
+  min-height: 52px;
+  border-radius: 16px;
+  font-family: var(--auth-display);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: .01em;
+  text-transform: none;
+}
+body[data-page="auth"] .btn:not(.btn-soft) {
+  border: 2px solid #1f5eff;
+  background: #1f5eff;
+  box-shadow: 0 4px 0 var(--auth-edge);
+  transition: background-color .12s, transform .08s, box-shadow .08s;
+}
+body[data-page="auth"] .btn:not(.btn-soft):hover { background: #164bd1; border-color: #164bd1; }
+body[data-page="auth"] .btn:not(.btn-soft):active { transform: translateY(3px); box-shadow: 0 1px 0 var(--auth-edge); }
+body[data-page="auth"] .btn[disabled] { opacity: .65; cursor: progress; }
+body[data-page="auth"] .btn.btn-soft {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .6rem;
+  border: 2px solid var(--auth-line);
+  background: #fff;
+  color: #164bd1;
+  text-decoration: none;
+}
+body[data-page="auth"] .btn.btn-soft:hover { background: #f5f8ff; border-color: #b9cbee; }
+
+body[data-page="auth"] .auth-switch { text-align: center; font-size: .875rem; color: #4f5f82; }
+body[data-page="auth"] .or { margin-block: .5rem .25rem; font-size: .75rem; }
+
+@media (max-width: 860px) {
+  body[data-page="auth"] .card { padding: 1.35rem 1.1rem; border-radius: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-page="auth"] .btn:not(.btn-soft) { transition: none; }
+}

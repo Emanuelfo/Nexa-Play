@@ -1,0 +1,396 @@
+/* ==========================================================================
+   Nexa Quest — páginas públicas: Inicial, Nexa Quest e Sobre.
+   Um único sistema visual para as três. O menu fica em public-header.css.
+   Login e Cadastro têm o refino próprio em auth-refino.css.
+   ========================================================================== */
+
+:root {
+  /* cor */
+  --ink: #091e5b;
+  --blue: #1f5eff;
+  --blue-dark: #164bd1;
+  --edge: #0b2a9e;          /* "borda de baixo" dos botões principais */
+  --ice: #e3f0ff;
+  --paper: #f5f8ff;
+  --line: #d3dff3;
+  --muted: #4f5f82;
+  --cyan: #4cc3ff;
+  --err: #ae2434;
+  --ok: #0e7a4b;
+
+  /* tipografia */
+  --display: 'Nexa Fredoka', 'Fredoka', 'Baloo 2', 'Trebuchet MS', system-ui, sans-serif;
+  --text: 'Nexa Inter', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+
+  /* medidas */
+  --gutter: clamp(16px, 4vw, 40px);
+  --shell: 1200px;
+  --radius: 16px;
+  --space-section: clamp(56px, 9vw, 112px);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 104px; -webkit-text-size-adjust: 100%; }
+
+.pub {
+  margin: 0;
+  background: #fff;
+  color: var(--ink);
+  font: 400 1rem/1.6 var(--text);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+:where(.pub) img, :where(.pub) svg { display: block; max-width: 100%; }
+:where(.pub) img { height: auto; }
+:where(.pub) :is(h1, h2, h3, p, ul, ol, figure) { margin: 0; }
+:where(.pub) :is(ul, ol) { padding: 0; list-style: none; }
+:where(.pub) a { color: inherit; }
+
+.pub :focus-visible {
+  outline: 3px solid var(--cyan);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.sr-only:focus {
+  position: fixed; z-index: 200; top: 8px; left: 8px; width: auto; height: auto; margin: 0;
+  padding: 12px 18px; clip: auto; border-radius: 10px; background: var(--ink); color: #fff;
+}
+
+.shell { width: min(var(--shell), calc(100% - 2 * var(--gutter))); margin-inline: auto; }
+
+/* ---------- tipografia ---------- */
+:where(.pub) :is(h1, h2, h3) { font-family: var(--display); color: var(--ink); text-wrap: balance; }
+:where(.pub) h1 { font-weight: 700; font-size: clamp(2.5rem, 5.6vw, 4.5rem); line-height: 1.04; }
+:where(.pub) h2 { font-weight: 600; font-size: clamp(1.75rem, 3.2vw, 2.625rem); line-height: 1.12; }
+:where(.pub) h3 { font-weight: 600; font-size: 1.3125rem; line-height: 1.25; }
+
+.lead { max-width: 52ch; color: var(--muted); font-size: clamp(1.0625rem, 1.5vw, 1.25rem); line-height: 1.6; text-wrap: pretty; }
+.text { max-width: 62ch; color: var(--muted); text-wrap: pretty; }
+.text + .text { margin-top: 1em; }
+.lead + .text { margin-top: 16px; }
+[hidden] { display: none !important; }
+
+/* ---------- botões ----------
+   Primário: azul com borda inferior escura, como um botão de jogo.
+   Secundário: contorno. Ao pressionar, o botão desce até a borda. */
+.pq-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0 32px;
+  border: 2px solid var(--blue);
+  border-radius: 16px;
+  background: var(--blue);
+  box-shadow: 0 4px 0 var(--edge);
+  color: #fff;
+  font: 600 1.0625rem/1 var(--display);
+  letter-spacing: .01em;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color .12s, transform .08s, box-shadow .08s;
+}
+.pq-btn:hover { background: var(--blue-dark); border-color: var(--blue-dark); }
+.pq-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--edge); }
+
+.pq-btn--ghost { background: #fff; border-color: var(--line); box-shadow: 0 4px 0 var(--line); color: var(--blue-dark); }
+.pq-btn--ghost:hover { background: var(--paper); border-color: #b9cbee; }
+.pq-btn--ghost:active { box-shadow: 0 1px 0 var(--line); }
+
+.pq-btn[disabled] { opacity: .6; cursor: progress; }
+
+.pq-link {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px;
+  color: var(--blue-dark); font-weight: 600; text-decoration: none;
+  border-bottom: 2px solid transparent;
+}
+.pq-link:hover { border-bottom-color: currentColor; }
+
+/* ==========================================================================
+   INICIAL
+   ========================================================================== */
+.hero { padding-block: clamp(36px, 5vw, 56px) var(--space-section); }
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  grid-template-areas: "art copy";
+  align-items: center;
+  gap: clamp(24px, 5vw, 80px);
+  min-height: min(680px, calc(100svh - 150px));
+}
+.hero-art { grid-area: art; }
+.hero-copy { grid-area: copy; }
+
+.hero-copy h1 { font-size: clamp(2.75rem, 6vw, 5rem); letter-spacing: -.01em; }
+.hero-copy h1 span { display: block; }
+/* As três palavras seguem a ordem da jornada: o azul se intensifica a cada etapa. */
+.hero-copy h1 span:nth-child(1) { color: var(--ink); }
+.hero-copy h1 span:nth-child(2) { color: #1a3fae; }
+.hero-copy h1 span:nth-child(3) { color: var(--blue); }
+.hero-copy .lead { margin-top: 24px; max-width: 44ch; }
+
+.hero-actions { display: grid; gap: 14px; width: min(100%, 340px); margin-top: 36px; }
+
+/* palco do mascote */
+.stage { position: relative; width: min(100%, 540px); aspect-ratio: 1 / 1.04; margin-inline: auto; }
+.stage::before {                      /* chão em que o golfinho pisa */
+  content: ""; position: absolute; left: 50%; bottom: 3%; width: 86%; aspect-ratio: 1;
+  transform: translateX(-50%); border-radius: 50%; background: var(--ice);
+}
+.stage::after {
+  content: ""; position: absolute; left: 50%; bottom: 0; width: 34%; height: 3.5%;
+  transform: translateX(-50%); border-radius: 50%; background: rgb(9 30 91 / 16%);
+}
+.stage-mascot {
+  position: absolute; left: 50%; bottom: 2.2%; z-index: 1;
+  width: auto; height: 90%; max-width: none; transform: translateX(-50%);
+}
+
+.chip {
+  position: absolute; z-index: 2;
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 8px 18px 8px 8px;
+  border: 2px solid var(--ink); border-radius: 18px; background: #fff;
+  box-shadow: 0 4px 0 var(--ink);
+  color: var(--ink); font: 600 1rem/1 var(--display); text-decoration: none;
+  transform: rotate(var(--tilt, 0deg));
+  transition: transform .12s, box-shadow .12s;
+}
+.chip:hover { transform: translateY(2px) rotate(var(--tilt, 0deg)); box-shadow: 0 2px 0 var(--ink); }
+.chip-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--blue); color: #fff; }
+.chip-icon svg { width: 22px; height: 22px; }
+.chip--design     { --tilt: -3deg; left: 0;  top: 10%; }
+.chip--sistemas   { --tilt: 3deg;  right: 0; top: 4%; }
+.chip--multimidia { --tilt: 2deg;  left: 1%; bottom: 25%; }
+.chip--jogos      { --tilt: -3deg; right: 1%; bottom: 17%; }
+
+/* Único momento de movimento da página: a cena se monta ao carregar. */
+@keyframes rise { from { opacity: 0; transform: translate(-50%, 24px); } }
+@keyframes pop  { from { opacity: 0; transform: translateY(14px) rotate(var(--tilt, 0deg)) scale(.92); } }
+.stage-mascot { animation: rise .6s cubic-bezier(.2, .8, .2, 1) backwards; }
+.chip { animation: pop .5s cubic-bezier(.2, .9, .3, 1.2) backwards; }
+.chip--design { animation-delay: .25s; } .chip--sistemas { animation-delay: .35s; }
+.chip--multimidia { animation-delay: .45s; } .chip--jogos { animation-delay: .55s; }
+
+/* como começar */
+.steps-section { padding-block: var(--space-section); background: var(--paper); border-block: 1px solid var(--line); }
+.steps-head { display: grid; gap: 12px; max-width: 640px; }
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; margin-top: clamp(36px, 5vw, 64px); }
+.step { position: relative; display: grid; gap: 8px; align-content: start; }
+.step-node {
+  display: grid; place-items: center; width: 64px; height: 64px; margin-bottom: 16px;
+  border: 2px solid var(--ink); border-radius: 50%; background: #fff; box-shadow: 0 4px 0 var(--ink); color: var(--blue);
+}
+.step-node svg { width: 30px; height: 30px; }
+.step:not(:last-child)::after {       /* trilha pontilhada até a próxima etapa */
+  content: ""; position: absolute; top: 31px; left: 84px; right: -20px;
+  border-top: 3px dotted #9db6e6;
+}
+.step p { color: var(--muted); max-width: 32ch; }
+.steps-foot { margin-top: clamp(32px, 4vw, 48px); }
+
+/* ==========================================================================
+   SUBPÁGINAS (Nexa Quest e Sobre)
+   ========================================================================== */
+.page-head { padding-block: clamp(40px, 6vw, 72px) var(--space-section); }
+.page-head h1 { font-size: clamp(2.25rem, 4.6vw, 3.75rem); }
+.page-head .lead { margin-top: 20px; }
+.page-head-actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 32px; }
+
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: clamp(32px, 6vw, 88px); align-items: center; }
+
+.section { padding-block: var(--space-section); }
+.section--paper { background: var(--paper); border-block: 1px solid var(--line); }
+.section-head { display: grid; gap: 12px; max-width: 640px; }
+
+/* captura real do jogo */
+.shot { display: grid; gap: 14px; }
+.shot-frame {
+  overflow: hidden; border: 2px solid var(--ink); border-radius: 20px; background: var(--ice);
+  box-shadow: 0 6px 0 var(--ink);
+}
+.shot-frame img { width: 100%; }
+.shot figcaption { color: var(--muted); font-size: .9375rem; }
+.demo summary {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px;
+  color: var(--blue-dark); font-weight: 600; cursor: pointer; list-style: none;
+}
+.demo summary::-webkit-details-marker { display: none; }
+.demo summary::before { content: "▶"; font-size: .75em; }
+.demo[open] summary::before { content: "▼"; }
+.demo summary:hover { text-decoration: underline; }
+.demo-video { position: relative; aspect-ratio: 16 / 9; margin-top: 12px; overflow: hidden; border-radius: 16px; background: var(--ink); }
+.demo-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.demo-yt { display: inline-block; margin-top: 10px; }
+
+/* como funciona: lista editorial, sem cartões */
+.how { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: clamp(32px, 6vw, 96px); align-items: start; }
+.how-head { position: sticky; top: 112px; display: grid; gap: 16px; }
+.how-list { border-top: 1px solid var(--line); }
+.how-item { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 8px 24px; padding-block: 28px; border-bottom: 1px solid var(--line); }
+.how-icon { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 16px; background: var(--ice); color: var(--blue); }
+.how-icon svg { width: 28px; height: 28px; }
+.how-item h3 { align-self: center; }
+.how-item p { grid-column: 2; color: var(--muted); max-width: 52ch; }
+
+/* recorte real da interface do jogo (painel de nível) */
+.crop { grid-column: 2; position: relative; overflow: hidden; width: min(100%, 380px); aspect-ratio: 390 / 150; margin-top: 12px; border: 2px solid var(--ink); border-radius: 14px; background: var(--ice); }
+.crop img { position: absolute; top: 0; left: -233.3%; width: 333.3%; max-width: none; }
+
+/* áreas de aprendizagem */
+.areas { margin-top: clamp(28px, 4vw, 48px); border-top: 1px solid var(--line); }
+.area {
+  display: grid; grid-template-columns: 72px minmax(0, 1fr) minmax(0, 1.2fr); gap: 8px 32px; align-items: center;
+  padding: 28px 20px; margin-inline: -20px; border-bottom: 1px solid var(--line);
+  scroll-margin-top: 110px;
+}
+.area:target { background: var(--ice); border-bottom-color: transparent; border-radius: 20px; }
+.area-icon { display: grid; place-items: center; width: 72px; height: 72px; border: 2px solid var(--ink); border-radius: 22px; background: #fff; box-shadow: 0 4px 0 var(--ink); color: var(--blue); }
+.area-icon svg { width: 34px; height: 34px; }
+.area h3 { font-size: clamp(1.5rem, 2.6vw, 2rem); }
+.area p { color: var(--muted); max-width: 48ch; }
+
+/* convite final */
+.invite { padding-block: var(--space-section); background: var(--ice); }
+.invite-grid { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: clamp(24px, 6vw, 96px); align-items: center; }
+.invite-copy { display: grid; gap: 16px; justify-items: start; }
+.invite-copy .lead { color: #38496f; }
+.invite-copy .pq-btn { margin-top: 12px; }
+.invite img { width: clamp(150px, 20vw, 240px); }
+
+/* ==========================================================================
+   SOBRE
+   ========================================================================== */
+/* Equipe: grade de 6 colunas (3 + 2 centralizado), sem cartão isolado no fim */
+.team-grid {
+  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: clamp(36px, 5vw, 56px) clamp(20px, 3vw, 36px); margin-top: clamp(28px, 4vw, 48px);
+}
+.member { grid-column: span 2; display: grid; gap: 20px; align-content: start; }
+.member:nth-child(4) { grid-column: 2 / span 2; }
+.member-photo {
+  aspect-ratio: 1; overflow: hidden; border: 2px solid var(--ink); border-radius: 24px; background: var(--ice);
+  box-shadow: 0 5px 0 var(--ink); display: grid; place-items: center;
+  color: var(--blue); font: 600 3rem/1 var(--display);
+}
+.member-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 28%; }
+.member-info { display: grid; gap: 6px; }
+.member h3 { font-size: clamp(1.375rem, 2vw, 1.625rem); line-height: 1.15; }
+.member .member-area { display: flex; align-items: flex-start; gap: 8px; color: var(--blue-dark); font-size: .9375rem; font-weight: 600; line-height: 1.3; }
+.member-area svg { flex: none; width: 20px; height: 20px; margin-top: -1px; fill: none; stroke: currentColor; stroke-width: 2; }
+.member .member-about { max-width: 38ch; margin-top: 6px; color: var(--muted); font-size: .9375rem; line-height: 1.6; text-wrap: pretty; }
+
+.about-purpose { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(32px, 6vw, 88px); align-items: start; }
+.about-purpose > div:first-child { display: grid; gap: 16px; }
+
+/* formulário de contato (mesma API de mensagens já existente) */
+.contact { padding: clamp(24px, 3.5vw, 36px); border: 2px solid var(--ink); border-radius: 24px; background: #fff; box-shadow: 0 6px 0 var(--ink); }
+.contact h3 { font-size: 1.5rem; }
+.contact > p { margin-top: 6px; color: var(--muted); }
+.contact form { display: grid; gap: 16px; margin-top: 20px; }
+.field { display: grid; gap: 6px; }
+.field label { font-weight: 600; font-size: .9375rem; }
+.field .input {
+  width: 100%; min-height: 48px; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 12px;
+  background: #fff; color: var(--ink); font: inherit;
+}
+.field textarea.input { min-height: 120px; resize: vertical; }
+.field .input:hover { border-color: #b9cbee; }
+.field .input:focus-visible { outline: 3px solid var(--cyan); outline-offset: 1px; border-color: var(--blue); }
+.field .input[aria-invalid="true"] { border-color: var(--err); }
+.err { min-height: 1.25em; color: var(--err); font-size: .875rem; }
+.err:empty { display: none; }
+.status { min-height: 1.5em; font-size: .9375rem; }
+.status.ok { color: var(--ok); }
+.status.bad { color: var(--err); }
+.status:empty { display: none; }
+.contact .pq-btn { width: 100%; }
+
+.toast {
+  position: fixed; z-index: 300; left: 50%; bottom: 24px; max-width: calc(100% - 32px); transform: translateX(-50%);
+  padding: 14px 20px; border-radius: 14px; background: var(--ink); color: #fff; font-weight: 500;
+}
+
+/* ==========================================================================
+   RODAPÉ (montado por renderFooter em main.js)
+   ========================================================================== */
+.site-footer { background: var(--ink); color: #fff; }
+.site-footer .pf { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 1fr)); gap: 32px 48px; padding-block: 56px; }
+.site-footer img { width: 88px; }
+.site-footer .pf-brand p { margin-top: 14px; max-width: 28ch; color: #b9c8ee; }
+.site-footer h3 { margin-bottom: 12px; color: #fff; font: 600 1rem/1.3 var(--display); }
+.site-footer ul { display: grid; gap: 2px; }
+.site-footer a { display: inline-flex; align-items: center; min-height: 36px; color: #cfdaf7; text-decoration: none; }
+.site-footer a:hover { color: #fff; text-decoration: underline; }
+.site-footer :focus-visible { outline-color: var(--cyan); }
+
+/* ==========================================================================
+   RESPONSIVO
+   ========================================================================== */
+@media (max-width: 960px) {
+  .how { grid-template-columns: 1fr; }
+  .how-head { position: static; }
+  .area { grid-template-columns: 64px minmax(0, 1fr); }
+  .area p { grid-column: 2; }
+  .area-icon { width: 64px; height: 64px; }
+}
+
+@media (max-width: 860px) {
+  .hero-grid { grid-template-columns: 1fr; grid-template-areas: "copy" "art"; min-height: 0; gap: 40px; }
+  .hero-copy h1 br { display: none; }
+  .hero-copy h1 span { display: inline; }
+  .hero-actions { width: 100%; }
+  .stage { width: min(100%, 440px); }
+
+  .split, .about-purpose { grid-template-columns: 1fr; }
+  .steps { grid-template-columns: 1fr; gap: 0; }
+  .step { grid-template-columns: 64px minmax(0, 1fr); column-gap: 20px; padding-bottom: 32px; }
+  .step-node { grid-row: 1 / span 2; margin-bottom: 0; }
+  .step p { max-width: none; }
+  .step:not(:last-child)::after { top: 72px; bottom: 8px; left: 31px; right: auto; border-top: 0; border-left: 3px dotted #9db6e6; }
+
+  .invite-grid { grid-template-columns: 1fr; }
+  .invite img { order: -1; width: 140px; }
+  .site-footer .pf { grid-template-columns: 1fr 1fr; }
+  .site-footer .pf-brand { grid-column: 1 / -1; }
+}
+
+@media (max-width: 520px) {
+  .hero-copy h1 span { display: block; }
+  .chip { padding: 6px 14px 6px 6px; font-size: .9375rem; border-radius: 16px; }
+  .chip-icon { width: 34px; height: 34px; border-radius: 10px; }
+  .chip-icon svg { width: 20px; height: 20px; }
+  .how-item { grid-template-columns: 48px minmax(0, 1fr); gap: 6px 16px; }
+  .how-icon { width: 48px; height: 48px; border-radius: 14px; }
+  .area { margin-inline: -12px; padding: 24px 12px; gap: 8px 16px; }
+  .page-head-actions .pq-btn { width: 100%; }
+}
+
+/* Equipe em telas estreitas: foto ao lado do texto, lista compacta */
+@media (max-width: 719px) {
+  .team-grid { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .member, .member:nth-child(4) { grid-column: auto; grid-template-columns: clamp(96px, 26vw, 144px) minmax(0, 1fr); gap: 18px; align-items: start; }
+  .member-photo { border-radius: 18px; box-shadow: 0 4px 0 var(--ink); font-size: 2rem; }
+  .member h3 { font-size: 1.25rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .stage-mascot, .chip { animation: none; }
+  .pq-btn, .chip { transition: none; }
+}
+
+/* mascote como elemento complementar no Sobre */
+.about-mascot { position: relative; display: grid; place-items: end center; width: min(100%, 360px); aspect-ratio: 1; margin-inline: auto; }
+.about-mascot::before { content: ""; position: absolute; left: 50%; bottom: 0; width: 88%; aspect-ratio: 1; transform: translateX(-50%); border-radius: 50%; background: var(--ice); }
+.about-mascot img { position: relative; width: 54%; margin-bottom: 4%; }
+@media (max-width: 860px) { .about-mascot { width: min(100%, 240px); } }

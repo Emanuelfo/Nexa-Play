@@ -481,13 +481,15 @@ function renderHeader() {
 
 function renderFooter() {
   const host = $('[data-component="footer"]'); if (!host) return;
-  const r = NP.root(), home = r + (NP.currentUser() ? 'paginas/inicio.html' : 'index.html');
-  const s = (n, d) => `<a href="https://www.${n}.com" target="_blank" rel="noopener noreferrer" aria-label="${n}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg></a>`;
+  const r = NP.root(), logged = !!NP.currentUser();
   host.className = 'site-footer';
-  host.innerHTML = `<div class="wrap"><a href="${home}" aria-label="Nexa Play"><img src="${r}assets/imagens/logo-branca.svg" alt="Nexa Play" width="157" height="84"></a>
-  <div><h3>NEXA QUEST</h3><ul><li><a href="${home}">Início</a></li>${NP.currentUser() ? `<li><a href="${r}paginas/meu-perfil.html">Meu Perfil</a></li><li><a href="${r}paginas/meu-perfil.html#comunidade">Comunidade</a></li>` : `<li><a href="${r}index.html#como-funciona">Como funciona</a></li><li><a href="${r}index.html#comunidade">Comunidade</a></li>`}</ul></div>
-  <div><h3>NEXA PLAY</h3><ul><li><a href="${r}paginas/sobre-nexa-play.html">Sobre a Nexa Play</a></li><li><a href="${r}paginas/sobre-nexa-play.html#parceiros">Parceiros</a></li><li><a href="${r}paginas/sobre-nexa-play.html#contato">Contato</a></li></ul></div>
-  <div><h3>SIGA NOSSAS REDES</h3><div class="social">${s('instagram', 'M7 2h10a5 5 0 015 5v10a5 5 0 01-5 5H7a5 5 0 01-5-5V7a5 5 0 015-5zm0 2a3 3 0 00-3 3v10a3 3 0 003 3h10a3 3 0 003-3V7a3 3 0 00-3-3zm5 3.5a4.5 4.5 0 110 9 4.5 4.5 0 010-9zm0 2a2.5 2.5 0 100 5 2.5 2.5 0 000-5zm5.2-3.2a1.1 1.1 0 110 2.2 1.1 1.1 0 010-2.2z')}${s('tiktok', 'M14 3h3a5 5 0 004 4v3a8 8 0 01-4-1.2V15a6 6 0 11-6-6v3.2a3 3 0 103 2.8z')}${s('youtube', 'M22 8a3 3 0 00-2-2c-1.8-.5-8-.5-8-.5s-6.200 0-8 .5A3 3 0 002 8c-.5 1.800-.5 4-.5 4s0 2.200.5 4a3 3 0 002 2c1.800.5 8 .5 8 .5s6.200 0 8-.5a3 3 0 002-2c.5-1.800.5-4 .5-4s0-2.200-.5-4zM10 15V9l5 3z')}${s('x', 'M18.200 2h3.200l-7 8 8.200 12h-6.400l-5-7.300L5.500 22H2.300l7.500-8.600L2 2h6.500l4.500 6.600zm-1.100 18h1.800L7.100 3.800H5.200z')}</div></div></div>`;
+  host.innerHTML = `<div class="shell pf">
+  <div class="pf-brand"><a href="${r}index.html" aria-label="Nexa Quest — página inicial"><img src="${r}assets/imagens/logo-branca-quest.svg" alt="Nexa Quest" width="88" height="68"></a><p>Uma criação da Nexa Play.</p></div>
+  <div><h3>Nexa Quest</h3><ul><li><a href="${r}index.html">Inicial</a></li><li><a href="${r}paginas/nexa-quest.html">Nexa Quest</a></li><li><a href="${r}paginas/sobre-nexa-play.html">Sobre</a></li></ul></div>
+  <div><h3>Sua conta</h3><ul>${logged
+    ? `<li><a href="${r}paginas/inicio.html">Ir para a plataforma</a></li>`
+    : `<li><a href="${r}paginas/criar-conta.html">Criar conta</a></li><li><a href="${r}paginas/login.html">Entrar</a></li>`}</ul></div>
+</div>`;
 }
 
 function initContact() {

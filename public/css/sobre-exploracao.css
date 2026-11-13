@@ -1,0 +1,67 @@
+/* About page: same palette and display typography as the Nexa Quest landing.
+   Scoped to .nq-about to preserve shared pages and existing interactions. */
+.nq-about{--about-ink:#091e5b;--about-blue:#1f5eff;--about-cyan:#4cc3ff;--about-paper:#e3f0ff;--about-deep:#050f33}
+.nqa-shell{width:min(1240px,calc(100% - 96px));margin-inline:auto}
+.nq-about .hero{padding-top:calc(var(--nx-nav-height) + clamp(2rem, 5vw, 4rem))}
+.nq-about .hero .btn-row{flex-wrap:wrap;gap:14px}
+.nq-about .hero .btn{width:auto;min-width:205px;min-height:48px;padding:12px 24px;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center}
+.nqa-label{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:0 0 24px}
+.nqa-story{background:var(--about-paper);color:var(--about-ink);padding:76px 0 90px}
+.nqa-display{font-family:Impact,'Arial Narrow',sans-serif;font-size:clamp(56px,7.6vw,112px);font-weight:400;line-height:.98;letter-spacing:-.025em;text-transform:uppercase;margin:0 0 52px;color:var(--about-ink);text-wrap:initial}
+.nqa-display span{color:var(--about-blue)}
+.nqa-story-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:90px;align-items:center}
+.nqa-portrait{margin:0;background:var(--about-blue);border-radius:160px 160px 12px 12px;overflow:hidden;aspect-ratio:1;align-self:stretch;max-height:560px}
+.nqa-portrait img{display:block;width:100%;height:100%;object-fit:contain;object-position:center bottom}
+.nqa-story-copy p{font-size:17px;line-height:1.8;margin:0 0 24px}
+.nqa-story-copy .nqa-deck{font-size:clamp(23px,2.4vw,34px);font-weight:700;line-height:1.3;letter-spacing:-.03em}
+.nqa-disciplines{list-style:none;padding:0;margin:32px 0 0;display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
+.nqa-disciplines li{padding:14px 0;border-top:1px solid #091e5b44;font-size:14px;font-weight:700}
+.nq-about #sobre{padding:80px 0;min-height:0}
+.nq-about .sobre-grid{width:min(1240px,calc(100% - 96px));grid-template-columns:1.4fr .6fr;gap:80px}
+.nq-about .sobre-copy h2{font-size:clamp(36px,4.5vw,64px);line-height:1.08;letter-spacing:-.04em}
+.nq-about .sobre-copy p{max-width:620px;font-size:17px;line-height:1.8}
+.nq-about .sobre .sw{height:230px}
+.nq-about .sobre .sw-glow{opacity:.4}
+.nqa-switch-help{max-width:220px;text-align:center;font-size:13px;line-height:1.6;margin:0 0 24px;color:var(--about-ink);background:var(--about-paper);padding:10px 16px;border-radius:10px;position:relative;z-index:2}
+.nqa-product{background:var(--about-deep);color:#fff;padding:90px 0}
+.nqa-product-grid{display:grid;grid-template-columns:1fr 1fr;gap:100px;align-items:center}
+.nqa-product .nqa-label{color:var(--about-cyan)}
+.nqa-product h2{font-size:clamp(36px,4vw,56px);line-height:1.08;letter-spacing:-.04em;color:#fff;margin:0 0 24px}
+.nqa-product p:not(.nqa-label){font-size:17px;line-height:1.8;max-width:470px;margin-bottom:28px}
+.nqa-product .btn{box-shadow:none;white-space:nowrap;min-height:48px}
+.nqa-product-art{display:flex;flex-direction:column;gap:38px;text-decoration:none;color:var(--about-paper);padding:35px 0;border-block:1px solid #4cc3ff66}
+.nqa-product-art img{width:100%;height:auto;transition:transform .25s}
+.nqa-product-art>span{display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:700}
+.nqa-product-art>span span{font-size:28px}
+.nqa-product-art:hover img{transform:translateY(-5px)}
+.nq-about #parceiros{padding:85px 0;background:#fff}
+.nq-about .ptn{width:min(1240px,calc(100% - 96px));margin:auto;gap:64px;grid-template-columns:1fr 1fr}
+.nq-about .ptn-copy h2{font-size:clamp(32px,3.6vw,52px);line-height:1.1;letter-spacing:-.035em}
+.nq-about .ptn-list li{border-radius:0;box-shadow:none;background:transparent;border:0;border-bottom:1px solid #091e5b33;padding:15px 0}
+.nq-about .ptn-list li i{display:none}
+.nq-about .convite{width:100%;max-width:none;padding:0;margin:0;background:var(--about-paper)}
+.nq-about .convite .panel{width:min(1240px,calc(100% - 96px));margin:0 auto;padding:52px 0;box-shadow:none;border:0;border-radius:0;background:transparent;color:var(--about-ink);gap:64px}
+.nq-about .convite h2{font-size:34px;line-height:1.15;letter-spacing:-.03em;color:var(--about-ink)}
+.nq-about .convite p{font-size:16px;line-height:1.8;color:var(--about-ink)}
+.nq-about .convite .btn-line{color:var(--about-ink);border-color:var(--about-ink);background:transparent;box-shadow:none;min-height:48px}
+.nq-about .convite .btn-line:hover{background:var(--about-ink);color:#fff}
+.nq-about #contato{padding:80px 0;background:var(--about-deep)}
+.nq-about #contato>.wrap{width:min(1240px,calc(100% - 96px))}
+.nq-about .contato .panel{padding:0;border:0;border-radius:0;box-shadow:none;background:transparent;gap:70px;grid-template-columns:1fr 1.2fr}
+.nq-about .contato .chat{display:none}
+.nq-about #cont-t{font-family:Impact,'Arial Narrow',sans-serif;font-weight:400;font-size:clamp(48px,5.6vw,78px);line-height:1;text-wrap:initial;letter-spacing:-.02em;color:var(--about-paper)}
+.nq-about .contato .panel>div>p{font-size:17px;line-height:1.8;color:var(--about-paper);max-width:340px}
+.nq-about .field label{display:block;color:var(--about-paper);font-size:13px;font-weight:600;margin-bottom:9px}
+.nq-about .contato .input{background:#ffffff0d;border:1px solid #e3f0ff66;border-radius:8px;color:#fff;padding:14px;min-height:48px;width:100%}
+.nq-about .contato .input::placeholder{color:#d1def2}
+.nq-about .contato textarea{min-height:160px}
+.nq-about .contato .err{min-height:20px;color:#ffb5b5}
+.nq-about .contato .btn{min-height:48px;box-shadow:none}
+.nq-about .waves{display:none}
+.nq-about main :focus-visible{outline:3px solid var(--about-cyan);outline-offset:5px}
+.nq-about main section[id]{scroll-margin-top:95px}
+@media(max-width:900px){.nqa-shell,.nq-about .sobre-grid,.nq-about .ptn,.nq-about .convite .panel,.nq-about #contato>.wrap{width:calc(100% - 48px)}.nqa-story-grid,.nqa-product-grid{gap:40px}.nq-about .sobre-grid{gap:40px;grid-template-columns:1.3fr .7fr}.nq-about .ptn{gap:32px}.nq-about .contato .panel{gap:40px;grid-template-columns:1fr}.nq-about .convite .panel{gap:32px}}
+@media(max-width:600px){.nqa-shell,.nq-about .sobre-grid,.nq-about .ptn,.nq-about .convite .panel,.nq-about #contato>.wrap,.nq-about .hero>.wrap{width:calc(100% - 36px);margin-inline:auto}.nq-about .hero>.wrap{padding-inline:0}.nq-about .hero .btn{width:100%;min-width:0}.nqa-story{padding:46px 0}.nqa-display{font-size:clamp(38px,10vw,60px);margin-bottom:32px}.nqa-story-grid,.nqa-product-grid{grid-template-columns:1fr;gap:32px}.nqa-portrait{max-height:370px;border-radius:100px 100px 8px 8px}.nqa-story-copy p{font-size:16px}.nqa-story-copy .nqa-deck{font-size:25px}.nq-about #sobre{padding:48px 0}.nq-about .sobre-grid{grid-template-columns:1fr;gap:32px}.nq-about .sobre-copy h2{font-size:38px}.nq-about .sobre .sw{height:155px}.nqa-switch-help{font-size:12px}.nqa-product{padding:48px 0}.nqa-product h2{font-size:38px}.nqa-product-art{gap:24px;padding:28px 0}.nq-about #parceiros{padding:48px 0}.nq-about .ptn{display:flex;flex-direction:column;gap:28px}.nq-about .ptn-art{width:100%;margin:0}.nq-about .ptn-copy h2{font-size:34px}.nq-about .convite .panel{display:block;padding:40px 0}.nq-about .convite h2{font-size:30px}.nq-about #contato{padding:48px 0}.nq-about #cont-t{font-size:54px}.nq-about .form-grid{grid-template-columns:1fr}.nq-about .form-grid .full{grid-column:1}.nq-about .contato .btn{width:100%}}
+@media(prefers-reduced-motion:reduce){.nq-about *, .nq-about *::before,.nq-about *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+.nq-about .contato textarea.input{min-height:160px;resize:vertical}
+.nq-about .convite h2 em,.nq-about .ptn-copy h2 em{color:var(--about-blue)}

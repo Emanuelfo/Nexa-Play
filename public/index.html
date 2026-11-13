@@ -4,136 +4,82 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Nexa Quest</title>
-  <meta name="description" content="Nexa Quest: plataforma digital interativa com missões, desafios, pontos, níveis e conquistas.">
+  <title>Nexa Quest — Aprenda. Crie. Evolua.</title>
+  <meta name="description" content="Plataforma de aprendizagem prática para estudantes de tecnologia e criação digital: siga trilhas, cumpra missões e crie projetos com outras pessoas.">
   <link rel="icon" href="assets/icones/favicon.svg">
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/quest.css">
-  <link rel="stylesheet" href="css/responsive.css">
-  <script src="js/config.js"></script>
+  <link rel="preload" href="assets/fontes/fredoka-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/fontes.css">
+  <link rel="stylesheet" href="css/publico.css">
+  <link rel="stylesheet" href="css/public-header.css">
   <script src="js/functions.js" defer></script>
   <script src="js/main.js" defer></script>
-  <script src="js/motion.js" defer></script>
-  <script src="js/quest.js" defer></script>
+  <script src="js/public-header.js" defer></script>
 </head>
 
-<body data-page="inicio" data-root="">
+<body class="pub nx-public-page" data-page="inicio" data-root="">
   <a class="sr-only" href="#conteudo">Ir para o conteúdo</a>
-  <header data-component="header"></header>
+  <header class="nx-header" data-public-header></header>
+
   <main id="conteudo">
-    <section class="hero stage" aria-labelledby="hero-t"><span class="orb o1" aria-hidden="true"></span><span
-        class="orb o2" aria-hidden="true"></span><span class="ghost" aria-hidden="true">QUEST</span>
-      <div class="wrap">
-        <div>
-          <h1 id="hero-t">BEM-VINDO AO <img class="hero-logo" src="assets/imagens/nexaquest.svg" alt="Nexa Quest"></h1>
-          <p class="lead">Uma plataforma digital interativa onde o seu conhecimento vira missões, desafios e conquistas.
-            Evolua, ganhe pontos, suba de nível e desbloqueie novos conteúdos.</p>
-          <div class="btn-row"><a class="btn btn-glow" href="paginas/criar-conta.html">CRIAR CONTA</a><a
-              class="btn btn-line" href="#download">Baixar o jogo</a></div>
+    <section class="hero" aria-labelledby="hero-titulo">
+      <div class="shell hero-grid">
+        <div class="hero-copy">
+          <h1 id="hero-titulo">Dê o play no seu futuro digital.</h1>
+          <p class="lead">Desenvolva suas habilidades em tecnologia e criação digital, complete missões e participe de projetos com outros estudantes.</p>
+          <div class="hero-actions">
+            <a class="pq-btn" href="paginas/criar-conta.html">Começar agora</a>
+            <a class="pq-btn pq-btn--ghost" href="paginas/login.html">Já tenho uma conta</a>
+          </div>
         </div>
-        <div class="hero-art"><span class="halo" aria-hidden="true"></span><img src="assets/imagens/mascote-palco.svg" alt="Mascote golfinho da Nexa Play sobre uma plataforma"></div>
-      </div>
-    </section>
-    <section class="qm" id="quest" aria-labelledby="quest-t" data-qm>
-      <div class="wrap qm-inner">
-        <div class="qm-copy">
-          <h2 class="qm-title" id="quest-t">Aprender também pode ser uma <em>aventura.</em></h2>
-          <p class="qm-lead">Explore diferentes áreas do conhecimento, enfrente desafios e descubra novas formas de aprender com o Nexa Quest.</p>
-          <div class="btn-row"><a class="btn btn-glow" href="#download">Baixar o jogo</a></div>
-        </div>
-        <div class="qm-stage">
-          <span class="qm-dark" aria-hidden="true"><svg class="qm-arcs" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid slice"><circle cx="470" cy="400" r="300"/><circle cx="470" cy="400" r="420"/><path d="M120 800C260 560 420 470 800 440"/></svg></span>
-          <div class="qm-scene">
-            <div class="qm-device">
-              <div class="qm-monitor">
-                <div class="qm-screen">
-                  <img src="assets/imagens/jogo-educa-tech.png" alt="Tela do jogo Educa Tech com as áreas Jogos, Design, Visual e Ads" width="1300" height="629" loading="lazy" decoding="async">
-                  <span class="qm-glare" aria-hidden="true"></span>
-                </div>
-                <div class="qm-chin"><span class="qm-led" aria-hidden="true"></span></div>
-              </div>
-              <div class="qm-neck" aria-hidden="true"></div>
-              <div class="qm-base" aria-hidden="true"></div>
-              <span class="qm-floor" aria-hidden="true"></span>
-            </div>
+
+        <div class="hero-art">
+          <div class="stage" role="group" aria-label="O golfinho do Nexa Quest e as quatro áreas de aprendizagem">
+            <img class="stage-mascot" src="assets/imagens/mascote-destaque.svg" alt="Golfinho, mascote do Nexa Quest" width="272" height="443" fetchpriority="high">
+            <a class="chip chip--design" href="paginas/nexa-quest.html#design">
+              <span class="chip-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="assets/icones/areas.svg#i-design"/></svg></span>Design
+            </a>
+            <a class="chip chip--sistemas" href="paginas/nexa-quest.html#sistemas">
+              <span class="chip-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="assets/icones/areas.svg#i-sistemas"/></svg></span>Sistemas
+            </a>
+            <a class="chip chip--multimidia" href="paginas/nexa-quest.html#multimidia">
+              <span class="chip-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="assets/icones/areas.svg#i-multimidia"/></svg></span>Multimídia
+            </a>
+            <a class="chip chip--jogos" href="paginas/nexa-quest.html#jogos">
+              <span class="chip-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="assets/icones/areas.svg#i-jogos"/></svg></span>Jogos
+            </a>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="vd" id="demonstracao" aria-labelledby="vd-t" data-vd>
-      <div class="wrap">
-        <div class="vd-head">
-          <div class="vd-titles">
-            <span class="vd-eyebrow">Demonstração</span>
-            <h2 class="vd-title" id="vd-t">Conheça a interface do <em>Nexa Quest.</em></h2>
-          </div>
-          <div class="vd-aside">
-            <p class="vd-lead">Veja os menus e o visual do jogo em funcionamento, direto aqui no site.</p>
-            <div class="btn-row"><a class="btn btn-glow" href="paginas/login.html" data-game>Acessar o Nexa Quest</a></div>
-          </div>
+    <section class="steps-section" aria-labelledby="passos-titulo">
+      <div class="shell">
+        <div class="steps-head">
+          <h2 id="passos-titulo">Do aprendizado individual aos projetos em equipe</h2>
+          <p class="lead">Aprenda no seu ritmo, pratique com desafios e use seus conhecimentos em projetos com outros estudantes.</p>
         </div>
-        <div class="vd-player">
-          <div class="vd-frame">
-            <iframe src="https://www.youtube.com/embed/rIEy7J-uNw0" title="Demonstração da interface do jogo Nexa Quest" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-          </div>
+        <ol class="steps">
+          <li class="step">
+            <span class="step-node"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="assets/icones/areas.svg#i-livro"/></svg></span>
+            <h3>Aprenda</h3>
+            <p>Escolha uma área e siga a trilha, no seu ritmo.</p>
+          </li>
+          <li class="step">
+            <span class="step-node"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="assets/icones/areas.svg#i-alvo"/></svg></span>
+            <h3>Pratique</h3>
+            <p>Cumpra missões e desafios, ganhe pontos e conquistas.</p>
+          </li>
+          <li class="step">
+            <span class="step-node"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="assets/icones/areas.svg#i-equipe"/></svg></span>
+            <h3>Crie em equipe</h3>
+            <p>Publique um projeto e convide outros estudantes para a equipe.</p>
+          </li>
+        </ol>
+        <p class="steps-foot"><a class="pq-link" href="paginas/nexa-quest.html">Conhecer o Nexa Quest</a></p>
       </div>
     </section>
-
-    <section class="manifesto" aria-labelledby="man-t">
-      <div class="m-fx" aria-hidden="true"></div>
-      <div class="wrap">
-        <div class="m-top">
-          <span class="m-count" aria-hidden="true"><b>00</b> / 03</span>
-        </div>
-        <div class="m-stage">
-          <ol class="m-list">
-          <li class="mrow">
-            <span class="mi" aria-hidden="true"></span>
-            <p class="mline">
-              <span class="m-pre"><span class="mw1">Aprendizado em</span></span></span>
-              <span class="mw2"><span class="mw2-o">aventura</span><span class="mw2-f" aria-hidden="true">aventura</span></span>
-            </p>
-          </li>
-          <li class="mrow">
-            <span class="mi" aria-hidden="true"></span>
-            <p class="mline">
-              <span class="m-pre"><span class="mw1">Uma nova</span></span></span>
-              <span class="mw2"><span class="mw2-o">experiência</span><span class="mw2-f" aria-hidden="true">experiência</span></span>
-            </p>
-          </li>
-          <li class="mrow">
-            <span class="mi" aria-hidden="true"></span>
-            <p class="mline">
-              <span class="m-pre"><span class="mw1">Solução de</span></span></span>
-              <span class="mw2"><span class="mw2-o">desafios</span><span class="mw2-f" aria-hidden="true">desafios</span></span>
-            </p>
-          </li>
-          </ol>
-          <div class="m-art" aria-hidden="true"><img src="assets/imagens/golfinho-fone.svg" alt="" width="241" height="152"></div>
-          <div class="m-foot">
-            <div>
-              <p>Educação, tecnologia e diversão numa só plataforma. No Nexa Quest, cada desafio é uma nova chance de aprender.</p>
-              <a class="btn btn-glow" href="#como-funciona">Veja como funciona <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
-            </div>
-      
-          </div>
-        </div>
-      </div>
-    </section>
-    </section>
-    <section class="sec" id="sobre-nexa-play" aria-labelledby="snp-t">
-      <div class="wrap split">
-        <div><span class="pill">SOBRE A NEXA PLAY</span>
-          <h2 id="snp-t">Quem desenvolve o <em>Nexa Quest.</em></h2>
-          <p>A Nexa Play é uma startup brasileira que atua em tecnologia, design, audiovisual e games. Da combinação dessas áreas nasceu a nossa forma de olhar para a educação: unir aprendizado, tecnologia e diversão em experiências interativas.</p>
-          <div class="btn-row"><a class="btn btn-azul" href="paginas/sobre-nexa-play.html">Conhecer a Nexa Play</a></div>
-        </div>
-        <div class="art"><img src="assets/imagens/logo-escura.svg" alt="Nexa Play" width="420" loading="lazy"></div>
-      </div>
-    </section>
-    <div class="waves" aria-hidden="true"></div>
   </main>
+
   <footer data-component="footer"></footer>
 </body>
 
