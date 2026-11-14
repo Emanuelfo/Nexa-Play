@@ -1,5 +1,5 @@
 /* Nexa Play — funções reutilizáveis (sem dependências) */
-const API_BASE_URL = ''; // Same-origin /api on Render, localhost and the Vercel proxy.
+const API_BASE_URL = ''; // /api is forwarded to https://nexa-play.onrender.com by Vercel.
 const NP = {
   $: (s, r = document) => r.querySelector(s),
   $$: (s, r = document) => [...r.querySelectorAll(s)],
@@ -28,6 +28,7 @@ const NP = {
   status(el, msg, ok) { if (el) { el.textContent = msg; el.className = 'status ' + (ok ? 'ok' : 'bad'); } },
   /* JWT enviado exclusivamente pelo cookie HttpOnly. */
   async api(path, { method = 'GET', body, legacyToken } = {}) {
+    const requestVersion = NP._authVersion;
     const headers = { 'X-Nexa-Request': '1' };
     if (legacyToken) headers.Authorization = 'Bearer ' + legacyToken;
     if (body) headers['Content-Type'] = 'application/json';
@@ -45,19 +46,22 @@ const NP = {
       const response = await r.text();
       let data;
       try {
-        data = response ? JSON.parse(response) : {};
+        data = r.status === 204 ? {} : JSON.parse(response);
+        if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('Invalid API response');
       } catch {
-        data = {
+        return { ok: false, status: r.ok ? 502 : r.status, data: {
           mensagem: r.status === 404
-            ? 'API não encontrada. Verifique a URL do serviço no Render.'
-            : `Resposta inválida da API (HTTP ${r.status}).`,
-        };
+            ? 'API não encontrada. Verifique o encaminhamento /api da Vercel para o Render.'
+            : 'O servidor retornou uma resposta inválida. Tente novamente.',
+        } };
       }
-      if (!data || typeof data !== 'object') data = {};
       if (!r.ok && !data.mensagem) data.mensagem = `Falha na API (HTTP ${r.status}).`;
-      if (r.status === 401 && path !== '/login' && path !== '/auth/google' && path !== '/auth/session') {
+      if (r.status === 401 && requestVersion === NP._authVersion && !['/me', '/login', '/auth/google', '/auth/session'].includes(path)) {
         NP.clearLocalAuth();
-        if (document.body.dataset.protected) location.replace(NP.root() + 'paginas/login.html');
+        if (document.body.dataset.protected) {
+          NP.hidePrivatePage();
+          location.replace(NP.root() + 'paginas/login.html');
+        }
       }
       return { ok: r.ok, status: r.status, data };
     } catch {
@@ -75,6 +79,8 @@ const NP = {
     }
   },
   clearLocalAuth() {
+    NP._authVersion += 1;
+    NP._sessionRequest = null;
     for (const storage of ['localStorage', 'sessionStorage']) {
       try { window[storage].removeItem('np_token'); } catch { /* storage may be disabled */ }
     }
@@ -83,16 +89,18 @@ const NP = {
   async login() {
     NP.clearLocalAuth();
     const user = await NP.loadUser();
-    if (!user) throw new Error('Não foi possível confirmar a sessão. Verifique se os cookies estão habilitados e tente novamente.');
+    if (!user) throw new Error(NP._sessionError || 'Não foi possível confirmar a sessão. Verifique se os cookies estão habilitados e tente novamente.');
   },
   async logout() {
     const result = await NP.api('/logout', { method: 'POST' });
     if (!result.ok) throw new Error(result.data.mensagem || 'Não foi possível encerrar a sessão. Tente novamente.');
     NP.clearLocalAuth();
+    try { NP._logoutChannel?.postMessage('logout'); } catch { /* Logout already completed on the server. */ }
   },
   async signOut() {
     try {
       await NP.logout();
+      NP.hidePrivatePage();
       location.replace(NP.root() + 'index.html');
     } catch (error) { NP.toast(error.message); }
   },
@@ -107,9 +115,15 @@ const NP = {
   _user: null,
   _sessionStatus: null,
   _sessionRequest: null,
+  _sessionError: '',
+  _authVersion: 0,
+  hidePrivatePage() {
+    if (document.body.dataset.protected) document.documentElement.style.visibility = 'hidden';
+  },
   async loadUser() {
     if (NP._sessionRequest) return NP._sessionRequest;
-    NP._sessionRequest = (async () => {
+    const request = (async () => {
+      const version = NP._authVersion;
       let legacyToken = null;
       let remember = false;
       try {
@@ -122,15 +136,29 @@ const NP = {
       if (legacyToken) {
         const migration = await NP.api('/auth/session', { method: 'POST', legacyToken, body: { lembrar: remember } });
         if (migration.ok || migration.status === 401) NP.clearLocalAuth();
-        else { NP._sessionStatus = migration.status; return null; }
+        else {
+          NP._sessionStatus = migration.status;
+          NP._sessionError = migration.data.mensagem;
+          return null;
+        }
       }
+      const validationVersion = legacyToken ? NP._authVersion : version;
       const result = await NP.api('/me');
+      if (validationVersion !== NP._authVersion) return null;
+      if (result.status === 401) NP.clearLocalAuth();
+      if (result.ok && !/^[1-9]\d{0,17}$/.test(String(result.data.id || ''))) {
+        result.ok = false;
+        result.status = 502;
+        result.data.mensagem = 'Não foi possível validar a resposta da sessão. Tente novamente.';
+      }
       NP._sessionStatus = result.status;
+      NP._sessionError = result.ok || result.status === 401 ? '' : result.data.mensagem;
       NP._user = result.ok ? result.data : null;
       return NP._user;
     })();
-    try { return await NP._sessionRequest; }
-    finally { NP._sessionRequest = null; }
+    NP._sessionRequest = request;
+    try { return await request; }
+    finally { if (NP._sessionRequest === request) NP._sessionRequest = null; }
   },
   currentUser: () => NP._user,
   icon: {
@@ -139,6 +167,22 @@ const NP = {
     pencil: '<svg width="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>'
   }
 };
+
+// Hide private DOM before the browser captures a back/forward cache entry.
+addEventListener('pagehide', () => NP.hidePrivatePage());
+if (typeof BroadcastChannel !== 'undefined') {
+  try {
+    NP._logoutChannel = new BroadcastChannel('nexa-auth');
+    NP._logoutChannel.addEventListener('message', event => {
+      if (event.data !== 'logout') return;
+      NP.clearLocalAuth();
+      if (document.body.dataset.protected) {
+        NP.hidePrivatePage();
+        location.replace(NP.root() + 'paginas/login.html');
+      }
+    });
+  } catch { /* Some browser privacy modes disable cross-tab messaging. */ }
+}
 
 // Revalidate documents restored from the browser back/forward cache.
 addEventListener('pageshow', async event => {

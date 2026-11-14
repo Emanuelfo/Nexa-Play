@@ -39,7 +39,7 @@ async function login(req, res) {
     const invalido = () => res.status(401).json({ mensagem: "E-mail, usuário ou senha incorretos. Confira os dados ou crie uma conta." });
 
     if (typeof id_login !== "string" || !id_login.trim() || id_login.length > 255
-      || typeof senha !== "string" || !senha || Buffer.byteLength(senha, "utf8") > 1024
+      || typeof senha !== "string" || !senha || Buffer.byteLength(senha, "utf8") > 72
       || (lembrar !== undefined && typeof lembrar !== "boolean")
       || (googleVinculo !== undefined && (typeof googleVinculo !== "string" || googleVinculo.length > 2048))) {
       return invalido();
@@ -59,9 +59,11 @@ async function login(req, res) {
     }
 
     const identificador = id_login.trim();
+    const attributes = ["id", "nome_usuario", "email", "pontos", "senha", ...(vinculo ? ["google_sub"] : [])];
     const usuario = ehEmail(identificador)
-      ? await Usuario.findOne({ where: { email: identificador.toLowerCase() } })
+      ? await Usuario.findOne({ attributes, where: where(fn("lower", fn("trim", col("email"))), identificador.toLowerCase()) })
       : await Usuario.findOne({
+        attributes,
         where: where(fn("lower", col("nome_usuario")), identificador.replace(/^@/, "").toLowerCase()),
       });
 

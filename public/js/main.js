@@ -571,6 +571,7 @@ function initContact() {
 
 function initRegister() {
   const f = $('#form-cadastro'); if (!f) return;
+  let submitting = false;
   const confirmarSenha = f.elements.namedItem('confirmar-senha');
   const validarConfirmacao = () => {
     const mensagem = !confirmarSenha.value
@@ -584,32 +585,42 @@ function initRegister() {
   });
   f.addEventListener('submit', async e => {
     e.preventDefault();
+    if (submitting) return;
     const nomeCompleto = f.nome_completo.value.trim();
     const nomeUsuario = f.nome_usuario.value.trim();
     const email = f.email.value.trim();
     const ok = [NP.setErr(f.nome_completo, nomeCompleto.length > 0 && nomeCompleto.length <= 100 ? '' : 'Informe seu nome completo (até 100 caracteres).'),
     NP.setErr(f.nome_usuario, /^[A-Za-z0-9_]{3,30}$/.test(nomeUsuario) ? '' : 'Use de 3 a 30 letras, números ou _ no nome de usuário.'),
-    NP.setErr(f.email, NP.isEmail(email) ? '' : 'Informe um e-mail válido.'),
-    NP.setErr(f.senha, f.senha.value.length < 6 ? 'A senha precisa ter ao menos 6 caracteres.' : ''),
+    NP.setErr(f.email, NP.isEmail(email) && email.length <= 255 ? '' : 'Informe um e-mail válido.'),
+    NP.setErr(f.senha, f.senha.value.length < 6 || new TextEncoder().encode(f.senha.value).length > 72 ? 'Use ao menos 6 caracteres e até 72 bytes na senha.' : ''),
     validarConfirmacao()].every(Boolean);
     if (!ok) return NP.status($('#cadastro-status'), 'Revise os campos destacados.', false);
-    const btn = $('button[type=submit]', f); btn.disabled = true; NP.status($('#cadastro-status'), 'Criando sua conta…', true);
-    const r = await NP.api('/usuarios', { method: 'POST', body: { nome_completo: nomeCompleto, nome_usuario: nomeUsuario, email, senha: f.senha.value, lembrar: true } });
-    if (!r.ok) {
-      btn.disabled = false;
-      if (r.status === 409) {
-        const campo = r.data.mensagem?.includes('usuário') ? f.nome_usuario : f.email;
-        NP.setErr(campo, r.data.mensagem);
-      }
-      return NP.status($('#cadastro-status'), r.data.mensagem || 'Não foi possível criar a conta.', false);
-    }
+    const btn = $('button[type=submit]', f);
+    submitting = true;
+    btn.disabled = true;
+    NP.status($('#cadastro-status'), 'Criando sua conta…', true);
+    let completed = false;
     try {
+      const result = await NP.api('/usuarios', { method: 'POST', body: { nome_completo: nomeCompleto, nome_usuario: nomeUsuario, email, senha: f.senha.value, lembrar: true } });
+      if (!result.ok) {
+        if (result.status === 409 && ['email', 'nome_usuario'].includes(result.data.campo)) {
+          NP.setErr(f.elements.namedItem(result.data.campo), result.data.mensagem);
+        }
+        NP.status($('#cadastro-status'), result.data.mensagem || 'Não foi possível criar a conta.', false);
+        return;
+      }
       await NP.login();
+      completed = true;
+      NP.status($('#cadastro-status'), 'Conta criada! Redirecionando…', true);
+      location.replace('inicio.html');
     } catch (error) {
-      return NP.status($('#cadastro-status'), error.message, false);
+      NP.status($('#cadastro-status'), error.message, false);
+    } finally {
+      if (!completed) {
+        submitting = false;
+        btn.disabled = false;
+      }
     }
-    NP.status($('#cadastro-status'), 'Conta criada! Redirecionando…', true);
-    setTimeout(() => location.href = 'inicio.html', 700);
   });
 }
 
@@ -618,25 +629,41 @@ let googleVinculoPendente = null;
 
 function initLogin() {
   const f = $('#form-login'); if (!f) return;
-  f.addEventListener('submit', async e => {
-    e.preventDefault(); const id = f.id_login.value.trim();
-    const ok = [NP.setErr(f.id_login, id ? '' : 'Informe seu e-mail ou usuário.'), NP.setErr(f.senha, f.senha.value ? '' : 'Informe sua senha.')].every(Boolean);
-    if (!ok) return;
-    const btn = $('button[type=submit]', f); btn.disabled = true;
-    const body = { id_login: id, senha: f.senha.value, lembrar: f.lembrar.checked };
-    if (googleVinculoPendente) body.google_vinculo = googleVinculoPendente;
-    const r = await NP.api('/login', { method: 'POST', body });
-    btn.disabled = false;
-    if (!r.ok) {
-      if (r.data.codigo) googleVinculoPendente = null; // vínculo expirado/recusado: recomeçar pelo botão do Google
-      return NP.status($('#login-status'), r.data.mensagem || 'Não foi possível entrar.', false);
-    }
+  let submitting = false;
+  f.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (submitting) return;
+    const id = f.id_login.value.trim();
+    const valid = [
+      NP.setErr(f.id_login, id && id.length <= 255 ? '' : 'Informe seu e-mail ou usuário.'),
+      NP.setErr(f.senha, f.senha.value ? '' : 'Informe sua senha.'),
+    ].every(Boolean);
+    if (!valid) return;
+    const button = $('button[type=submit]', f);
+    submitting = true;
+    button.disabled = true;
+    NP.status($('#login-status'), 'Entrando…', true);
+    let completed = false;
     try {
+      const body = { id_login: id, senha: f.senha.value, lembrar: f.lembrar.checked };
+      if (googleVinculoPendente) body.google_vinculo = googleVinculoPendente;
+      const result = await NP.api('/login', { method: 'POST', body });
+      if (!result.ok) {
+        if (result.data.codigo) googleVinculoPendente = null;
+        NP.status($('#login-status'), result.data.mensagem || 'Não foi possível entrar.', false);
+        return;
+      }
       await NP.login();
+      completed = true;
+      location.replace('inicio.html');
     } catch (error) {
-      return NP.status($('#login-status'), error.message, false);
+      NP.status($('#login-status'), error.message, false);
+    } finally {
+      if (!completed) {
+        submitting = false;
+        button.disabled = false;
+      }
     }
-    location.href = 'inicio.html';
   });
   initGoogleLogin(f);
 }
@@ -2952,6 +2979,8 @@ function initGameLinks() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  initRegister();
+  initLogin();
   const user = await NP.loadUser();
   if ($('#form-login') && user) {
     location.replace('inicio.html');
@@ -2988,5 +3017,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     initHomeProjects();
     initFeed();
   }
-  initPlaceholders(); initContact(); initRegister(); initLogin(); initGameLinks();
+  initPlaceholders(); initContact(); initGameLinks();
 });

@@ -11,7 +11,9 @@ async function run() {
   const email = `auth-test-${suffix}@example.invalid`;
   const password = crypto.randomUUID();
   let revokedToken;
-  const headers = { 'Content-Type': 'application/json', 'X-Nexa-Request': '1', 'X-Forwarded-Proto': 'https' };
+  // A distinct simulated proxy client keeps this local fixture within its own rate-limit quota.
+  const clientIp = `2001:db8:${crypto.randomBytes(2).toString('hex')}::1`;
+  const headers = { 'Content-Type': 'application/json', 'X-Nexa-Request': '1', 'X-Forwarded-Proto': 'https', 'X-Forwarded-For': clientIp };
   const post = (path, body, extraHeaders = {}) => fetch(base + path, {
     method: 'POST', headers: { ...headers, ...extraHeaders }, body: JSON.stringify(body),
   });
@@ -34,6 +36,9 @@ async function run() {
     assert.equal(response.status, 201);
     const signup = await response.json();
     assert.equal(signup.token, undefined);
+    const stored = await Usuario.findByPk(signup.usuario.id, { attributes: ['senha'] });
+    assert.notEqual(stored.senha, password);
+    assert.match(stored.senha, /^\$2[aby]\$/);
     let setCookie = response.headers.get('set-cookie');
     assert.match(setCookie, /HttpOnly/i);
     assert.match(setCookie, /Secure/i);
@@ -42,6 +47,15 @@ async function run() {
     response = await post('/auth/session', { lembrar: true }, { Authorization: `Bearer ${legacyToken}` });
     assert.equal(response.status, 204);
     assert.match(response.headers.get('set-cookie'), /Max-Age=/i);
+
+    response = await post('/usuarios', { nome_completo: 'Duplicate test', nome_usuario: `duplicate_${suffix}`, email: email.toUpperCase(), senha: password });
+    assert.equal(response.status, 409);
+    assert.equal((await response.json()).campo, 'email');
+    response = await post('/login', { id_login: email, senha: 'incorrect-test-password' });
+    assert.equal(response.status, 401);
+    response = await post('/login', { id_login: email, senha: password, lembrar: false });
+    assert.equal(response.status, 200);
+    assert(!/Max-Age=/i.test(response.headers.get('set-cookie')));
 
     response = await post('/login', { id_login: email, senha: password, lembrar: true });
     assert.equal(response.status, 200);
@@ -68,7 +82,7 @@ async function run() {
     assert.equal(response.status, 401);
     response = await fetch(base + '/me', { headers: { Authorization: `Bearer ${revokedToken}` } });
     assert.equal(response.status, 401);
-    console.log('PASS live Express/PostgreSQL: anonymous access, CSRF/CORS, signup, password login, cookie flags, migration, repeated authenticated requests, expiry and logout revocation.');
+    console.log('PASS live Express/PostgreSQL: protected access, CSRF/CORS, signup, password hash, duplicate email, wrong password, temporary/persistent cookies, migration, repeated authenticated requests, expiry and logout revocation.');
   } finally {
     await Usuario.destroy({ where: { email } });
     if (revokedToken) {

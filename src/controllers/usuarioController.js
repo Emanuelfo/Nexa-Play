@@ -46,13 +46,14 @@ async function cadastrar(req, res) {
       return res.status(400).json({ mensagem: "A senha deve ter ao menos 6 caracteres e no máximo 72 bytes." });
     }
 
-    if (await Usuario.findOne({ where: { email: emailNorm } })) {
-      return res.status(409).json({ mensagem: "Já existe uma conta com esse e-mail." });
+    if (await Usuario.findOne({ attributes: ["id"], where: where(fn("lower", fn("trim", col("email"))), emailNorm) })) {
+      return res.status(409).json({ campo: "email", mensagem: "Já existe uma conta com esse e-mail." });
     }
     if (await Usuario.findOne({
+      attributes: ["id"],
       where: where(fn("lower", col("nome_usuario")), nomeUsuario),
     })) {
-      return res.status(409).json({ mensagem: "Esse nome de usuário já está em uso." });
+      return res.status(409).json({ campo: "nome_usuario", mensagem: "Esse nome de usuário já está em uso." });
     }
 
     const usuario = await Usuario.create({
@@ -60,13 +61,15 @@ async function cadastrar(req, res) {
       nome_exibicao: nomeExibicao,
       email: emailNorm,
       senha: await bcrypt.hash(senha, 10),
-    });
+    }, { returning: ["id", "nome_usuario", "email", "pontos"] });
 
     setSession(req, res, gerarToken(usuario, !!lembrar), !!lembrar);
     res.status(201).json({ usuario: dadosPublicos(usuario) });
   } catch (erro) {
-    if (erro.name === "SequelizeUniqueConstraintError" || erro.code === "23505") {
-      return res.status(409).json({ mensagem: "O e-mail ou nome de usuário já está em uso." });
+    if (erro.name === "SequelizeUniqueConstraintError" || (erro.original?.code || erro.parent?.code || erro.code) === "23505") {
+      const fields = [...Object.keys(erro.fields || {}), ...(erro.errors || []).map(item => item.path)];
+      const campo = fields.includes("email") ? "email" : fields.includes("nome_usuario") ? "nome_usuario" : undefined;
+      return res.status(409).json({ campo, mensagem: "O e-mail ou nome de usuário já está em uso." });
     }
     console.error(JSON.stringify({
       event: "registration_error",
@@ -80,7 +83,7 @@ async function cadastrar(req, res) {
 // Usuário logado (usa o token) — o site chama isso ao abrir cada página
 async function me(req, res) {
   try {
-    const usuario = await Usuario.findByPk(req.usuario.id);
+    const usuario = await Usuario.findByPk(req.usuario.id, { attributes: ["id", "nome_usuario", "email", "pontos"] });
     if (!usuario) {
       clearSession(req, res);
       return res.status(401).json({ mensagem: "Usuário não encontrado" });

@@ -20,7 +20,7 @@ function client(replies, legacy = null) {
       calls.push({ url, options });
       const result = replies.shift();
       if (result instanceof Error) throw result;
-      return { ok: result.status >= 200 && result.status < 300, status: result.status, text: async () => JSON.stringify(result.data || {}) };
+      return { ok: result.status >= 200 && result.status < 300, status: result.status, text: async () => result.raw ?? JSON.stringify(result.data || {}) };
     },
   };
   context.window = context;
@@ -73,8 +73,63 @@ test('logout waits for server success and reports failure without claiming the s
   assert.equal(failure.NP.currentUser().id, '1');
 });
 
+test('logout still completes when cross-tab messaging is blocked', async () => {
+  const c = client([{ status: 204 }]);
+  c.NP._logoutChannel = { postMessage() { throw new Error('Channel unavailable'); } };
+  await c.NP.signOut();
+  assert.equal(c.navigation[0], 'index.html');
+});
+
 test('simultaneous validations share one request', async () => {
   const c = client([{ status: 200, data: { id: '1' } }]);
   await Promise.all([c.NP.loadUser(), c.NP.loadUser()]);
   assert.equal(c.calls.length, 1);
+});
+
+test('HTML fallback and malformed session data cannot be treated as an authenticated session', async () => {
+  for (const reply of [{ status: 200, raw: '<html>Landing page</html>' }, { status: 200, data: {} }, { status: 200, data: [] }]) {
+    const c = client([reply]);
+    await c.NP.enterPlatform();
+    assert.equal(c.NP.currentUser(), null);
+    assert.equal(c.NP._sessionStatus, 502);
+    assert.equal(c.navigation.length, 0);
+  }
+});
+
+test('network failure during session confirmation keeps its network message', async () => {
+  const c = client([new Error('Render unavailable')]);
+  await assert.rejects(() => c.NP.login(), /conectar ao servidor/);
+  assert.equal(c.NP._sessionStatus, 0);
+});
+
+test('a pending validation cannot restore the user after logout', async () => {
+  const c = client([]);
+  const originalFetch = c.NP.api;
+  let finishValidation;
+  c.NP.api = () => new Promise(resolve => { finishValidation = resolve; });
+  const pending = c.NP.loadUser();
+  c.NP.clearLocalAuth();
+  finishValidation({ ok: true, status: 200, data: { id: '1' } });
+  await pending;
+  assert.equal(c.NP.currentUser(), null);
+  c.NP.api = originalFetch;
+});
+
+test('an old failed validation cannot clear a newly established session', async () => {
+  const c = client([]);
+  let complete;
+  c.NP.api = () => new Promise(resolve => { complete = resolve; });
+  const pending = c.NP.loadUser();
+  c.NP.clearLocalAuth();
+  c.NP._user = { id: '2' };
+  complete({ ok: false, status: 401, data: {} });
+  await pending;
+  assert.equal(c.NP.currentUser().id, '2');
+});
+
+test('each supported Vercel project root forwards all API paths to Render', () => {
+  for (const file of ['vercel.json', 'public/vercel.json']) {
+    const config = JSON.parse(fs.readFileSync(file, 'utf8'));
+    assert.deepEqual(config.rewrites, [{ source: '/api/:path*', destination: 'https://nexa-play.onrender.com/api/:path*' }]);
+  }
 });

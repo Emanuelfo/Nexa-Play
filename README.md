@@ -119,10 +119,13 @@ Antes de implementar a experiência, o desenho de backend/schema foi documentado
 ## Sessão do navegador — Vercel e Render
 
 O frontend usa `/api` na própria origem. O `vercel.json` da raiz encaminha essas
-rotas ao Render. Configure na Vercel **Root Directory = raiz do repositório**,
-framework **Other**, sem comando de build, com saída `public`. Publique também
+rotas ao Render. Na Vercel, use **Root Directory = raiz do repositório**,
+framework **Other**, sem comando de build, com saída `public`. Se o projeto usa
+**Root Directory = public**, a configuração equivalente em `public/vercel.json`
+encaminha a API e a saída deve ser a própria pasta (`.`). Publique também
 o backend atualizado no Render, com `NODE_ENV=production`, `JWT_SECRET` existente,
-`DATABASE_URL` existente e `GOOGLE_CLIENT_ID` existente para o Google.
+`DATABASE_URL` existente. O login tradicional usa essas variáveis. A integração
+Google preexistente possui configuração independente e ficou fora desta revisão.
 `CORS_ORIGINS` recebe origens adicionais exatas, separadas por vírgula.
 A origem Vercel de produção e a origem Render já são permitidas.
 
@@ -153,7 +156,7 @@ CSRF. Respostas privadas usam Cache-Control: private, no-store.
 Clientes Bearer existentes podem continuar usando Authorization, que também exige preflight no navegador.
 O middleware mantém leitura Bearer para migração e compatibilidade.
 
-Execute `node --test tests/session.test.js tests/session-client.test.js tests/auth-issuance.test.js` para os
+Execute `node --test tests/session.test.js tests/session-client.test.js tests/auth-issuance.test.js tests/traditional-forms.test.js` para os
 testes isolados de JWT, cookie, revogação, migração e encaminhamento do cliente.
 Fechar/reabrir navegador, GIS com conta real e o proxy publicado exigem verificação
 após o deploy, com os domínios autorizados também no Google Cloud Console.
@@ -165,3 +168,49 @@ em cada banco antes de publicar o backend. Ela foi necessária no banco deste
 ambiente, onde faltavam google_sub e google_vinculado_em, e foi aplicada durante
 esta implementação. O login Google real ainda precisa de uma conta Google e
 Client ID com as origens autorizadas para validação após publicação.
+
+
+## Revisão da autenticação tradicional
+
+Na revisão, a implantação Vercel consultada respondeu 404 para `/api/me`, enquanto
+`https://nexa-play.onrender.com/api/me` respondeu 401 JSON, como esperado sem sessão.
+O frontend publicado já usava `/api`. Os dois arquivos Vercel cobrem os diretórios
+de projeto suportados e apontam todas as rotas da API para o Render. Uma resposta
+HTML ou JSON inválida agora é tratada como erro de comunicação, inclusive com HTTP
+200, e nunca é aceita como sessão válida. O deploy Vercel precisa ser atualizado.
+
+O backend também precisa de redeploy para as consultas de e-mail normalizado,
+projeções explícitas dos dados de autenticação e limite de 72 bytes do bcrypt no
+login. O cadastro já aplicava esse limite. O login passa a rejeitar sufixos além
+após os 72 bytes em vez de permitir a truncagem silenciosa do bcrypt.
+A duplicidade de e-mail é verificada sem distinguir maiúsculas e minúsculas,
+inclusive para dados antigos com espaços, e erros apontam o campo correto.
+Esta revisão não introduz migração ou alteração do schema do banco.
+
+Os formulários recebem os handlers antes da validação inicial da sessão,
+bloqueiam envios simultâneos e liberam nova tentativa em caso de erro. O fallback
+HTML usa POST para evitar credenciais na URL. A confirmação de sessão diferencia
+indisponibilidade do servidor de falha de autenticação. Respostas antigas não
+restauram nem removem uma sessão estabelecida por outra operação.
+
+Ao sair, o conteúdo privado é ocultado antes da navegação e antes da captura do
+cache de histórico. Documentos restaurados validam a sessão novamente. O logout
+é comunicado às outras abas quando o navegador oferece BroadcastChannel.
+O cookie continua HttpOnly, Secure em produção e SameSite=Lax, com validade de
+8 horas ou 30 dias quando a opção Lembrar de mim está marcada.
+
+Variáveis no Render permanecem `NODE_ENV=production`, `DATABASE_URL` e
+`JWT_SECRET` com pelo menos 32 bytes. Mantenha o segredo existente para preservar
+as sessões válidas. `CORS_ORIGINS` adiciona somente origens exatas necessárias.
+A configuração de CORS e os limites de requisições foram preservados nesta revisão.
+O frontend utiliza o proxy de mesma origem porque chamadas diretas entre Vercel e
+Render dependeriam das permissões de cookies de terceiros do navegador.
+
+Validação realizada com testes isolados, PostgreSQL e navegador local através de
+um proxy. Incluiu cadastro, hash, e-mail duplicado, senha correta/incorreta,
+sessão temporária/persistente, atualização, entrada pela landing, logout,
+rotas protegidas, expiração, falha temporária do backend e botão Voltar.
+As contas temporárias foram removidas. O teste integrado simula um cliente de proxy
+com IP reservado por execução para usar sua própria cota de rate limiting.
+Fechar e reabrir o processo do navegador e a configuração após deploy de ambos
+os serviços continuam sendo verificações manuais.

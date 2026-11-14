@@ -18,6 +18,11 @@ stub('../src/config/database', {
 });
 stub('../src/models/Usuario', {
   async findOne({ where }) {
+    if (where.attribute) {
+      const expression = where.attribute.args[0];
+      const field = expression.col || expression.args[0].col;
+      return users.find(user => String(user[field]).trim().toLowerCase() === where.logic) || null;
+    }
     return users.find(user => Object.entries(where).every(([key, value]) => user[key] === value)) || null;
   },
   async findByPk(id) { return users.find(user => String(user.id) === String(id)) || null; },
@@ -61,8 +66,24 @@ test('password, registration and Google issue the same session; refresh and serv
     assert.equal((await result.json()).token, undefined);
     assert.match(result.headers.get('set-cookie'), /HttpOnly/);
     assert(!result.headers.get('set-cookie').includes('Max-Age'));
+    assert.notEqual(users[0].senha, 'valid-test-password');
+    assert.match(users[0].senha, /^\$2[aby]\$/);
+    result = await post('/usuarios', { nome_completo: 'Duplicate', nome_usuario: 'different_fixture', email: ' FIXTURE@EXAMPLE.INVALID ', senha: 'valid-test-password' });
+    assert.equal(result.status, 409);
+    assert.equal((await result.json()).campo, 'email');
+    result = await post('/usuarios', { nome_completo: 'Invalid', nome_usuario: 'valid_fixture', email: 'invalid', senha: 'short' });
+    assert.equal(result.status, 400);
     result = await post('/login', { id_login: 'fixture@example.invalid', senha: 'wrong-password' });
     assert.equal(result.status, 401);
+    result = await post('/login', { id_login: 'fixture@example.invalid', senha: 'x'.repeat(73) });
+    assert.equal(result.status, 401);
+    const originalHash = users[0].senha;
+    users[0].senha = await require('bcrypt').hash('z'.repeat(72), 4);
+    result = await post('/login', { id_login: 'fixture@example.invalid', senha: 'z'.repeat(72) + 'wrong-suffix' });
+    assert.equal(result.status, 401);
+    users[0].senha = originalHash;
+    result = await post('/login', { id_login: ' FIXTURE@EXAMPLE.INVALID ', senha: 'valid-test-password', lembrar: true });
+    assert.equal(result.status, 200);
     result = await post('/login', { id_login: 'fixture@example.invalid', senha: 'valid-test-password', lembrar: true });
     assert.equal(result.status, 200);
     assert.equal((await result.json()).token, undefined);
