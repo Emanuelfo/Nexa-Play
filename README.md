@@ -11,10 +11,10 @@ contas, login com JWT e mensagens de contato ficam no banco.
 
 O servidor Express serve os arquivos do site e a API na mesma origem. As tabelas da aplicação continuam sendo provisionadas pelo schema; o backend cria apenas a tabela técnica interna de rate limiting, de forma idempotente.
 
-## Deploy Netlify + Render
-- O frontend envia as chamadas da API para `https://nexa-play.onrender.com`, configurado centralmente em `public/js/functions.js`.
-- O backend permite CORS para `https://nexaquest.netlify.app` e origens adicionais configuradas em `CORS_ORIGINS` (separadas por vírgula). A autenticação usa `Authorization: Bearer`; não usa cookies nem credenciais CORS.
-- Se o domínio do frontend ou da API mudar, atualize esses valores em `src/app.js` e `public/js/functions.js`, respectivamente.
+## Deploy Vercel + Render
+- O frontend envia chamadas para `/api` na própria origem. Na Vercel, `vercel.json` encaminha para `https://nexa-play.onrender.com`.
+- O backend permite CORS com credenciais para as origens Vercel/Render de produção e as origens exatas de `CORS_ORIGINS`. O navegador usa cookie HttpOnly e validação por JWT.
+- Se os domínios mudarem, atualize as origens em `src/app.js`/`CORS_ORIGINS` e o destino em `vercel.json`.
 
 ## Estrutura
 ```
@@ -78,7 +78,7 @@ O feed usa as tabelas `publicacoes`, `comentarios` e `curtidas`; o perfil usa `a
 - Helmet aplica cabeçalhos HTTP e uma CSP compatível com os scripts locais, fontes Google, imagens HTTPS e o vídeo do YouTube. Os limites de requisição são compartilhados entre instâncias por `api_rate_limit_windows` no PostgreSQL; o servidor cria a tabela de forma idempotente e limpa janelas expiradas.
 - Limites atuais: API 1.200 req/min/IP; login 10 req/15 min/IP e 20 por identificador; cadastro 5/h/IP; mensagens 5/h/IP; publicações 10/h/usuário; comentários 30/min/usuário; curtidas 60/min/usuário; solicitações de amizade 20/h/usuário. Escritas de perfil e projetos também têm limites próprios e retornam HTTP 429 com `Retry-After`.
 - Configure `JWT_SECRET` com pelo menos 32 bytes aleatórios, `CORS_ORIGINS` para domínios adicionais e `DATABASE_SSL_CA` com o certificado raiz PEM do projeto Supabase (substitua quebras de linha por `\n` se necessário). A CA ativa a validação do certificado TLS; sem ela, a conexão mantém criptografia mas não valida o certificado e o backend em produção emite um alerta. O Render deve ser o único proxy confiável à frente do Express; os logs JSON registram IDs de requisição e eventos de abuso sem gravar tokens, senhas, corpos ou IPs em texto claro.
-- CSRF tradicional não se aplica ao fluxo atual: a API autentica exclusivamente por token Bearer enviado em header, não por cookies. A aplicação valida JWT HS256 com expiração e ID de usuário, usa consultas parametrizadas e exige autorização no servidor.
+- A API valida JWT HS256, expiração e revogação, usa consultas parametrizadas e exige autorização no servidor. Cookies SameSite=Lax, origens autorizadas e cabeçalho de escrita protegem as requisições do navegador contra CSRF.
 - O backend conecta ao PostgreSQL/Supabase pelo `DATABASE_URL` de servidor e, conforme o schema atual, essa role pode ignorar RLS. As tabelas seguem com RLS habilitado e sem policies para acesso público, mas RLS não substitui as verificações de identidade/autoria da API quando a role do backend tem bypass. Aplicar RLS por usuário exigiria migrar a autenticação customizada para Supabase Auth e criar policies; esta implementação não altera as policies/tabelas sociais.
 - A CSP aplicada pelo Helmet vale para páginas servidas diretamente pelo Express. Como produção publica o frontend no Netlify, configure também os headers CSP no Netlify para obter a mesma proteção nos documentos hospedados lá.
 
@@ -98,8 +98,7 @@ Antes de implementar a experiência, o desenho de backend/schema foi documentado
 - O backend acessa o PostgreSQL/Supabase pelo Sequelize; o navegador não recebe credenciais do Supabase. Imagens e links externos aceitam URLs HTTPS, sem upload. Não há comentários ou upload de imagens de projeto nesta versão.
 
 ## O que mudou no front-end
-- `js/functions.js`: removido o armazenamento de contas no `localStorage`; entrou `NP.api()` e o token JWT
-  (`localStorage` com "Lembrar de mim", senão `sessionStorage`).
+- `js/functions.js`: `NP.api()` envia o cookie HttpOnly para a API da própria origem. JWTs antigos no armazenamento do navegador são migrados para cookie.
 - `js/main.js`: cadastro, login, redefinição de senha e contato agora chamam a API. Ao abrir cada página,
   o usuário é confirmado no servidor (`NP.loadUser()`).
 - `paginas/login.html`: o modal "Redefinir senha" ganhou o campo de data de nascimento.
@@ -115,3 +114,54 @@ Antes de implementar a experiência, o desenho de backend/schema foi documentado
 - `public/css/responsive.css`: ajustes para tablet e celular.
 - `public/js/motion.js`: animações (revelação na rolagem, parallax, inclinação 3D com o mouse, botões magnéticos, barra de progresso). Respeita "movimento reduzido" do sistema.
 - `public/assets/imagens/mascote-palco.png`: a mesma mascote de `mascote-destaque.png`, apenas sem o fundo claro embutido (o original foi mantido).
+
+
+## Sessão do navegador — Vercel e Render
+
+O frontend usa `/api` na própria origem. O `vercel.json` da raiz encaminha essas
+rotas ao Render. Configure na Vercel **Root Directory = raiz do repositório**,
+framework **Other**, sem comando de build, com saída `public`. Publique também
+o backend atualizado no Render, com `NODE_ENV=production`, `JWT_SECRET` existente,
+`DATABASE_URL` existente e `GOOGLE_CLIENT_ID` existente para o Google.
+`CORS_ORIGINS` recebe origens adicionais exatas, separadas por vírgula.
+A origem Vercel de produção e a origem Render já são permitidas.
+
+O JWT existente passa a ser enviado em `nexa_session`, cookie HttpOnly, Secure
+em HTTPS/produção, SameSite=Lax, Path=/api e sem Domain. A Vercel encaminha
+Cookie e Set-Cookie pelo proxy. O navegador mantém a comunicação na própria
+origem, sem depender de cookies de terceiros. As sessões de Vercel e Render
+são independentes por domínio. Use o frontend Vercel para entrar e acessar
+pela landing Vercel. Abrir HTML por `file://` não suporta esse fluxo.
+
+Os prazos permanecem 8 horas e 30 dias com **Lembrar de mim**. Somente a opção
+persistente emite Max-Age. Senha, cadastro e Google usam o mesmo mecanismo.
+Tokens antigos são trocados por cookie sem renovar a validade e removidos de
+localStorage/sessionStorage após a troca. Novos JWTs não são retornados no JSON
+nem gravados no armazenamento JavaScript. O token temporário de vínculo Google
+continua limitado à confirmação já existente.
+
+O logout revoga o hash SHA-256 do JWT até sua expiração e só depois limpa o cookie.
+No startup, o servidor cria de forma idempotente a tabela técnica
+`public.jwt_revocations`, seu índice e RLS, assim como já faz com rate limiting.
+A role do banco precisa dessas permissões. Nenhuma tabela de usuários é alterada.
+A tarefa periódica remove hashes expirados. Falha no banco impede autenticação.
+
+Chamadas de escrita à API exigem `X-Nexa-Request: 1`. O frontend já envia esse
+cabeçalho. CORS permite credenciais apenas para origens autorizadas e valida o
+preflight do cabeçalho para proteger as operações autenticadas por cookie contra
+CSRF. Respostas privadas usam Cache-Control: private, no-store.
+Clientes Bearer existentes podem continuar usando Authorization, que também exige preflight no navegador.
+O middleware mantém leitura Bearer para migração e compatibilidade.
+
+Execute `node --test tests/session.test.js tests/session-client.test.js tests/auth-issuance.test.js` para os
+testes isolados de JWT, cookie, revogação, migração e encaminhamento do cliente.
+Fechar/reabrir navegador, GIS com conta real e o proxy publicado exigem verificação
+após o deploy, com os domínios autorizados também no Google Cloud Console.
+
+Para o teste integrado local com PostgreSQL, inicie `npm start` e execute
+`node tests/session-live.cjs`. O teste cria e remove uma conta temporária própria.
+A migração existente `db/migrations/20261114_login_google.sql` deve estar aplicada
+em cada banco antes de publicar o backend. Ela foi necessária no banco deste
+ambiente, onde faltavam google_sub e google_vinculado_em, e foi aplicada durante
+esta implementação. O login Google real ainda precisa de uma conta Google e
+Client ID com as origens autorizadas para validação após publicação.

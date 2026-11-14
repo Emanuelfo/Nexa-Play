@@ -359,7 +359,7 @@ function renderSocialShell(host, user) {
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && accountMenu.classList.contains('open')) closeAccountMenu(true);
   });
-  $('#logout').addEventListener('click', () => { NP.logout(); location.href = root + 'index.html'; });
+  $('#logout').addEventListener('click', () => NP.signOut());
 
   const shell = document.createElement('div');
   shell.className = 'social-shell';
@@ -527,7 +527,7 @@ function renderHeader() {
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape' && menu.classList.contains('open')) closeMenu(true);
     });
-    $('#logout').addEventListener('click', () => { NP.logout(); location.href = r + 'index.html'; });
+    $('#logout').addEventListener('click', () => NP.signOut());
   }
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
@@ -603,7 +603,13 @@ function initRegister() {
       }
       return NP.status($('#cadastro-status'), r.data.mensagem || 'Não foi possível criar a conta.', false);
     }
-    NP.login(r.data.token, true); NP.status($('#cadastro-status'), 'Conta criada! Redirecionando…', true); setTimeout(() => location.href = 'inicio.html', 700);
+    try {
+      await NP.login();
+    } catch (error) {
+      return NP.status($('#cadastro-status'), error.message, false);
+    }
+    NP.status($('#cadastro-status'), 'Conta criada! Redirecionando…', true);
+    setTimeout(() => location.href = 'inicio.html', 700);
   });
 }
 
@@ -625,7 +631,12 @@ function initLogin() {
       if (r.data.codigo) googleVinculoPendente = null; // vínculo expirado/recusado: recomeçar pelo botão do Google
       return NP.status($('#login-status'), r.data.mensagem || 'Não foi possível entrar.', false);
     }
-    NP.login(r.data.token, f.lembrar.checked); location.href = 'inicio.html';
+    try {
+      await NP.login();
+    } catch (error) {
+      return NP.status($('#login-status'), error.message, false);
+    }
+    location.href = 'inicio.html';
   });
   initGoogleLogin(f);
 }
@@ -656,8 +667,12 @@ function initGoogleLogin(f) {
     const lembrar = !!f.lembrar.checked;
     const r = await NP.api('/auth/google', { method: 'POST', body: { credential: resposta.credential, lembrar } });
     state.ocupado = false;
-    if (r.ok && r.data.token) {
-      NP.login(r.data.token, lembrar);
+    if (r.ok && r.data.usuario) {
+      try {
+        await NP.login();
+      } catch (error) {
+        return aviso(error.message);
+      }
       aviso(r.data.novo_usuario ? 'Conta criada! Redirecionando…' : 'Entrando…', true);
       location.href = 'inicio.html';
       return;
@@ -2924,7 +2939,7 @@ function initProjectDetail() {
 
 function initPlaceholders() {
   $$('[data-soon]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); NP.toast(a.dataset.soon); }));
-  $$('[data-logout]').forEach(b => b.addEventListener('click', () => { NP.logout(); location.href = NP.root() + 'index.html'; }));
+  $$('[data-logout]').forEach(b => b.addEventListener('click', () => NP.signOut()));
 }
 
 function initGameLinks() {
@@ -2937,14 +2952,27 @@ function initGameLinks() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  if (document.body.dataset.protected && NP.token()) {
-    loadOwnProfileResponse();
-    const publicId = new URLSearchParams(location.search).get('id');
-    if (document.body.dataset.page === 'perfil-publico' && publicId && /^\d{1,18}$/.test(publicId) && BigInt(publicId) > 0n) {
-      loadPublicProfileResponse(publicId);
-    }
+  const user = await NP.loadUser();
+  if ($('#form-login') && user) {
+    location.replace('inicio.html');
+    return;
   }
-  await NP.loadUser(); // confirma o login no servidor antes de montar as páginas
+  document.documentElement.style.visibility = '';
+  dispatchEvent(new Event('sessionchecked'));
+  if (document.body.dataset.protected && !user) {
+    if (NP._sessionStatus === 401) location.replace(NP.root() + 'paginas/login.html');
+    else {
+      const message = document.createElement('p');
+      message.setAttribute('role', 'status');
+      message.textContent = 'Não foi possível verificar sua sessão. ';
+      const retry = document.createElement('button');
+      retry.textContent = 'Tentar novamente';
+      retry.addEventListener('click', () => location.reload());
+      message.append(retry);
+      document.querySelector('main').replaceChildren(message);
+    }
+    return;
+  }
   renderHeader(); renderFooter();
   const page = document.body.dataset.page;
   if (page === 'estatisticas-jogo') initGameStats();

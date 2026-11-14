@@ -86,3 +86,13 @@
 @media (prefers-reduced-motion: reduce) {
   .nx-header nav a, .nx-header .nx-nav-access { transition: none; }
 }
+.nx-header .nx-nav-access[aria-busy="true"] { position: relative; cursor: progress; }
+.nx-header .nx-nav-access[aria-busy="true"]::after {
+  content: ""; position: absolute; right: 7px; top: calc(50% - 5px);
+  width: 10px; height: 10px; border: 2px solid currentColor;
+  border-right-color: transparent; border-radius: 50%; animation: session-spin .8s linear infinite;
+}
+@keyframes session-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .nx-header .nx-nav-access[aria-busy="true"]::after { animation: none; }
+}

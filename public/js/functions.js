@@ -1,5 +1,5 @@
 /* Nexa Play — funções reutilizáveis (sem dependências) */
-const API_BASE_URL = 'https://nexa-play.onrender.com';
+const API_BASE_URL = ''; // Same-origin /api on Render, localhost and the Vercel proxy.
 const NP = {
   $: (s, r = document) => r.querySelector(s),
   $$: (s, r = document) => [...r.querySelectorAll(s)],
@@ -26,16 +26,18 @@ const NP = {
     input.setAttribute('aria-invalid', msg ? 'true' : 'false'); return !msg;
   },
   status(el, msg, ok) { if (el) { el.textContent = msg; el.className = 'status ' + (ok ? 'ok' : 'bad'); } },
-  /* API (backend Node/PostgreSQL). O token JWT fica no localStorage ("lembrar de mim") ou no sessionStorage. */
-  async api(path, { method = 'GET', body } = {}) {
-    const headers = {}, t = NP.token();
-    if (t) headers.Authorization = 'Bearer ' + t;
+  /* JWT enviado exclusivamente pelo cookie HttpOnly. */
+  async api(path, { method = 'GET', body, legacyToken } = {}) {
+    const headers = { 'X-Nexa-Request': '1' };
+    if (legacyToken) headers.Authorization = 'Bearer ' + legacyToken;
     if (body) headers['Content-Type'] = 'application/json';
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30000);
     try {
       const r = await fetch(`${API_BASE_URL}/api${path}`, {
         method,
+        credentials: 'same-origin',
+        cache: 'no-store',
         headers,
         body: body ? JSON.stringify(body) : undefined,
         signal: controller.signal,
@@ -53,6 +55,10 @@ const NP = {
       }
       if (!data || typeof data !== 'object') data = {};
       if (!r.ok && !data.mensagem) data.mensagem = `Falha na API (HTTP ${r.status}).`;
+      if (r.status === 401 && path !== '/login' && path !== '/auth/google' && path !== '/auth/session') {
+        NP.clearLocalAuth();
+        if (document.body.dataset.protected) location.replace(NP.root() + 'paginas/login.html');
+      }
       return { ok: r.ok, status: r.status, data };
     } catch {
       return {
@@ -68,20 +74,63 @@ const NP = {
       clearTimeout(timeout);
     }
   },
-  token() { try { return localStorage.getItem('np_token') || sessionStorage.getItem('np_token'); } catch { return null; } },
-  login(token, remember) {
-    NP.logout();
-    try { (remember ? localStorage : sessionStorage).setItem('np_token', token); } catch { /* armazenamento bloqueado */ }
+  clearLocalAuth() {
+    for (const storage of ['localStorage', 'sessionStorage']) {
+      try { window[storage].removeItem('np_token'); } catch { /* storage may be disabled */ }
+    }
+    NP._user = null;
   },
-  logout() { try { localStorage.removeItem('np_token'); sessionStorage.removeItem('np_token'); } catch { /* ignora */ } NP._user = null; },
+  async login() {
+    NP.clearLocalAuth();
+    const user = await NP.loadUser();
+    if (!user) throw new Error('Não foi possível confirmar a sessão. Verifique se os cookies estão habilitados e tente novamente.');
+  },
+  async logout() {
+    const result = await NP.api('/logout', { method: 'POST' });
+    if (!result.ok) throw new Error(result.data.mensagem || 'Não foi possível encerrar a sessão. Tente novamente.');
+    NP.clearLocalAuth();
+  },
+  async signOut() {
+    try {
+      await NP.logout();
+      location.replace(NP.root() + 'index.html');
+    } catch (error) { NP.toast(error.message); }
+  },
+  async enterPlatform() {
+    const user = await NP.loadUser();
+    if (NP._sessionStatus !== 200 && NP._sessionStatus !== 401) {
+      NP.toast('Não foi possível verificar sua sessão. Tente novamente.');
+      return;
+    }
+    location.assign(NP.root() + 'paginas/' + (user ? 'inicio.html' : 'login.html'));
+  },
   _user: null,
-  /* Busca o usuário logado no servidor; chamado uma vez ao abrir cada página */
+  _sessionStatus: null,
+  _sessionRequest: null,
   async loadUser() {
-    if (!NP.token()) return null;
-    const r = await NP.api('/me');
-    if (r.ok) NP._user = r.data;
-    else if (r.status === 401) NP.logout(); // token inválido ou expirado
-    return NP._user;
+    if (NP._sessionRequest) return NP._sessionRequest;
+    NP._sessionRequest = (async () => {
+      let legacyToken = null;
+      let remember = false;
+      try {
+        legacyToken = localStorage.getItem('np_token');
+        remember = !!legacyToken;
+      } catch { /* storage may be disabled */ }
+      if (!legacyToken) {
+        try { legacyToken = sessionStorage.getItem('np_token'); } catch { /* storage may be disabled */ }
+      }
+      if (legacyToken) {
+        const migration = await NP.api('/auth/session', { method: 'POST', legacyToken, body: { lembrar: remember } });
+        if (migration.ok || migration.status === 401) NP.clearLocalAuth();
+        else { NP._sessionStatus = migration.status; return null; }
+      }
+      const result = await NP.api('/me');
+      NP._sessionStatus = result.status;
+      NP._user = result.ok ? result.data : null;
+      return NP._user;
+    })();
+    try { return await NP._sessionRequest; }
+    finally { NP._sessionRequest = null; }
   },
   currentUser: () => NP._user,
   icon: {
@@ -90,3 +139,17 @@ const NP = {
     pencil: '<svg width="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>'
   }
 };
+
+// Revalidate documents restored from the browser back/forward cache.
+addEventListener('pageshow', async event => {
+  if (!event.persisted || !document.body.dataset.protected) return;
+  document.documentElement.style.visibility = 'hidden';
+  const user = await NP.loadUser();
+  if (user) location.reload();
+  else if (NP._sessionStatus === 401) location.replace(NP.root() + 'paginas/login.html');
+  else {
+    document.body.replaceChildren();
+    document.documentElement.style.visibility = '';
+    NP.toast('Não foi possível verificar sua sessão. Atualize a página para tentar novamente.');
+  }
+});

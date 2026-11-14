@@ -18,9 +18,11 @@ if (Buffer.byteLength(process.env.JWT_SECRET || "", "utf8") < 32) {
   process.exit(1);
 }
 
+const session = require("./services/session");
 const app = express();
 const frontendOrigins = new Set([
   "https://nexaquest-kappa.vercel.app",
+  "https://nexa-play.onrender.com",
   ...((process.env.CORS_ORIGINS || "").split(",").map(origin => origin.trim()).filter(Boolean)),
 ]);
 const apiRateLimit = createRateLimiter({
@@ -63,13 +65,15 @@ app.use(helmet({
 app.use("/api", (req, res, next) => {
   const origin = req.get("Origin");
   res.vary("Origin");
-  if (origin && !frontendOrigins.has(origin)) {
+  res.setHeader("Cache-Control", "private, no-store");
+  if (origin && !frontendOrigins.has(origin) && origin !== `${req.protocol}://${req.get("host")}`) {
     return res.status(403).json({ mensagem: "Esta origem não tem permissão para acessar a API." });
   }
   if (origin) {
     res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+    res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Nexa-Request");
     res.setHeader("Access-Control-Expose-Headers", "Retry-After, X-Request-Id");
     if (req.method === "OPTIONS") res.setHeader("Access-Control-Max-Age", "600");
   }
@@ -79,12 +83,16 @@ app.use("/api", (req, res, next) => {
     const headers = (req.get("Access-Control-Request-Headers") || "")
       .split(",").map(header => header.trim().toLowerCase()).filter(Boolean);
     const allowedMethods = new Set(["GET", "POST", "PUT", "DELETE"]);
-    const allowedHeaders = new Set(["authorization", "content-type"]);
+    const allowedHeaders = new Set(["authorization", "content-type", "x-nexa-request"]);
     if ((method && !allowedMethods.has(method))
       || headers.some(header => !allowedHeaders.has(header))) {
       return res.status(403).json({ mensagem: "Método ou cabeçalho CORS não permitido." });
     }
     return res.sendStatus(204);
+  }
+  const bearerRequest = /^Bearer [A-Za-z0-9._~-]+$/i.test(req.get("Authorization") || "");
+  if (!["GET", "HEAD"].includes(req.method) && req.get("X-Nexa-Request") !== "1" && !bearerRequest) {
+    return res.status(403).json({ mensagem: "Cabeçalho de proteção da requisição ausente." });
   }
   return next();
 });
@@ -145,8 +153,10 @@ sequelize.authenticate()
     console.log("Conectado ao banco de dados");
   })
   .then(initializeRateLimitStore)
+  .then(session.initializeSessionStore)
   .then(() => {
     const cleanupTimer = setInterval(() => {
+      session.cleanRevocations().catch(() => console.error("session_cleanup_failed"));
       cleanExpiredBuckets().catch(erro => {
         console.error(JSON.stringify({
           event: "rate_limit_cleanup_error",

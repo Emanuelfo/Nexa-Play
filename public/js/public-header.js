@@ -12,16 +12,13 @@
     `<a href="${url}"${key === page ? ' aria-current="page"' : ''}>${label}</a>`
   ).join('');
 
-  // Quem já tem sessão vai direto à plataforma; os demais, ao Login.
-  const entrada = (typeof NP !== 'undefined' && NP.token && NP.token()) ? 'paginas/inicio.html' : 'paginas/login.html';
-
   header.innerHTML = `
     <div class="nx-nav-wrap">
       <a class="nx-brand" href="${root}index.html" aria-label="Nexa Quest — página inicial">
         <img src="${root}assets/imagens/logo-escura-quest.svg" width="64" height="54" alt="Nexa Quest">
       </a>
       <nav class="nx-nav" aria-label="Principal">${links}</nav>
-      <a class="nx-nav-access" href="${root}${entrada}">Acessar plataforma</a>
+      <a class="nx-nav-access" href="${root}paginas/inicio.html">Acessar plataforma</a>
       <details class="nx-mobile-menu">
         <summary aria-label="Menu de navegação">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
@@ -31,6 +28,22 @@
         <nav aria-label="Principal">${links}</nav>
       </details>
     </div>`;
+
+  const access = header.querySelector('.nx-nav-access');
+  let checking = false;
+  access.addEventListener('click', async event => {
+    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    if (checking) return;
+    checking = true;
+    const indicator = setTimeout(() => access.setAttribute('aria-busy', 'true'), 300);
+    try { await NP.enterPlatform(); }
+    finally {
+      clearTimeout(indicator);
+      access.removeAttribute('aria-busy');
+      checking = false;
+    }
+  });
 
   const menu = header.querySelector('.nx-mobile-menu');
   const trigger = menu.querySelector('summary');

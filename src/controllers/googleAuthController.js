@@ -1,3 +1,4 @@
+const { setSession } = require("../services/session");
 const crypto = require("node:crypto");
 const { where, fn, col } = require("sequelize");
 const Usuario = require("../models/Usuario");
@@ -47,8 +48,9 @@ const nomeUsuarioEmUso = async (nome) => !!(await Usuario.findOne({
 
 const eUnicidade = (erro) => erro?.name === "SequelizeUniqueConstraintError" || (erro?.parent || erro?.original)?.code === "23505";
 
-function respostaLogin(res, usuario, lembrar, extra = {}) {
-  return res.json({ token: gerarToken(usuario, lembrar), usuario: dadosPublicos(usuario), ...extra });
+function respostaLogin(req, res, usuario, lembrar, extra = {}) {
+  setSession(req, res, gerarToken(usuario, lembrar), lembrar);
+  return res.json({ usuario: dadosPublicos(usuario), ...extra });
 }
 
 async function criarContaGoogle(google) {
@@ -95,7 +97,7 @@ async function loginGoogle(req, res) {
 
     // 1) Conta já vinculada a este Google (identificador externo "sub")
     const vinculado = await Usuario.findOne({ where: { google_sub: google.sub } });
-    if (vinculado) return respostaLogin(res, vinculado, !!lembrar, { novo_usuario: false });
+    if (vinculado) return respostaLogin(req, res, vinculado, !!lembrar, { novo_usuario: false });
 
     // 2) Mesmo e-mail em conta existente: NÃO vincula automaticamente
     const existente = ehEmail(google.email)
@@ -103,7 +105,7 @@ async function loginGoogle(req, res) {
       : null;
     if (existente) {
       // Conta criada/vinculada a este mesmo Google por uma requisição simultânea: é a mesma pessoa
-      if (existente.google_sub === google.sub) return respostaLogin(res, existente, !!lembrar, { novo_usuario: false });
+      if (existente.google_sub === google.sub) return respostaLogin(req, res, existente, !!lembrar, { novo_usuario: false });
       if (existente.google_sub) {
         return res.status(409).json({
           codigo: "conta_vinculada_outro_google",
@@ -123,7 +125,7 @@ async function loginGoogle(req, res) {
       return res.status(400).json({ codigo: "email_invalido", mensagem: "O e-mail da conta Google não pôde ser usado." });
     }
     const { usuario, criado } = await criarContaGoogle(google);
-    return respostaLogin(res, usuario, !!lembrar, { novo_usuario: criado });
+    return respostaLogin(req, res, usuario, !!lembrar, { novo_usuario: criado });
   } catch (erro) {
     if (erro instanceof GoogleTokenInvalidoError) {
       return res.status(401).json({ codigo: "google_token_invalido", mensagem: "Não foi possível confirmar sua conta do Google. Tente novamente." });

@@ -1,5 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const crypto = require("node:crypto");
+const { setSession, clearSession } = require("../services/session");
 const { where, fn, col } = require("sequelize");
 const Usuario = require("../models/Usuario");
 const { ehEmail } = require("../utils/validacao");
@@ -17,6 +19,7 @@ function dadosPublicos(u) {
 function gerarToken(usuario, lembrar) {
   return jwt.sign({ id: usuario.id }, process.env.JWT_SECRET, {
     expiresIn: lembrar ? "30d" : "8h",
+    jwtid: crypto.randomUUID(),
   });
 }
 
@@ -59,7 +62,8 @@ async function cadastrar(req, res) {
       senha: await bcrypt.hash(senha, 10),
     });
 
-    res.status(201).json({ token: gerarToken(usuario, !!lembrar), usuario: dadosPublicos(usuario) });
+    setSession(req, res, gerarToken(usuario, !!lembrar), !!lembrar);
+    res.status(201).json({ usuario: dadosPublicos(usuario) });
   } catch (erro) {
     if (erro.name === "SequelizeUniqueConstraintError" || erro.code === "23505") {
       return res.status(409).json({ mensagem: "O e-mail ou nome de usuário já está em uso." });
@@ -77,7 +81,10 @@ async function cadastrar(req, res) {
 async function me(req, res) {
   try {
     const usuario = await Usuario.findByPk(req.usuario.id);
-    if (!usuario) return res.status(401).json({ mensagem: "Usuário não encontrado" });
+    if (!usuario) {
+      clearSession(req, res);
+      return res.status(401).json({ mensagem: "Usuário não encontrado" });
+    }
     res.json(dadosPublicos(usuario));
   } catch (erro) {
     console.error(JSON.stringify({

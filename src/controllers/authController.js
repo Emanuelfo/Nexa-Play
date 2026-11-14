@@ -1,3 +1,4 @@
+const { setSession } = require("../services/session");
 const bcrypt = require("bcrypt");
 const { where, fn, col } = require("sequelize");
 const Usuario = require("../models/Usuario");
@@ -71,8 +72,8 @@ async function login(req, res) {
         const resultado = await vincularGoogle(usuario, vinculo);
         if (resultado) return res.status(resultado.status).json(resultado.corpo);
       }
+      setSession(req, res, gerarToken(usuario, !!lembrar), !!lembrar);
       return res.json({
-        token: gerarToken(usuario, !!lembrar),
         usuario: dadosPublicos(usuario),
         ...(vinculo ? { google_vinculado: true } : {}),
       });
