@@ -283,10 +283,10 @@ html { scroll-behavior: smooth; scroll-padding-top: 104px; -webkit-text-size-adj
   color: var(--blue); font: 600 3rem/1 var(--display);
 }
 .member-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 28%; }
-.member-info { display: grid; gap: 6px; }
+.member-info { display: grid; gap: 6px; text-align: left; }
 .member h3 { font-size: clamp(1.375rem, 2vw, 1.625rem); line-height: 1.15; }
-.member .member-area { display: flex; align-items: flex-start; gap: 8px; color: var(--blue-dark); font-size: .9375rem; font-weight: 600; line-height: 1.3; }
-.member-area svg { flex: none; width: 20px; height: 20px; margin-top: -1px; fill: none; stroke: currentColor; stroke-width: 2; }
+.member .member-area { display: flex; align-items: flex-start; justify-content: flex-start; gap: 8px; color: var(--blue-dark); font-size: .9375rem; font-weight: 600; line-height: 1.3; }
+.member-area svg { order: 1; flex: none; width: 20px; height: 20px; margin-top: -1px; fill: none; stroke: currentColor; stroke-width: 2; }
 .member .member-about { max-width: 38ch; margin-top: 6px; color: var(--muted); font-size: .9375rem; line-height: 1.6; text-wrap: pretty; }
 
 .about-purpose { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(32px, 6vw, 88px); align-items: start; }
@@ -390,9 +390,9 @@ html { scroll-behavior: smooth; scroll-padding-top: 104px; -webkit-text-size-adj
 }
 
 /* mascote como elemento complementar no Sobre */
-.about-mascot { position: relative; display: grid; place-items: end center; width: min(100%, 360px); aspect-ratio: 1; margin-inline: auto; }
-.about-mascot::before { content: ""; position: absolute; left: 50%; bottom: 0; width: 88%; aspect-ratio: 1; transform: translateX(-50%); border-radius: 50%; background: var(--ice); }
-.about-mascot img { position: relative; width: 54%; margin-bottom: 4%; }
+.about-mascot { position: relative; display: grid; grid-template-rows: 1fr auto; place-items: center; width: min(100%, 360px); aspect-ratio: 1; margin-inline: auto; }
+.about-mascot::before { content: ""; grid-area: 2 / 1; width: 88%; aspect-ratio: 1; border-radius: 50%; background: var(--ice); }
+.about-mascot img { position: relative; grid-area: 2 / 1; width: 54%; height: auto; }
 @media (max-width: 860px) { .about-mascot { width: min(100%, 240px); } }
 
 /* ==========================================================================

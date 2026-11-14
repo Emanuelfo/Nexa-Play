@@ -15,6 +15,7 @@
     <script src="../js/functions.js" defer></script>
     <script src="../js/main.js" defer></script>
     <script src="../js/motion.js" defer></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
 <body data-root="../" data-page="auth">
@@ -47,7 +48,8 @@
                 <div class="line-row"><label><input type="checkbox" name="lembrar"> Lembrar de mim</label></div>
                 <button class="btn" type="submit">Entrar</button>
                 <p class="status" id="login-status" role="status"></p>
-                <div class="or">OU</div><button class="btn btn-soft" type="button" id="google-btn"><svg width="18"
+                <div class="or">OU</div>
+                <div class="google-slot" id="google-slot" hidden></div><button class="btn btn-soft" type="button" id="google-btn"><svg width="18"
                         viewBox="0 0 48 48" aria-hidden="true">
                         <path fill="#EA4335"
                             d="M24 9.500c3.5 0 6.6 1.2 9.1 3.600l6.8-6.800C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.200l7.9 6.100C12.4 13.5 17.7 9.5 24 9.500z" />

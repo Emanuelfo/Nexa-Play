@@ -607,6 +607,9 @@ function initRegister() {
   });
 }
 
+// Token de vínculo (Google -> conta já existente com o mesmo e-mail); vive só na memória da página
+let googleVinculoPendente = null;
+
 function initLogin() {
   const f = $('#form-login'); if (!f) return;
   f.addEventListener('submit', async e => {
@@ -614,12 +617,114 @@ function initLogin() {
     const ok = [NP.setErr(f.id_login, id ? '' : 'Informe seu e-mail ou usuário.'), NP.setErr(f.senha, f.senha.value ? '' : 'Informe sua senha.')].every(Boolean);
     if (!ok) return;
     const btn = $('button[type=submit]', f); btn.disabled = true;
-    const r = await NP.api('/login', { method: 'POST', body: { id_login: id, senha: f.senha.value, lembrar: f.lembrar.checked } });
+    const body = { id_login: id, senha: f.senha.value, lembrar: f.lembrar.checked };
+    if (googleVinculoPendente) body.google_vinculo = googleVinculoPendente;
+    const r = await NP.api('/login', { method: 'POST', body });
     btn.disabled = false;
-    if (!r.ok) return NP.status($('#login-status'), r.data.mensagem || 'Não foi possível entrar.', false);
+    if (!r.ok) {
+      if (r.data.codigo) googleVinculoPendente = null; // vínculo expirado/recusado: recomeçar pelo botão do Google
+      return NP.status($('#login-status'), r.data.mensagem || 'Não foi possível entrar.', false);
+    }
     NP.login(r.data.token, f.lembrar.checked); location.href = 'inicio.html';
   });
-  $('#google-btn').addEventListener('click', () => NP.status($('#login-status'), 'Login com Google ainda não está configurado (requer integração com o Google Identity). Use e-mail e senha.', false));
+  initGoogleLogin(f);
+}
+
+/* Login com Google (Google Identity Services). O Client ID vem do backend (GOOGLE_CLIENT_ID) e o
+   servidor valida o ID Token; aqui só repassamos a credencial e reaproveitamos o mesmo JWT/sessão. */
+function initGoogleLogin(f) {
+  const fallback = $('#google-btn'), slot = $('#google-slot'), status = $('#login-status');
+  if (!fallback || !slot) return;
+  const state = { pronto: false, erro: '', ocupado: false, largura: 0 };
+  const aviso = (msg, ok = false) => NP.status(status, msg, ok);
+  const gsiPronto = () => !!(window.google && google.accounts && google.accounts.id);
+
+  const aguardarGsi = (limite = 10000) => new Promise(resolve => {
+    if (gsiPronto()) return resolve(true);
+    const inicio = Date.now();
+    const timer = setInterval(() => {
+      if (gsiPronto()) { clearInterval(timer); resolve(true); }
+      else if (Date.now() - inicio > limite) { clearInterval(timer); resolve(false); }
+    }, 100);
+  });
+
+  async function aoReceberCredencial(resposta) {
+    if (!resposta || !resposta.credential) return aviso('Não foi possível obter sua conta do Google. Tente novamente.');
+    if (state.ocupado) return;
+    state.ocupado = true;
+    aviso('Entrando com o Google…', true);
+    const lembrar = !!f.lembrar.checked;
+    const r = await NP.api('/auth/google', { method: 'POST', body: { credential: resposta.credential, lembrar } });
+    state.ocupado = false;
+    if (r.ok && r.data.token) {
+      NP.login(r.data.token, lembrar);
+      aviso(r.data.novo_usuario ? 'Conta criada! Redirecionando…' : 'Entrando…', true);
+      location.href = 'inicio.html';
+      return;
+    }
+    if (r.status === 409 && r.data.codigo === 'conta_existente' && r.data.vinculo_token) {
+      // E-mail já cadastrado: nada é vinculado sem a senha da conta existente
+      googleVinculoPendente = r.data.vinculo_token;
+      if (r.data.email) f.id_login.value = r.data.email;
+      NP.setErr(f.id_login, ''); f.senha.value = ''; f.senha.focus();
+      return aviso(r.data.mensagem, true);
+    }
+    aviso(r.data.mensagem || 'Não foi possível entrar com o Google.');
+  }
+
+  function desenharBotao() {
+    const largura = Math.max(200, Math.min(400, Math.round(state.largura || f.clientWidth)));
+    slot.replaceChildren();
+    google.accounts.id.renderButton(slot, {
+      type: 'standard', theme: 'outline', size: 'large', text: 'continue_with',
+      shape: 'pill', logo_alignment: 'left', width: largura, locale: 'pt-BR',
+    });
+    slot.hidden = false; fallback.hidden = true;
+  }
+
+  async function iniciar() {
+    state.erro = '';
+    const cfg = await NP.api('/auth/google/config');
+    if (!cfg.ok || !cfg.data.client_id) {
+      state.erro = cfg.data.mensagem || 'O login com Google não está disponível no momento. Use e-mail e senha.';
+      return;
+    }
+    if (!await aguardarGsi()) {
+      state.erro = 'Não foi possível carregar o login do Google. Verifique sua conexão ou o bloqueador de conteúdo e tente novamente.';
+      return;
+    }
+    state.largura = fallback.getBoundingClientRect().width;
+    google.accounts.id.initialize({
+      client_id: cfg.data.client_id,
+      callback: aoReceberCredencial,
+      ux_mode: 'popup',
+      auto_select: false,
+      cancel_on_tap_outside: true,
+      itp_support: true,
+    });
+    desenharBotao();
+    state.pronto = true;
+    let ajuste;
+    window.addEventListener('resize', () => {
+      clearTimeout(ajuste);
+      ajuste = setTimeout(() => {
+        const nova = f.clientWidth;
+        if (nova && Math.abs(nova - state.largura) > 8) { state.largura = nova; desenharBotao(); }
+      }, 200);
+    });
+  }
+
+  let iniciando = null;
+  const garantir = () => (iniciando ||= iniciar().finally(() => { iniciando = null; }));
+  // Enquanto o Google não carrega (ex.: servidor "acordando"), o botão original continua no lugar
+  fallback.addEventListener('click', async () => {
+    if (state.pronto) return;
+    aviso('Conectando ao Google…', true);
+    await garantir();
+    if (!state.pronto) aviso(state.erro || 'Não foi possível carregar o login do Google. Tente novamente.');
+    else aviso('');
+  });
+  garantir();
 }
 
 function initHome() {

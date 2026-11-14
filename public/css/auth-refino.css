@@ -91,6 +91,11 @@ body[data-page="auth"] .btn.btn-soft {
 }
 body[data-page="auth"] .btn.btn-soft:hover { background: #f5f8ff; border-color: #b9cbee; }
 
+/* Botão oficial do Google (Google Identity Services) ocupa o lugar do botão "Continuar com o Google" */
+body[data-page="auth"] .btn.btn-soft[hidden] { display: none; }
+body[data-page="auth"] .google-slot { display: flex; align-items: center; justify-content: center; min-height: 52px; }
+body[data-page="auth"] .google-slot[hidden] { display: none; }
+
 body[data-page="auth"] .auth-switch { text-align: center; font-size: .875rem; color: #4f5f82; }
 body[data-page="auth"] .or { margin-block: .5rem .25rem; font-size: .75rem; }
 

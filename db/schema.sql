@@ -25,7 +25,7 @@ create table if not exists usuarios (
   id             bigint generated always as identity primary key,
   nome_usuario   varchar(100) not null,
   email          varchar(255) not null unique,          -- e-mail normalizado (minúsculas, sem espaços)
-  senha          varchar(255) not null,                 -- hash bcrypt
+  senha          varchar(255),                          -- hash bcrypt (NULL em contas criadas só pelo Google)
   pontos         integer not null default 0 check (pontos >= 0),
   criado_em      timestamptz not null default now(),
   atualizado_em  timestamptz not null default now()
@@ -41,7 +41,13 @@ alter table usuarios
   add column if not exists mostrar_pontos boolean not null default true,
   add column if not exists mostrar_amigos boolean not null default true,
   add column if not exists mostrar_conquistas boolean not null default true,
-  add column if not exists mostrar_progresso boolean not null default true;
+  add column if not exists mostrar_progresso boolean not null default true,
+  add column if not exists google_sub varchar(255),                 -- "sub" da conta Google (login com Google)
+  add column if not exists google_vinculado_em timestamptz;
+
+-- Login com Google: contas só-Google não têm senha local (ver db/migrations/20261114_login_google.sql)
+alter table usuarios alter column senha drop not null;
+create unique index if not exists uq_usuarios_google_sub on usuarios (google_sub);
 
 update usuarios
 set nome_exibicao = nome_usuario,
@@ -271,6 +277,18 @@ begin
         and email !~ '[[:space:]]'
         and email ~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$'
       );
+  end if;
+end $$;
+
+-- 6.3b) toda conta precisa de ao menos um método de login: senha local OU conta Google vinculada
+do $$
+begin
+  if not exists (select 1 from pg_constraint
+                 where conname = 'usuarios_metodo_login_chk'
+                   and conrelid = 'usuarios'::regclass) then
+    alter table usuarios
+      add constraint usuarios_metodo_login_chk
+      check (senha is not null or google_sub is not null);
   end if;
 end $$;
 
