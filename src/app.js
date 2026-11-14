@@ -20,7 +20,7 @@ if (Buffer.byteLength(process.env.JWT_SECRET || "", "utf8") < 32) {
 
 const app = express();
 const frontendOrigins = new Set([
-  "https://nexa-play.onrender.com/",
+  "https://nexaquest-kappa.vercel.app/",
   ...((process.env.CORS_ORIGINS || "").split(",").map(origin => origin.trim()).filter(Boolean)),
 ]);
 const apiRateLimit = createRateLimiter({
