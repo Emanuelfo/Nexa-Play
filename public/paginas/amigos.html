@@ -19,9 +19,12 @@
   <header data-component="header"></header>
   <main id="conteudo">
     <div class="nq-pagehead">
-      <h1>Pessoas</h1>
+      <div>
+        <h1>Pessoas</h1>
+        <p class="nq-pagehead-lead">Encontre estudantes para colaborar e acompanhe suas conexões.</p>
+      </div>
     </div>
-    <p id="friends-page-status" class="feed-status" role="status" aria-live="polite" style="margin:0 .75rem .75rem"></p>
+    <p id="friends-page-status" class="feed-status" role="status" aria-live="polite"></p>
     <form id="friends-search-form" class="friends-search" role="search">
       <label class="sr-only" for="friends-search-input">Buscar por nome ou nome de usuário</label>
       <input id="friends-search-input" type="search" minlength="2" maxlength="100"
@@ -34,7 +37,7 @@
       <div id="friend-search-results" class="friends-list" aria-live="polite" hidden></div>
     </section>
 
-    <div class="nq-tabs" role="tablist" aria-label="Sua rede" id="friends-tabs" style="margin-bottom:1rem">
+    <div class="nq-tabs" role="tablist" aria-label="Sua rede" id="friends-tabs">
       <button type="button" role="tab" aria-selected="true" data-tab="friend-suggestions-panel">Sugestões</button>
       <button type="button" role="tab" aria-selected="false" data-tab="friends-list">Amigos <span class="count"
           id="friends-count" aria-label="Quantidade de amigos">—</span></button>

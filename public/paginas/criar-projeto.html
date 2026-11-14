@@ -19,52 +19,64 @@
   <header data-component="header"></header>
   <main id="conteudo">
     <div class="nq-pagehead">
-      <h1>Criar projeto</h1>
+      <div>
+        <h1>Criar projeto</h1>
+        <p class="nq-pagehead-lead">Conte sobre sua ideia e escolha como as pessoas podem participar.</p>
+      </div>
     </div>
     <section class="project-form-card" aria-labelledby="create-project-title">
       <h2 id="create-project-title" class="sr-only">Informações do projeto</h2>
       <form id="project-form" class="project-form">
-        <label>Título
-          <input name="titulo" type="text" maxlength="120" required placeholder="Um nome para sua ideia">
-        </label>
-        <label>Descrição
-          <textarea name="descricao" rows="6" maxlength="5000" required
-            placeholder="O que o projeto faz? Como as pessoas podem participar?"></textarea>
-          <small>Até 5.000 caracteres.</small>
-        </label>
-        <div class="project-form-row">
-          <label>Categoria
-            <select name="categoria" required>
-              <option value="">Selecione</option>
-              <option>Jogos</option>
-              <option>Arte e design</option>
-              <option>Programação</option>
-              <option>Educação</option>
-              <option>Música</option>
-              <option>Outros</option>
-            </select>
+        <fieldset class="form-group">
+          <legend>Sobre o projeto</legend>
+          <label>Título
+            <input name="titulo" type="text" maxlength="120" required placeholder="Um nome para sua ideia">
           </label>
-          <label>Formato
-            <select name="tipo" required>
-              <option value="individual">Individual</option>
-              <option value="equipe">Em equipe</option>
-            </select>
+          <label>Descrição
+            <textarea name="descricao" rows="6" maxlength="5000" required
+              placeholder="O que o projeto faz? Como as pessoas podem participar?"></textarea>
+            <small>Até 5.000 caracteres.</small>
           </label>
-        </div>
-        <div class="project-form-row">
+        </fieldset>
+        <fieldset class="form-group">
+          <legend>Organização</legend>
+          <div class="project-form-row">
+            <label>Categoria
+              <select name="categoria" required>
+                <option value="">Selecione</option>
+                <option>Jogos</option>
+                <option>Arte e design</option>
+                <option>Programação</option>
+                <option>Educação</option>
+                <option>Música</option>
+                <option>Outros</option>
+              </select>
+            </label>
+            <label>Formato
+              <select name="tipo" required>
+                <option value="individual">Individual</option>
+                <option value="equipe">Em equipe</option>
+              </select>
+            </label>
+          </div>
           <label>Visibilidade
             <select name="visibilidade" required>
               <option value="publico">Público: aparece em Explorar</option>
               <option value="privado">Privado: só equipe e proprietário</option>
             </select>
           </label>
-          <label>Imagem de capa (URL HTTPS)
-            <input name="imagem_url" type="url" inputmode="url" placeholder="https://…" autocomplete="url">
-          </label>
-        </div>
-        <label>Link externo (URL HTTPS)
-          <input name="link_externo" type="url" inputmode="url" placeholder="Site, repositório ou demonstração">
-        </label>
+        </fieldset>
+        <fieldset class="form-group">
+          <legend>Divulgação <span class="form-optional">opcional</span></legend>
+          <div class="project-form-row">
+            <label>Imagem de capa (URL HTTPS)
+              <input name="imagem_url" type="url" inputmode="url" placeholder="https://…" autocomplete="url">
+            </label>
+            <label>Link externo (URL HTTPS)
+              <input name="link_externo" type="url" inputmode="url" placeholder="Site, repositório ou demonstração">
+            </label>
+          </div>
+        </fieldset>
         <p id="project-form-status" class="feed-status" role="status" aria-live="polite"></p>
         <div class="project-form-actions">
           <a class="btn-soft" href="explorar-projetos.html">Cancelar</a>

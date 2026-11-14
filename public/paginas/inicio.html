@@ -19,6 +19,27 @@
   <header data-component="header"></header>
   <main id="conteudo">
     <h1 class="sr-only">Início</h1>
+    <section class="home-hello" aria-label="Boas-vindas">
+      <div>
+        <p class="home-greeting" data-home-greeting>Olá!</p>
+        <p class="home-lead">Crie um projeto ou encontre pessoas para colaborar.</p>
+      </div>
+      <div class="home-actions">
+        <a class="btn" href="criar-projeto.html">Criar projeto</a>
+        <a class="btn btn-soft" href="explorar-projetos.html">Explorar projetos</a>
+      </div>
+    </section>
+    <section class="home-section" aria-labelledby="home-projects-title">
+      <div class="home-section-head">
+        <h2 id="home-projects-title">Projetos recentes</h2>
+        <a class="nq-more" href="explorar-projetos.html">Ver todos</a>
+      </div>
+      <div id="home-projects" class="project-grid" aria-live="polite" aria-busy="true"></div>
+    </section>
+    <section class="home-section" aria-labelledby="home-community-title">
+      <div class="home-section-head">
+        <h2 id="home-community-title">Comunidade</h2>
+      </div>
     <form id="feed-post-form" class="feed-composer">
       <div class="composer-row">
         <span data-composer-avatar></span>
@@ -50,6 +71,7 @@
       </div>
       <p id="feed-status" class="feed-status" role="status" aria-live="polite"></p>
       <button id="feed-load-more" class="feed-load-more" type="button" hidden>Carregar mais publicações</button>
+    </section>
     </section>
   </main>
 </body>

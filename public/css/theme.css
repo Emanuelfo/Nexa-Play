@@ -1,15 +1,19 @@
 html[data-social-theme] {
   color-scheme: light;
-  --nq-navy: #091b50;
-  --nq-blue: #2457d6;
-  --nq-blue-dark: #1948c6;
+  --nq-navy: #091e5b;
+  --nq-heading: #091e5b;
+  --nq-blue: #2457eb;
+  --nq-blue-dark: #1644bf;
   --nq-cyan: #50c9f5;
-  --nq-ink: #16264d;
-  --nq-muted: #5b6987;
-  --nq-canvas: #f3f6fc;
+  --nq-ink: #142252;
+  --nq-muted: #586781;
+  --nq-canvas: #f4f6fa;
   --nq-surface: #fff;
-  --nq-soft: #eef3fc;
-  --nq-border: #dde4f0;
+  --nq-soft: #eef2fb;
+  --nq-border: #e1e6ef;
+  --nq-nav-bg: #2457eb;
+  --nq-nav-active-bg: #fff;
+  --nq-nav-active-ink: #1644bf;
   --nq-like: #d6304f;
   --nq-ok: #137a55;
   --nq-bad: #b8324a;
@@ -27,8 +31,12 @@ html[data-social-theme] {
 html[data-social-theme][data-theme="dark"] {
   color-scheme: dark;
   --nq-navy: #102143;
-  --nq-blue: #315eb8;
+  --nq-heading: #e6edf8;
+  --nq-blue: #3a68d1;
   --nq-blue-dark: #91b2ff;
+  --nq-nav-bg: #1a3a82;
+  --nq-nav-active-bg: #e6edfb;
+  --nq-nav-active-ink: #14306e;
   --nq-cyan: #70dcff;
   --nq-ink: #e6edf8;
   --nq-muted: #a7b3c8;
@@ -60,11 +68,34 @@ html[data-social-theme][data-theme="dark"] .btn-line:hover {
   border-color: var(--nq-border);
 }
 
+html[data-social-theme][data-theme="dark"] .btn,
+html[data-social-theme][data-theme="dark"] .btn-azul {
+  border-bottom-color: #2a4f9f;
+}
+
 html[data-social-theme][data-theme="dark"] .btn:hover,
-html[data-social-theme][data-theme="dark"] .btn-azul:hover,
-html[data-social-theme][data-theme="dark"] .nq-nav a.btn:hover {
-  background: #244c9d;
-  border-color: #244c9d;
+html[data-social-theme][data-theme="dark"] .btn-azul:hover {
+  background: #4676e0;
+  border-color: #4676e0;
+  border-bottom-color: #2a4f9f;
+}
+
+html[data-social-theme][data-theme="dark"] .nq-tabs button[aria-selected="true"],
+html[data-social-theme][data-theme="dark"] .chip[aria-pressed="true"] {
+  color: #fff;
+}
+
+html[data-social-theme][data-theme="dark"] .nq-search input,
+html[data-social-theme][data-theme="dark"] .project-form input,
+html[data-social-theme][data-theme="dark"] .project-form select,
+html[data-social-theme][data-theme="dark"] .project-form textarea,
+html[data-social-theme][data-theme="dark"] .project-update-form textarea,
+html[data-social-theme][data-theme="dark"] .profile-edit-form input,
+html[data-social-theme][data-theme="dark"] .profile-edit-form textarea,
+html[data-social-theme][data-theme="dark"] .friends-search input,
+html[data-social-theme][data-theme="dark"] .projects-filters input[type="search"],
+html[data-social-theme][data-theme="dark"] .project-invite-form input {
+  border-color: var(--nq-border);
 }
 
 html[data-social-theme][data-theme="dark"] .project-form input:focus,

@@ -12,6 +12,8 @@ const NQ_ICON = {
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.600-6.500 8-6.500s8 2.500 8 6.500"/>',
   search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.800-3.800"/>',
   trophy: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  game: '<circle cx="12" cy="12" r="9"/><path d="m10 8.5 5 3.500-5 3.500z"/>',
 };
 const nqSvg = path => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
 
@@ -271,26 +273,39 @@ function renderRailSuggestions(box) {
   });
 }
 
+const NQ_PAGE_TITLE = {
+  inicio: 'Início',
+  'projetos-explorar': 'Explorar projetos',
+  amigos: 'Pessoas',
+  'meus-projetos': 'Meus projetos',
+  perfil: 'Meu perfil',
+  'perfil-publico': 'Perfil',
+  'estatisticas-jogo': 'Atividade no jogo',
+  'projeto-criar': 'Criar projeto',
+  'projeto-detalhe': 'Projeto',
+};
+
 function renderSocialShell(host, user) {
   const root = NP.root();
   const profile = `${root}paginas/meu-perfil.html`;
   const page = document.body.dataset.page;
   const navigation = [
     { key: 'inicio', label: 'Início', href: `${root}paginas/inicio.html`, path: NQ_ICON.home },
-    { key: 'projetos-explorar', label: 'Explorar', href: `${root}paginas/explorar-projetos.html`, path: NQ_ICON.explore },
+    { key: 'projetos-explorar', label: 'Explorar projetos', short: 'Explorar', href: `${root}paginas/explorar-projetos.html`, path: NQ_ICON.explore },
     { key: 'amigos', label: 'Pessoas', href: `${root}paginas/amigos.html`, path: NQ_ICON.people },
     { key: 'meus-projetos', label: 'Meus projetos', href: `${root}paginas/meus-projetos.html`, path: NQ_ICON.projects },
-    { key: 'perfil', label: 'Perfil', href: profile, path: NQ_ICON.user },
+    { key: 'perfil', label: 'Meu perfil', short: 'Perfil', href: profile, path: NQ_ICON.user },
   ];
-  const activeMap = { 'perfil-publico': null, 'estatisticas-jogo': 'perfil', 'projeto-detalhe': 'projetos-explorar', 'projeto-criar': 'meus-projetos' };
+  const activeMap = { 'perfil-publico': null, 'estatisticas-jogo': 'estatisticas-jogo', 'projeto-detalhe': 'projetos-explorar', 'projeto-criar': 'projeto-criar' };
   const activeKey = page in activeMap ? activeMap[page] : page;
-  const link = (item, extra = '') => `<a href="${item.href}" title="${item.label}"${activeKey === item.key ? ' aria-current="page"' : ''}${extra}>${nqSvg(item.path)}<span>${item.label}</span>${item.key === 'amigos' ? '<b class="nq-badge" data-friends-badge hidden aria-hidden="true"></b>' : ''}</a>`;
-  const publishHref = `${root}paginas/inicio.html?novo=1`;
-  const initial = user.nome_usuario.charAt(0).toUpperCase();
+  const link = (item, extra = '', short = false) => `<a href="${item.href}" title="${item.label}"${activeKey === item.key ? ' aria-current="page"' : ''}${extra}>${nqSvg(item.path)}<span>${short ? (item.short || item.label) : item.label}</span>${item.key === 'amigos' ? '<b class="nq-badge" data-friends-badge hidden aria-hidden="true"></b>' : ''}</a>`;
+  const createHref = `${root}paginas/criar-projeto.html`;
+  const statsItem = { key: 'estatisticas-jogo', label: 'Atividade no jogo', href: `${root}paginas/estatisticas.html`, path: NQ_ICON.trophy };
 
   host.className = 'site-header social-topbar';
   host.innerHTML = `<div class="nq-top">
-    <a class="nq-brand" href="${root}paginas/inicio.html" aria-label="Nexa Quest — início"><img src="${root}assets/imagens/logo-escura-quest.svg" alt="Nexa Quest" width="64" height="34"></a>
+    <a class="nq-brand-mobile" href="${root}paginas/inicio.html" aria-label="Nexa Quest — início"><img src="${root}assets/imagens/logo-escura-quest.svg" alt="Nexa Quest" width="52" height="28"></a>
+    <p class="nq-top-title" data-top-title>${NQ_PAGE_TITLE[page] || ''}</p>
     <form class="nq-search" role="search" action="${root}paginas/amigos.html">
       ${nqSvg(NQ_ICON.search)}
       <label class="sr-only" for="nq-search-input">Buscar pessoas</label>
@@ -298,6 +313,7 @@ function renderSocialShell(host, user) {
       <div class="nq-suggest" id="nq-suggest" role="listbox" aria-label="Pessoas encontradas" hidden></div>
     </form>
     <div class="nq-top-actions">
+      <button class="nq-search-toggle" type="button" aria-label="Buscar pessoas" aria-expanded="false">${nqSvg(NQ_ICON.search)}</button>
       <button class="theme-toggle" data-theme-toggle type="button" aria-label="Alternar entre modo claro e escuro" title="Ativar modo escuro" aria-pressed="false">
         <svg data-theme-icon="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 15.4A8.5 8.5 0 0 1 8.6 3.8 8.5 8.5 0 1 0 20.2 15.4Z"></path></svg>
         <svg data-theme-icon="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"></path></svg>
@@ -315,7 +331,14 @@ function renderSocialShell(host, user) {
       </div>
     </div>
   </div>`;
+  const topbar = $('.nq-top', host);
   initSearchSuggest($('.nq-search', host), root);
+  const searchToggle = $('.nq-search-toggle', host);
+  searchToggle.addEventListener('click', () => {
+    const open = topbar.classList.toggle('is-searching');
+    searchToggle.setAttribute('aria-expanded', String(open));
+    if (open) $('#nq-search-input').focus();
+  });
   document.dispatchEvent(new Event('np:social-theme-controls-ready'));
   const accountButton = $('#user-btn');
   const accountMenu = $('#user-menu');
@@ -343,29 +366,42 @@ function renderSocialShell(host, user) {
   const sidebar = document.createElement('nav');
   sidebar.className = 'nq-nav';
   sidebar.setAttribute('aria-label', 'Principal');
-  sidebar.innerHTML = `<ul>${navigation.map(item => `<li>${link(item)}</li>`).join('')}</ul><a class="btn" href="${publishHref}" data-publish>Publicar</a>`;
+  sidebar.innerHTML = `<a class="nq-brand" href="${root}paginas/inicio.html" aria-label="Nexa Quest — início"><img src="${root}assets/imagens/logo-branca-quest.svg" alt="Nexa Quest" width="96" height="74"></a>
+    <a class="nq-create" href="${createHref}"${page === 'projeto-criar' ? ' aria-current="page"' : ''}>${nqSvg(NQ_ICON.plus)}<span>Criar projeto</span></a>
+    <ul>${navigation.map(item => `<li>${link(item)}</li>`).join('')}</ul>
+    <ul class="nq-nav-secondary">
+      <li>${link(statsItem)}</li>
+      <li><a href="#" data-game>${nqSvg(NQ_ICON.game)}<span>Acessar o jogo</span></a></li>
+    </ul>`;
 
   const tabbar = document.createElement('nav');
   tabbar.className = 'nq-tabbar';
   tabbar.setAttribute('aria-label', 'Navegação principal');
-  const short = key => navigation.find(item => item.key === key);
-  tabbar.innerHTML = [short('inicio'), short('projetos-explorar')].map(item => link(item)).join('')
-    + `<a class="is-create" href="${publishHref}" data-publish aria-label="Publicar">${nqSvg(NQ_ICON.create)}<span class="sr-only">Publicar</span></a>`
-    + [short('amigos'), short('perfil')].map(item => link(item)).join('');
+  const byKey = key => navigation.find(item => item.key === key);
+  tabbar.innerHTML = [byKey('inicio'), byKey('projetos-explorar')].map(item => link(item, '', true)).join('')
+    + `<a class="is-create" href="${createHref}" aria-label="Criar projeto"${page === 'projeto-criar' ? ' aria-current="page"' : ''}>${nqSvg(NQ_ICON.plus)}<span class="sr-only">Criar projeto</span></a>`
+    + [byKey('amigos'), byKey('perfil')].map(item => link(item, '', true)).join('');
 
   const main = $('main');
   if (!main) return;
   main.classList.add('social-main');
+  const stage = document.createElement('div');
+  stage.className = 'nq-stage';
+  const body = document.createElement('div');
+  body.className = 'nq-body';
   host.after(shell);
-  shell.append(sidebar, main);
+  stage.append(host, body);
+  body.append(main);
+  shell.append(sidebar, stage);
 
   if (page === 'inicio') {
     const side = document.createElement('aside');
     side.className = 'nq-side';
     side.setAttribute('aria-label', 'Resumo e sugestões');
-    side.innerHTML = `<section class="nq-box" aria-label="Seu perfil">
-        <div class="nq-mini"><span data-rail-avatar></span><div><strong data-rail-name></strong><span data-rail-handle></span></div></div>
+    side.innerHTML = `<section class="nq-box nq-progress" aria-labelledby="rail-progress-title">
+        <h2 id="rail-progress-title">Seu progresso</h2>
         <div class="nq-mini-stats" data-rail-stats hidden></div>
+        <a class="nq-more" href="${profile}">Ver meu perfil</a>
       </section>
       <section class="nq-box" aria-labelledby="rail-people-title">
         <h2 id="rail-people-title">Pessoas para conhecer</h2>
@@ -378,10 +414,7 @@ function renderSocialShell(host, user) {
         <p>Novas missões e conquistas esperam por você no Nexa Quest.</p>
         <a class="btn btn-sm" href="#" data-game>Acessar o jogo</a>
       </section>`;
-    shell.append(side);
-    $('[data-rail-avatar]', side).replaceWith(avatarEl({ nome_usuario: user.nome_usuario }, 48));
-    $('[data-rail-name]', side).textContent = user.nome_usuario;
-    $('[data-rail-handle]', side).textContent = `${Number(user.pontos) || 0} pontos`;
+    body.append(side);
     renderRailSuggestions($('[data-rail-people]', side).closest('.nq-box'));
   }
   document.body.append(tabbar);
@@ -393,14 +426,14 @@ function renderSocialShell(host, user) {
 
   // Tocar no item da página atual leva ao topo em vez de recarregar.
   $$('.nq-nav a[aria-current="page"], .nq-tabbar a[aria-current="page"]').forEach(anchor => {
-    if (anchor.hasAttribute('data-publish') || new URL(anchor.href).pathname !== location.pathname) return;
+    if (new URL(anchor.href).pathname !== location.pathname) return;
     anchor.addEventListener('click', event => {
       event.preventDefault();
       window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     });
   });
 
-  // Publicar: na própria página do feed, apenas leva o foco ao campo de texto.
+  // Compatibilidade: links antigos com ?novo=1 continuam levando o foco ao campo de publicação.
   $$('[data-publish]').forEach(anchor => anchor.addEventListener('click', event => {
     const input = $('#feed-post-text');
     if (input) { event.preventDefault(); input.scrollIntoView({ block: 'center' }); input.focus(); }
@@ -413,10 +446,9 @@ function renderSocialShell(host, user) {
     const composerAvatar = $('[data-composer-avatar]');
     if (composerAvatar) composerAvatar.replaceWith(avatarEl(own, 40));
     if (page === 'inicio') {
-      const railAvatar = $('.nq-side .nq-mini .nq-avatar');
-      railAvatar?.replaceWith(avatarEl(own, 48));
-      $('[data-rail-name]').textContent = own.nome_exibicao || own.nome_usuario;
-      $('[data-rail-handle]').textContent = `@${own.nome_usuario}`;
+      const greeting = $('[data-home-greeting]');
+      const firstName = String(own.nome_exibicao || own.nome_usuario || '').trim().split(/\s+/)[0];
+      if (greeting && firstName) greeting.textContent = `Olá, ${firstName}!`;
       const stats = $('[data-rail-stats]');
       const values = own.estatisticas || {};
       [['Amigos', values.amigos], ['Conquistas', values.conquistas], ['Pontos', values.pontos]].forEach(([label, value]) => {
@@ -430,6 +462,32 @@ function renderSocialShell(host, user) {
       stats.hidden = !stats.childElementCount;
     }
   });
+}
+
+/* Início: projetos mais recentes da comunidade (mesmo endpoint e mesmo card do Explorar). */
+function initHomeProjects() {
+  const list = $('#home-projects');
+  if (!list) return;
+  NP.api('/projetos?limite=3').then(response => {
+    list.setAttribute('aria-busy', 'false');
+    list.replaceChildren();
+    if (!response.ok || !Array.isArray(response.data.projetos)) {
+      list.append(projectEmpty('Não foi possível carregar os projetos.', 'Tente novamente em instantes.'));
+      return;
+    }
+    response.data.projetos.forEach(project => list.append(projectCard(project)));
+    if (!response.data.projetos.length) {
+      list.append(projectEmpty('Ainda não há projetos públicos.', 'Quando a comunidade publicar projetos, eles aparecerão aqui.', 'Criar um projeto', `${NP.root()}paginas/criar-projeto.html`));
+    }
+  });
+}
+
+/* Estado de carregamento de botões (visual + bloqueio de cliques repetidos). */
+function setBusy(button, busy) {
+  if (!button) return;
+  button.disabled = busy;
+  button.classList.toggle('is-loading', busy);
+  if (busy) button.setAttribute('aria-busy', 'true'); else button.removeAttribute('aria-busy');
 }
 
 function renderHeader() {
@@ -1131,14 +1189,14 @@ function initFeed() {
       const texto = input.value.trim();
       if (!texto || submit.dataset.busy) return;
       submit.dataset.busy = '1';
-      submit.disabled = true;
+      setBusy(submit, true);
       submit.textContent = 'Publicando…';
       NP.status(formStatus, '', true);
       const response = await NP.api('/publicacoes', { method: 'POST', body: { texto } });
       delete submit.dataset.busy;
       submit.textContent = 'Publicar';
+      setBusy(submit, false);
       if (!response.ok || !response.data.publicacao) {
-        submit.disabled = false;
         NP.status(formStatus, response.data.mensagem || 'Não foi possível publicar. Seu texto foi mantido.', false);
         return;
       }
@@ -1570,9 +1628,9 @@ function initProfileEditor(profile) {
       capa_url: form.elements.namedItem('capa_url').value || null,
       privacidade,
     };
-    submit.disabled = true;
+    setBusy(submit, true);
     const response = await NP.api('/me/perfil', { method: 'PUT', body });
-    submit.disabled = false;
+    setBusy(submit, false);
     if (!response.ok || !response.data.usuario) {
       NP.status(status, response.data.mensagem || 'Não foi possível salvar o perfil.', false);
       return;
@@ -2457,10 +2515,10 @@ function initCreateProject() {
     const body = Object.fromEntries(fields.entries());
     const status = $('#project-form-status');
     const button = $('button[type="submit"]', form);
-    button.disabled = true;
+    setBusy(button, true);
     NP.status(status, 'Publicando projeto…', true);
     const response = await NP.api('/projetos', { method: 'POST', body });
-    button.disabled = false;
+    setBusy(button, false);
     if (!response.ok || !response.data.projeto) {
       NP.status(status, response.data.mensagem || 'Não foi possível publicar o projeto.', false);
       return;
@@ -2498,17 +2556,26 @@ function renderProjectUpdates(updates) {
 function projectFormFields(form, project, editing) {
   const categories = PROJECT_CATEGORIES.map(category => `<option value="${category}">${category}</option>`).join('');
   form.innerHTML = `
-    <label>Título<input name="titulo" type="text" maxlength="120" required></label>
-    <label>Descrição<textarea name="descricao" rows="5" maxlength="5000" required></textarea><small>Até 5.000 caracteres.</small></label>
-    <div class="project-form-row">
-      <label>Categoria<select name="categoria" required><option value="">Selecione</option>${categories}</select></label>
-      <label>Formato<select name="tipo" required><option value="individual">Individual</option><option value="equipe">Projeto em equipe</option></select></label>
-    </div>
-    <div class="project-form-row">
+    <fieldset class="form-group">
+      <legend>Sobre o projeto</legend>
+      <label>Título<input name="titulo" type="text" maxlength="120" required></label>
+      <label>Descrição<textarea name="descricao" rows="5" maxlength="5000" required></textarea><small>Até 5.000 caracteres.</small></label>
+    </fieldset>
+    <fieldset class="form-group">
+      <legend>Organização</legend>
+      <div class="project-form-row">
+        <label>Categoria<select name="categoria" required><option value="">Selecione</option>${categories}</select></label>
+        <label>Formato<select name="tipo" required><option value="individual">Individual</option><option value="equipe">Projeto em equipe</option></select></label>
+      </div>
       <label>Visibilidade<select name="visibilidade" required><option value="publico">Público</option><option value="privado">Privado</option></select></label>
-      <label>Imagem · URL HTTPS<input name="imagem_url" type="url" inputmode="url" placeholder="https://…"></label>
-    </div>
-    <label>Link externo · URL HTTPS<input name="link_externo" type="url" inputmode="url" placeholder="https://…"></label>
+    </fieldset>
+    <fieldset class="form-group">
+      <legend>Divulgação <span class="form-optional">opcional</span></legend>
+      <div class="project-form-row">
+        <label>Imagem · URL HTTPS<input name="imagem_url" type="url" inputmode="url" placeholder="https://…"></label>
+        <label>Link externo · URL HTTPS<input name="link_externo" type="url" inputmode="url" placeholder="https://…"></label>
+      </div>
+    </fieldset>
     <p class="feed-status" data-project-edit-status role="status" aria-live="polite"></p>
     <div class="project-form-actions"><button class="btn" type="submit">${editing ? 'Salvar alterações' : 'Publicar projeto'}</button></div>`;
   if (project) {
@@ -2572,9 +2639,9 @@ function renderProjectDetails(project) {
       event.preventDefault();
       const body = Object.fromEntries(new FormData(editForm).entries());
       const submit = $('button[type="submit"]', editForm);
-      submit.disabled = true;
+      setBusy(submit, true);
       const response = await NP.api(`/projetos/${encodeURIComponent(project.id)}`, { method: 'PUT', body });
-      submit.disabled = false;
+      setBusy(submit, false);
       if (!response.ok) {
         return NP.status($('[data-project-edit-status]'), response.data.mensagem || 'Não foi possível salvar as alterações.', false);
       }
@@ -2688,13 +2755,13 @@ function renderProjectDetails(project) {
     const input = updateForm.elements.namedItem('texto');
     const status = $('#project-update-status');
     const submit = $('button[type="submit"]', updateForm);
-    submit.disabled = true;
+    setBusy(submit, true);
     NP.status(status, 'Publicando atualização…', true);
     const response = await NP.api(`/projetos/${encodeURIComponent(project.id)}/atualizacoes`, {
       method: 'POST',
       body: { texto: input.value },
     });
-    submit.disabled = false;
+    setBusy(submit, false);
     if (!response.ok) return NP.status(status, response.data.mensagem || 'Não foi possível publicar a atualização.', false);
     input.value = '';
     NP.status(status, 'Atualização publicada.', true);
@@ -2785,6 +2852,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   else if ($('#perfil')) initProfile();
   else {
     initHome();
+    initHomeProjects();
     initFeed();
   }
   initPlaceholders(); initContact(); initRegister(); initLogin(); initGameLinks();

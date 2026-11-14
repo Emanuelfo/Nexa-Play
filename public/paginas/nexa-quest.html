@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Nexa Quest — Como funciona a plataforma</title>
-  <meta name="description" content="O Nexa Quest é uma plataforma de aprendizagem prática e colaborativa para estudantes de tecnologia e criação digital. Veja como funciona.">
+  <meta name="description" content="O Nexa Quest combina um jogo educativo com trilhas de aprendizagem e uma rede social para criar projetos e formar equipes. Veja como funciona.">
   <link rel="icon" href="../assets/icones/favicon.svg">
   <link rel="preload" href="../assets/fontes/fredoka-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="../css/fontes.css">
@@ -14,6 +14,7 @@
   <script src="../js/functions.js" defer></script>
   <script src="../js/main.js" defer></script>
   <script src="../js/public-header.js" defer></script>
+  <script src="../js/nexa-quest-imagens.js" defer></script>
 </head>
 
 <body class="pub nx-public-page" data-page="nexa-quest" data-root="../">
@@ -25,94 +26,180 @@
       <div class="shell split">
         <div>
           <h1 id="titulo">Conheça o Nexa Quest</h1>
-          <p class="lead">Uma plataforma de aprendizagem prática e colaborativa para estudantes que querem aprender tecnologia e criação digital fazendo, não só assistindo.</p>
+          <p class="lead">Uma plataforma que une aprendizagem prática e colaboração entre estudantes: um jogo para aprender e uma rede social para criar projetos em equipe.</p>
           <div class="page-head-actions">
             <a class="pq-btn" href="criar-conta.html">Começar agora</a>
             <a class="pq-btn pq-btn--ghost" href="login.html">Já tenho uma conta</a>
           </div>
         </div>
 
-        <figure class="shot">
-          <div class="shot-frame">
-            <img src="../assets/imagens/jogo-educa-tech.png" width="1300" height="629" alt="Tela do jogo Educa Tech, com as áreas Jogos, Design, Visual e Ads e o perfil do personagem">
-          </div>
-          <figcaption>Tela do jogo Educa Tech, parte do universo Nexa Quest. O acesso ao jogo ainda não está disponível nesta versão.</figcaption>
-          <details class="demo" id="demonstracao">
-            <summary>Assistir à demonstração</summary>
-            <div class="demo-video"><iframe src="https://www.youtube.com/embed/rIEy7J-uNw0" title="Demonstração do jogo Nexa Quest" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
-            <a class="pq-link demo-yt" href="https://www.youtube.com/watch?v=rIEy7J-uNw0" target="_blank" rel="noopener">Abrir no YouTube</a>
-          </details>
-        </figure>
+        <ul class="duo" aria-label="As duas partes do Nexa Quest">
+          <li>
+            <a class="duo-item" href="#rede-social">
+              <span class="how-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="../assets/icones/areas.svg#i-equipe"/></svg></span>
+              <strong class="duo-title">Rede social</strong>
+              <p>Crie projetos, encontre pessoas e forme equipes.</p>
+            </a>
+          </li>
+          <li>
+            <a class="duo-item" href="#jogo">
+              <span class="how-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="../assets/icones/areas.svg#i-trilha"/></svg></span>
+              <strong class="duo-title">Jogo educativo</strong>
+              <p>Aprenda em trilhas, com missões e desafios.</p>
+            </a>
+          </li>
+        </ul>
       </div>
     </section>
 
-    <section class="section section--paper" aria-labelledby="como-titulo">
-      <div class="shell how">
-        <div class="how-head">
-          <h2 id="como-titulo">Como funciona</h2>
-          <p class="lead">Você aprende, pratica e transforma o que aprendeu em projetos reais.</p>
+    <!-- Parte 1: rede social. Imagens esperadas em assets/imagens/: rede-social-1.png, rede-social-2.png, rede-social-3.png -->
+    <section class="section section--paper" id="rede-social" aria-labelledby="rede-titulo">
+      <div class="shell feature">
+        <div class="feature-copy">
+          <p class="kicker">Rede social</p>
+          <h2 id="rede-titulo">Crie e colabore</h2>
+          <p class="lead">Um espaço para tirar ideias do papel e encontrar quem vai criar com você.</p>
+          <ul class="ticks">
+            <li>Crie e compartilhe ideias de projetos.</li>
+            <li>Conheça estudantes com interesses semelhantes.</li>
+            <li>Forme equipes com habilidades complementares.</li>
+            <li>Participe de uma comunidade de tecnologia e criação digital.</li>
+            <li>Desenvolva projetos colaborativos.</li>
+          </ul>
         </div>
-        <ul class="how-list">
-          <li class="how-item">
-            <span class="how-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="../assets/icones/areas.svg#i-trilha"/></svg></span>
-            <h3>Trilhas de aprendizagem</h3>
-            <p>Conteúdos organizados em sequência, em diferentes áreas. Você sabe o que vem depois.</p>
-          </li>
-          <li class="how-item">
-            <span class="how-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="../assets/icones/areas.svg#i-alvo"/></svg></span>
-            <h3>Missões e desafios</h3>
-            <p>Atividades práticas dentro de cada trilha, para aplicar o que você aprendeu.</p>
-          </li>
-          <li class="how-item">
-            <span class="how-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="../assets/icones/areas.svg#i-trofeu"/></svg></span>
-            <h3>Pontos, níveis e conquistas</h3>
-            <p>Cada atividade concluída soma pontos e destrava conquistas no seu perfil.</p>
-            <div class="crop" role="img" aria-label="Detalhe do jogo: painel com o nível do jogador e os ícones de conquistas e amigos">
-              <img src="../assets/imagens/jogo-educa-tech.png" width="1300" height="629" alt="" loading="lazy">
+
+        <div class="feature-media gallery" role="group" aria-label="Telas da rede social do Nexa Quest">
+          <figure class="shot-item">
+            <div class="shot-frame pic">
+              <div class="pic-ph">
+                <span class="how-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="../assets/icones/areas.svg#i-livro"/></svg></span>
+                <strong>Página inicial</strong>
+                <span>Captura de tela em breve</span>
+              </div>
+              <img src="../assets/imagens/rede-social-1.png" alt="Tela inicial da rede social do Nexa Quest, com as publicações da comunidade" loading="lazy" decoding="async">
             </div>
-          </li>
-          <li class="how-item">
-            <span class="how-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="../assets/icones/areas.svg#i-equipe"/></svg></span>
-            <h3>Projetos em equipe</h3>
-            <p>Crie um projeto, convide estudantes pelo nome de usuário ou aceite pedidos para entrar na equipe.</p>
-          </li>
-          <li class="how-item">
-            <span class="how-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="../assets/icones/areas.svg#i-pasta"/></svg></span>
-            <h3>Seu portfólio</h3>
-            <p>Seus projetos, atualizações e conquistas ficam reunidos em um perfil que você pode mostrar.</p>
-          </li>
-        </ul>
+            <figcaption>Feed da comunidade: veja o que outros estudantes estão criando.</figcaption>
+          </figure>
+          <figure class="shot-item">
+            <div class="shot-frame pic">
+              <div class="pic-ph">
+                <span class="how-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="../assets/icones/areas.svg#i-pasta"/></svg></span>
+                <strong>Projetos</strong>
+                <span>Captura de tela em breve</span>
+              </div>
+              <img src="../assets/imagens/rede-social-2.png" alt="Tela de projetos da rede social do Nexa Quest" loading="lazy" decoding="async">
+            </div>
+            <figcaption>Projetos: crie o seu ou explore os dos colegas.</figcaption>
+          </figure>
+          <figure class="shot-item">
+            <div class="shot-frame pic">
+              <div class="pic-ph">
+                <span class="how-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="../assets/icones/areas.svg#i-equipe"/></svg></span>
+                <strong>Equipes</strong>
+                <span>Captura de tela em breve</span>
+              </div>
+              <img src="../assets/imagens/rede-social-3.png" alt="Tela de equipes e colaboração entre estudantes no Nexa Quest" loading="lazy" decoding="async">
+            </div>
+            <figcaption>Equipes: convide estudantes e trabalhem juntos.</figcaption>
+          </figure>
+        </div>
       </div>
     </section>
 
-    <section class="section" id="areas" aria-labelledby="areas-titulo">
+    <!-- Parte 2: jogo educativo. Imagem esperada em assets/imagens/: jogo.png -->
+    <section class="section" id="jogo" aria-labelledby="jogo-titulo">
       <div class="shell">
-        <div class="section-head">
-          <h2 id="areas-titulo">Áreas de aprendizagem</h2>
-          <p class="lead">Escolha por onde começar. Você pode explorar mais de uma.</p>
+        <div class="feature feature--flip">
+          <div class="feature-copy">
+            <p class="kicker">Jogo educativo</p>
+            <h2 id="jogo-titulo">Aprenda na prática</h2>
+            <p class="lead">Siga trilhas de aprendizagem e aprenda de forma interativa, fazendo.</p>
+            <ul class="how-list">
+              <li class="how-item">
+                <span class="how-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="../assets/icones/areas.svg#i-alvo"/></svg></span>
+                <h3>Missões e desafios</h3>
+                <p>Atividades práticas dentro de cada trilha, para aplicar o que você aprendeu.</p>
+              </li>
+              <li class="how-item">
+                <span class="how-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="../assets/icones/areas.svg#i-trilha"/></svg></span>
+                <h3>XP e níveis</h3>
+                <p>Cada atividade concluída soma XP e ajuda você a avançar de nível.</p>
+              </li>
+              <li class="how-item">
+                <span class="how-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="../assets/icones/areas.svg#i-trofeu"/></svg></span>
+                <h3>Conquistas</h3>
+                <p>Marcos que você destrava pelo caminho e ficam no seu perfil.</p>
+              </li>
+            </ul>
+          </div>
+
+          <figure class="feature-media shot">
+            <div class="shot-frame pic">
+              <div class="pic-ph">
+                <span class="how-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="../assets/icones/areas.svg#i-trilha"/></svg></span>
+                <strong>Trilhas de aprendizagem</strong>
+                <span>Captura de tela em breve</span>
+              </div>
+              <img src="../assets/imagens/jogo.png" alt="Tela do jogo educativo do Nexa Quest, com as trilhas de aprendizagem" loading="lazy" decoding="async">
+            </div>
+            <figcaption>Interface do jogo. O acesso ao jogo ainda não está disponível nesta versão.</figcaption>
+            <details class="demo" id="demonstracao">
+              <summary>Assistir à demonstração</summary>
+              <div class="demo-video"><iframe src="https://www.youtube.com/embed/rIEy7J-uNw0" title="Demonstração do jogo Nexa Quest" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
+              <a class="pq-link demo-yt" href="https://www.youtube.com/watch?v=rIEy7J-uNw0" target="_blank" rel="noopener">Abrir no YouTube</a>
+            </details>
+          </figure>
         </div>
-        <ul class="areas">
-          <li class="area" id="design">
-            <span class="area-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="../assets/icones/areas.svg#i-design"/></svg></span>
-            <h3>Design</h3>
-            <p>Interfaces, identidade visual e ilustração: do rascunho à peça pronta.</p>
-          </li>
-          <li class="area" id="sistemas">
-            <span class="area-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="../assets/icones/areas.svg#i-sistemas"/></svg></span>
-            <h3>Desenvolvimento de Sistemas</h3>
-            <p>Lógica de programação, sites e aplicativos que funcionam de verdade.</p>
-          </li>
-          <li class="area" id="multimidia">
-            <span class="area-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="../assets/icones/areas.svg#i-multimidia"/></svg></span>
-            <h3>Multimídia</h3>
-            <p>Vídeo, áudio e animação para contar boas histórias.</p>
-          </li>
-          <li class="area" id="jogos">
-            <span class="area-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="../assets/icones/areas.svg#i-jogos"/></svg></span>
-            <h3>Jogos Digitais</h3>
-            <p>Personagens, regras e fases: aprenda a criar jogos do zero.</p>
-          </li>
-        </ul>
+
+        <div class="tiles-wrap">
+          <h3>Trilhas em quatro áreas</h3>
+          <ul class="tiles">
+            <li class="tile" id="sistemas">
+              <span class="how-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="../assets/icones/areas.svg#i-sistemas"/></svg></span>
+              <h3>Desenvolvimento de Sistemas</h3>
+              <p>Lógica de programação, sites e aplicativos que funcionam de verdade.</p>
+            </li>
+            <li class="tile" id="design">
+              <span class="how-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="../assets/icones/areas.svg#i-design"/></svg></span>
+              <h3>Design</h3>
+              <p>Interfaces, identidade visual e ilustração: do rascunho à peça pronta.</p>
+            </li>
+            <li class="tile" id="multimidia">
+              <span class="how-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="../assets/icones/areas.svg#i-multimidia"/></svg></span>
+              <h3>Multimídia</h3>
+              <p>Vídeo, áudio e animação para contar boas histórias.</p>
+            </li>
+            <li class="tile" id="jogos">
+              <span class="how-icon"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="../assets/icones/areas.svg#i-jogos"/></svg></span>
+              <h3>Jogos Digitais</h3>
+              <p>Personagens, regras e fases: aprenda a criar jogos do zero.</p>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--paper" aria-labelledby="integracao-titulo">
+      <div class="shell feature">
+        <div class="feature-copy">
+          <h2 id="integracao-titulo">Aprenda no jogo, aplique nos projetos</h2>
+          <p class="lead">O que você desenvolve no jogo pode ser usado em projetos colaborativos na rede social. Essa ligação é o grande diferencial do Nexa Quest.</p>
+          <p class="text">Seus projetos, atualizações e conquistas ficam reunidos no seu perfil, para você mostrar o que já criou.</p>
+        </div>
+
+        <div class="bridge" role="group" aria-label="O que você aprende no jogo vira projeto na rede social">
+          <div class="bridge-end">
+            <span class="step-node"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="../assets/icones/areas.svg#i-trilha"/></svg></span>
+            <h3>Jogo educativo</h3>
+            <p>Você desenvolve conhecimentos.</p>
+          </div>
+          <span class="bridge-link" aria-hidden="true"></span>
+          <div class="bridge-end">
+            <span class="step-node"><svg fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="../assets/icones/areas.svg#i-equipe"/></svg></span>
+            <h3>Rede social</h3>
+            <p>Você aplica em projetos colaborativos.</p>
+          </div>
+        </div>
       </div>
     </section>
 
