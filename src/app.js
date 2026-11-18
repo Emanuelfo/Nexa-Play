@@ -12,6 +12,7 @@ const authRoutes = require("./routes/authRoutes");
 const mensagemRoutes = require("./routes/mensagemRoutes");
 const publicacaoRoutes = require("./routes/publicacaoRoutes");
 const projetoRoutes = require("./routes/projetoRoutes");
+const jogoRoutes = require("./routes/jogoRoutes");
 
 if (Buffer.byteLength(process.env.JWT_SECRET || "", "utf8") < 32) {
   console.error("JWT_SECRET ausente ou fraco. Configure um segredo aleatório com pelo menos 32 bytes.");
@@ -47,7 +48,7 @@ app.use(helmet({
       imgSrc: ["'self'", "https:", "data:", "blob:"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
       connectSrc: ["'self'", "https://nexa-play.onrender.com", "https://accounts.google.com/gsi/"],
-      frameSrc: ["'self'", "https://www.youtube.com", "https://www.youtube-nocookie.com", "https://accounts.google.com/gsi/"],
+      frameSrc: ["'self'", "https://www.youtube.com", "https://www.youtube-nocookie.com", "https://accounts.google.com/gsi/", "https://itch.io"],
       mediaSrc: ["'self'", "https:", "blob:"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
@@ -110,6 +111,7 @@ app.use(authRoutes);
 app.use(mensagemRoutes);
 app.use(publicacaoRoutes);
 app.use(projetoRoutes);
+app.use(jogoRoutes);
 app.use("/api", (req, res) => {
   res.status(404).json({ mensagem: "Rota da API não encontrada." });
 });

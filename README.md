@@ -97,6 +97,14 @@ Antes de implementar a experiência, o desenho de backend/schema foi documentado
 - Apenas projetos públicos aparecem em Explorar. Projetos privados e suas atualizações só podem ser consultados pelo proprietário e integrantes aceitos. Apenas o proprietário edita dados e gerencia participantes. Projetos individuais não aceitam participantes. Solicitações só são aceitas em projetos públicos de equipe; convites do proprietário podem ser enviados a equipes públicas ou privadas.
 - O backend acessa o PostgreSQL/Supabase pelo Sequelize; o navegador não recebe credenciais do Supabase. Imagens e links externos aceitam URLs HTTPS, sem upload. Não há comentários ou upload de imagens de projeto nesta versão.
 
+## Jogo NEXA QUEST incorporado
+- Página: `public/paginas/jogo.html` (menu "Jogo" da área autenticada, com botão de tela cheia). Proporção 16:9 responsiva; o jogo roda dentro da plataforma, sem redirecionar ao itch.io.
+- Acesso: a página usa o mesmo fluxo de sessão das demais (`data-protected`). O HTML não contém o endereço do jogo: o iframe só é criado depois de `GET /api/jogo`, rota protegida pelo middleware `auth`, devolver a URL de incorporação. Sem sessão válida (inclusive após F5 ou logout) a API responde 401 e o usuário vai para o login; depois de entrar, volta ao jogo.
+- URL: padrão `https://itch.io/embed-upload/20479421?color=000000`; pode ser trocada com `GAME_EMBED_URL` (só aceita `https://itch.io/embed-upload/...`).
+- CSP: `frame-src` do Helmet inclui `https://itch.io`. Se o frontend publicado aplicar CSP própria (Vercel/Netlify), inclua também `frame-src https://itch.io`.
+- Limite conhecido: o endereço de incorporação do itch.io é público para quem o descobrir; ele não impede o acesso direto ao jogo no itch.io. Restringir de verdade exigiria alterar a visibilidade do jogo no itch.io (ex.: protegido por senha/privado) ou hospedar o build no próprio servidor.
+- Não há sincronização de XP, nível ou progresso entre o jogo e o banco.
+
 ## O que mudou no front-end
 - `js/functions.js`: `NP.api()` envia o cookie HttpOnly para a API da própria origem. JWTs antigos no armazenamento do navegador são migrados para cookie.
 - `js/main.js`: cadastro, login, redefinição de senha e contato agora chamam a API. Ao abrir cada página,
@@ -107,7 +115,7 @@ Antes de implementar a experiência, o desenho de backend/schema foi documentado
 - **Redefinição de senha**: confirma a identidade por contato + data de nascimento por não haver envio de e-mail/SMS.
   Antes de produção, troque por link/código enviado ao usuário.
 - Considere limitar tentativas de login (ex.: `express-rate-limit`) e usar HTTPS em produção.
-- Login com Google, URL do jogo (`GAME_URL` em `js/main.js`) e redes sociais seguem como antes.
+- Login com Google e redes sociais seguem como antes. O jogo agora é incorporado em `paginas/jogo.html` (ver seção acima).
 
 ## Redesign visual
 - `public/css/style.css`: estilos compartilhados (no fim do arquivo estão as seções do redesign: palco escuro, faixa em movimento, manifesto, páginas internas, autenticação, rodapé).
