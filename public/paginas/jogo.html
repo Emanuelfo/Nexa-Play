@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-social-theme data-theme="light">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <script src="../js/theme.js"></script>
+  <title>Jogo | Nexa Quest</title>
+  <meta name="description" content="Jogue o NEXA QUEST diretamente na plataforma.">
+  <link rel="icon" href="../assets/icones/favicon.svg">
+  <link rel="stylesheet" href="../css/social.css">
+  <link rel="stylesheet" href="../css/theme.css">
+  <script src="../js/functions.js" defer></script>
+  <script src="../js/main.js" defer></script>
+</head>
+
+<body data-page="jogo" data-root="../" data-protected="1">
+  <a class="sr-only" href="#conteudo">Ir para o conteúdo</a>
+  <header data-component="header"></header>
+  <main id="conteudo">
+    <div class="game-page">
+      <div class="nq-pagehead">
+        <div>
+          <h1>NEXA QUEST</h1>
+          <p>Clique no jogo para ativar o teclado e o mouse.</p>
+        </div>
+        <div class="nq-pagehead-actions">
+          <button class="btn btn-soft btn-sm game-fs-btn" id="game-fullscreen" type="button" aria-pressed="false" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+            <span>Tela cheia</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="game-stage" id="game-stage" aria-busy="true">
+        <p class="game-status" id="game-status" role="status" aria-live="polite">Carregando o jogo…</p>
+        <button class="btn btn-sm game-exit" id="game-exit" type="button" hidden>Sair da tela cheia</button>
+      </div>
+
+      <p class="game-rotate">Para jogar melhor, gire o celular ou use a tela cheia.</p>
+    </div>
+  </main>
+</body>
+
+</html>

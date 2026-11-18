@@ -1,5 +1,5 @@
 /* Nexa Play — inicialização e comportamentos do site */
-const GAME_URL = ''; // Integração pendente: URL do jogo Nexa Quest (ex.: 'https://...')
+const GAME_PAGE = 'paginas/jogo.html'; // Jogo incorporado (URL entregue por GET /api/jogo somente a sessões válidas)
 const { $, $$ } = NP;
 
 /* ---------- Helpers visuais compartilhados da área social ---------- */
@@ -280,6 +280,7 @@ const NQ_PAGE_TITLE = {
   'meus-projetos': 'Meus projetos',
   perfil: 'Meu perfil',
   'perfil-publico': 'Perfil',
+  jogo: 'Jogo',
   'estatisticas-jogo': 'Atividade no jogo',
   'projeto-criar': 'Criar projeto',
   'projeto-detalhe': 'Projeto',
@@ -291,6 +292,7 @@ function renderSocialShell(host, user) {
   const page = document.body.dataset.page;
   const navigation = [
     { key: 'inicio', label: 'Início', href: `${root}paginas/inicio.html`, path: NQ_ICON.home },
+    { key: 'jogo', label: 'Jogo', href: `${root}${GAME_PAGE}`, path: NQ_ICON.game },
     { key: 'projetos-explorar', label: 'Explorar projetos', short: 'Explorar', href: `${root}paginas/explorar-projetos.html`, path: NQ_ICON.explore },
     { key: 'amigos', label: 'Pessoas', href: `${root}paginas/amigos.html`, path: NQ_ICON.people },
     { key: 'meus-projetos', label: 'Meus projetos', href: `${root}paginas/meus-projetos.html`, path: NQ_ICON.projects },
@@ -325,7 +327,7 @@ function renderSocialShell(host, user) {
           <a href="${profile}">Meu perfil</a>
           <a href="${root}paginas/meus-projetos.html">Meus projetos</a>
           <a href="${root}paginas/estatisticas.html">Atividade no jogo</a>
-          <a href="#" data-game>Acessar o jogo</a>
+          <a href="${root}${GAME_PAGE}" data-game>Acessar o jogo</a>
           <button type="button" id="logout">Sair da conta</button>
         </div>
       </div>
@@ -371,7 +373,6 @@ function renderSocialShell(host, user) {
     <ul>${navigation.map(item => `<li>${link(item)}</li>`).join('')}</ul>
     <ul class="nq-nav-secondary">
       <li>${link(statsItem)}</li>
-      <li><a href="#" data-game>${nqSvg(NQ_ICON.game)}<span>Acessar o jogo</span></a></li>
     </ul>`;
 
   const tabbar = document.createElement('nav');
@@ -380,7 +381,7 @@ function renderSocialShell(host, user) {
   const byKey = key => navigation.find(item => item.key === key);
   tabbar.innerHTML = [byKey('inicio'), byKey('projetos-explorar')].map(item => link(item, '', true)).join('')
     + `<a class="is-create" href="${createHref}" aria-label="Criar projeto"${page === 'projeto-criar' ? ' aria-current="page"' : ''}>${nqSvg(NQ_ICON.plus)}<span class="sr-only">Criar projeto</span></a>`
-    + [byKey('amigos'), byKey('perfil')].map(item => link(item, '', true)).join('');
+    + [byKey('jogo'), byKey('amigos'), byKey('perfil')].map(item => link(item, '', true)).join('');
 
   const main = $('main');
   if (!main) return;
@@ -412,7 +413,7 @@ function renderSocialShell(host, user) {
         <img class="nq-game-mascot" src="${root}assets/imagens/golfinho-fone.svg" alt="" width="120" height="76">
         <h2 id="rail-game-title">Continue sua jornada</h2>
         <p>Novas missões e conquistas esperam por você no Nexa Quest.</p>
-        <a class="btn btn-sm" href="#" data-game>Acessar o jogo</a>
+        <a class="btn btn-sm" href="${root}${GAME_PAGE}" data-game>Acessar o jogo</a>
       </section>`;
     body.append(side);
     renderRailSuggestions($('[data-rail-people]', side).closest('.nq-box'));
@@ -612,7 +613,7 @@ function initRegister() {
       await NP.login();
       completed = true;
       NP.status($('#cadastro-status'), 'Conta criada! Redirecionando…', true);
-      location.replace('inicio.html');
+      location.replace(postLoginUrl());
     } catch (error) {
       NP.status($('#cadastro-status'), error.message, false);
     } finally {
@@ -655,7 +656,7 @@ function initLogin() {
       }
       await NP.login();
       completed = true;
-      location.replace('inicio.html');
+      location.replace(postLoginUrl());
     } catch (error) {
       NP.status($('#login-status'), error.message, false);
     } finally {
@@ -666,6 +667,20 @@ function initLogin() {
     }
   });
   initGoogleLogin(f);
+}
+
+const GAME_AFTER_LOGIN_KEY = 'nq_after_login';
+/* Quem tentou abrir o jogo sem sessão volta a ele depois de entrar (apenas nesta aba). */
+function rememberGameDestination() {
+  try { sessionStorage.setItem(GAME_AFTER_LOGIN_KEY, 'jogo'); } catch { /* storage may be disabled */ }
+}
+function postLoginUrl() {
+  let next = '';
+  try {
+    next = sessionStorage.getItem(GAME_AFTER_LOGIN_KEY) || '';
+    sessionStorage.removeItem(GAME_AFTER_LOGIN_KEY);
+  } catch { /* storage may be disabled */ }
+  return next === 'jogo' ? 'jogo.html' : 'inicio.html';
 }
 
 /* Login com Google (Google Identity Services). O Client ID vem do backend (GOOGLE_CLIENT_ID) e o
@@ -701,7 +716,7 @@ function initGoogleLogin(f) {
         return aviso(error.message);
       }
       aviso(r.data.novo_usuario ? 'Conta criada! Redirecionando…' : 'Entrando…', true);
-      location.href = 'inicio.html';
+      location.href = postLoginUrl();
       return;
     }
     if (r.status === 409 && r.data.codigo === 'conta_existente' && r.data.vinculo_token) {
@@ -2964,6 +2979,105 @@ function initProjectDetail() {
   carregarDetalheProjeto();
 }
 
+/* Página do jogo: a URL de incorporação vem de GET /api/jogo (exige sessão válida no servidor)
+   e só então o iframe é criado. O HTML estático não contém o endereço do jogo. */
+function initGame() {
+  const stage = $('#game-stage');
+  const status = $('#game-status');
+  const fullscreenButton = $('#game-fullscreen');
+  const exitButton = $('#game-exit');
+  if (!stage || !status || !fullscreenButton) return;
+
+  const nativeEnter = stage.requestFullscreen || stage.webkitRequestFullscreen;
+  const fullscreenElement = () => document.fullscreenElement || document.webkitFullscreenElement || null;
+  const isFullscreen = () => fullscreenElement() === stage || stage.classList.contains('is-expanded');
+  const label = $('span', fullscreenButton);
+
+  function syncFullscreenState() {
+    const active = isFullscreen();
+    fullscreenButton.setAttribute('aria-pressed', String(active));
+    if (label) label.textContent = active ? 'Sair da tela cheia' : 'Tela cheia';
+    exitButton.hidden = !stage.classList.contains('is-expanded');
+  }
+
+  async function enterFullscreen() {
+    if (nativeEnter) {
+      try {
+        await nativeEnter.call(stage, { navigationUI: 'hide' });
+        try { await screen.orientation?.lock?.('landscape'); } catch { /* nem todos os navegadores permitem */ }
+        return;
+      } catch { /* cai para o modo expandido abaixo */ }
+    }
+    // iPhone/Safari não oferece tela cheia nativa para elementos: expande a área do jogo sobre a página.
+    stage.classList.add('is-expanded');
+    document.documentElement.classList.add('game-expanded');
+    syncFullscreenState();
+  }
+
+  async function exitFullscreen() {
+    if (fullscreenElement()) {
+      try { await (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch { /* já saiu */ }
+    }
+    stage.classList.remove('is-expanded');
+    document.documentElement.classList.remove('game-expanded');
+    try { screen.orientation?.unlock?.(); } catch { /* sem suporte */ }
+    syncFullscreenState();
+  }
+
+  fullscreenButton.addEventListener('click', () => (isFullscreen() ? exitFullscreen() : enterFullscreen()));
+  exitButton.addEventListener('click', exitFullscreen);
+  document.addEventListener('fullscreenchange', syncFullscreenState);
+  document.addEventListener('webkitfullscreenchange', syncFullscreenState);
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && stage.classList.contains('is-expanded')) exitFullscreen();
+  });
+
+  function showError(message) {
+    stage.setAttribute('aria-busy', 'false');
+    status.textContent = '';
+    status.append(message + ' ');
+    const retry = document.createElement('button');
+    retry.type = 'button';
+    retry.className = 'btn btn-soft btn-sm';
+    retry.textContent = 'Tentar novamente';
+    retry.addEventListener('click', () => { retry.remove(); loadGame(); });
+    status.append(retry);
+  }
+
+  function isEmbedUrl(value) {
+    try {
+      const url = new URL(value);
+      return url.protocol === 'https:' && url.hostname === 'itch.io' && url.pathname.startsWith('/embed-upload/');
+    } catch { return false; }
+  }
+
+  async function loadGame() {
+    stage.setAttribute('aria-busy', 'true');
+    status.textContent = 'Carregando o jogo…';
+    const response = await NP.api('/jogo');
+    if (response.status === 401) return; // NP.api já encaminha para o login
+    if (!response.ok || !isEmbedUrl(response.data.url)) {
+      return showError(response.ok ? 'O endereço do jogo é inválido.' : (response.data.mensagem || 'Não foi possível carregar o jogo.'));
+    }
+    stage.querySelector('iframe')?.remove();
+    const frame = document.createElement('iframe');
+    frame.title = 'NEXA QUEST';
+    frame.setAttribute('allow', 'fullscreen; autoplay; gamepad; clipboard-write');
+    frame.setAttribute('allowfullscreen', '');
+    frame.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+    frame.setAttribute('scrolling', 'no');
+    frame.addEventListener('load', () => {
+      stage.setAttribute('aria-busy', 'false');
+      status.hidden = true;
+    }, { once: true });
+    frame.src = response.data.url;
+    stage.prepend(frame);
+    fullscreenButton.disabled = false;
+  }
+
+  loadGame();
+}
+
 function initPlaceholders() {
   $$('[data-soon]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); NP.toast(a.dataset.soon); }));
   $$('[data-logout]').forEach(b => b.addEventListener('click', () => NP.signOut()));
@@ -2971,9 +3085,10 @@ function initPlaceholders() {
 
 function initGameLinks() {
   $$('[data-game]').forEach(a => a.addEventListener('click', e => {
+    if (NP.currentUser()) return; // segue o href real da página do jogo
     e.preventDefault();
-    if (!NP.currentUser()) return void (location.href = NP.root() + 'paginas/login.html');
-    GAME_URL ? (location.href = GAME_URL) : NP.toast('O jogo ainda não está disponível nesta versão.');
+    rememberGameDestination();
+    location.href = NP.root() + 'paginas/login.html';
   }));
   $$('[data-back]').forEach(a => a.addEventListener('click', e => { if (history.length > 1 && document.referrer.startsWith(location.origin || 'null')) { e.preventDefault(); history.back(); } }));
 }
@@ -2983,13 +3098,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   initLogin();
   const user = await NP.loadUser();
   if ($('#form-login') && user) {
-    location.replace('inicio.html');
+    location.replace(postLoginUrl());
     return;
   }
   document.documentElement.style.visibility = '';
   dispatchEvent(new Event('sessionchecked'));
   if (document.body.dataset.protected && !user) {
-    if (NP._sessionStatus === 401) location.replace(NP.root() + 'paginas/login.html');
+    if (NP._sessionStatus === 401) {
+      if (document.body.dataset.page === 'jogo') rememberGameDestination();
+      location.replace(NP.root() + 'paginas/login.html');
+    }
     else {
       const message = document.createElement('p');
       message.setAttribute('role', 'status');
@@ -3004,7 +3122,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   renderHeader(); renderFooter();
   const page = document.body.dataset.page;
-  if (page === 'estatisticas-jogo') initGameStats();
+  if (page === 'jogo') initGame();
+  else if (page === 'estatisticas-jogo') initGameStats();
   else if (page === 'amigos') initFriendsPage();
   else if ($('#project-detail')) initProjectDetail();
   else if (page === 'projeto-criar') initCreateProject();

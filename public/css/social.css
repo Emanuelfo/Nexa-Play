@@ -3424,7 +3424,7 @@ body[data-page="amigos"] .nq-search { display: none; }
     inset: auto 0 0;
     z-index: 60;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     height: calc(var(--nq-tab) + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px);
     background: var(--nq-surface);
@@ -3591,5 +3591,192 @@ body[data-page="amigos"] .nq-search {
   .chip,
   .project-card {
     transition: none;
+  }
+}
+
+
+/* ---------- Jogo (NEXA QUEST incorporado) ---------- */
+body[data-page="jogo"] .nq-body {
+  max-width: 1600px;
+  padding-bottom: 24px;
+}
+
+.game-page {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.game-page .nq-pagehead p {
+  margin: 0;
+}
+
+.game-fs-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+}
+
+.game-fs-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Proporção 16:9 e, no desktop, a largura é limitada para o jogo caber na altura da tela sem rolagem
+   (170px = topo 64 + respiros + linha de ações + margem inferior). */
+.game-stage {
+  position: relative;
+  width: min(100%, calc((100vh - 170px) * 16 / 9));
+  width: min(100%, calc((100dvh - 170px) * 16 / 9));
+  aspect-ratio: 16 / 9;
+  margin-inline: auto;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid var(--nq-border);
+  border-radius: var(--nq-r-lg);
+}
+
+.game-stage iframe {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #000;
+}
+
+.game-status {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: .75rem;
+  padding: 1rem;
+  margin: 0;
+  text-align: center;
+  font-size: 15px;
+  color: #fff;
+  pointer-events: none;
+}
+
+.game-status button {
+  pointer-events: auto;
+}
+
+.game-status[hidden],
+.game-exit[hidden] {
+  display: none;
+}
+
+.game-exit {
+  position: absolute;
+  top: calc(10px + env(safe-area-inset-top, 0px));
+  right: calc(10px + env(safe-area-inset-right, 0px));
+  z-index: 3;
+}
+
+.game-rotate {
+  display: none;
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--nq-muted);
+  text-align: center;
+}
+
+/* Tela cheia nativa: o jogo mantém 16:9 e ocupa o máximo da tela, com barras pretas se necessário. */
+.game-stage:fullscreen {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+}
+
+.game-stage:fullscreen iframe {
+  position: static;
+  width: min(100vw, calc(100vh * 16 / 9));
+  height: min(100vh, calc(100vw * 9 / 16));
+}
+
+.game-stage:-webkit-full-screen {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+}
+
+.game-stage:-webkit-full-screen iframe {
+  position: static;
+  width: min(100vw, calc(100vh * 16 / 9));
+  height: min(100vh, calc(100vw * 9 / 16));
+}
+
+/* Alternativa quando o navegador não oferece tela cheia (ex.: iPhone). */
+.game-stage.is-expanded {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  max-width: none;
+  height: 100vh;
+  height: 100dvh;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+}
+
+.game-stage.is-expanded iframe {
+  position: static;
+  width: min(100vw, calc(100vh * 16 / 9));
+  height: min(100vh, calc(100vw * 9 / 16));
+  width: min(100vw, calc(100dvh * 16 / 9));
+  height: min(100dvh, calc(100vw * 9 / 16));
+}
+
+html.game-expanded {
+  overflow: hidden;
+}
+
+/* Telas baixas (celular na horizontal): usa toda a largura e deixa a página rolar. */
+@media (max-height: 560px) {
+  .game-stage {
+    width: 100%;
+  }
+}
+
+@media (max-width: 699px) {
+  body[data-page="jogo"] .nq-body {
+    padding: 12px 12px calc(var(--nq-tab) + env(safe-area-inset-bottom, 0px) + 20px);
+  }
+
+  .game-stage {
+    width: 100%;
+    border-radius: var(--nq-r);
+  }
+
+  .game-page .nq-pagehead p {
+    display: none;
+  }
+
+  .game-page .nq-pagehead {
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 699px) and (orientation: portrait) {
+  .game-rotate {
+    display: block;
   }
 }
