@@ -1,0 +1,157 @@
+/* ==========================================================================
+   Nexa Quest — movimento das páginas públicas (Inicial, Nexa Quest e Sobre).
+
+   Carregado depois de publico.css. Para desligar o movimento, remova este
+   arquivo e js/motion-publico.js; nada mais precisa mudar.
+   Tokens de tempo e easing: bloco "movimento" em publico.css (:root).
+
+   Quatro tipos de movimento, e só estes:
+   1. Feedback de interação (hover, foco, mensagens)
+   2. Entrada de cenas ilustradas ao rolar (um único padrão)
+   3. Vida discreta e lenta no universo da marca (golfinho, nuvens, onda)
+   4. Montagem de duas cenas-chave (quatro áreas e como funciona)
+
+   Tudo fica dentro de (prefers-reduced-motion: no-preference): com movimento
+   reduzido, nenhuma regra deste arquivo se aplica e o site é idêntico ao estático.
+   Só transform e opacity são animados.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: no-preference) {
+
+  /* ------------------------------------------------------------------------
+     1. FEEDBACK DE INTERAÇÃO
+     ------------------------------------------------------------------------ */
+
+  /* Botões: o brilho diagonal desliza uma vez da esquerda para a direita
+     e para na posição em que já ficava. */
+  .pq-btn:is(:hover, :focus-visible)::before { animation: nq-shine var(--dur-shine) var(--ease-out); }
+  @keyframes nq-shine { from { transform: translateX(-100%); } to { transform: none; } }
+
+  /* Links: a seta se desloca por transform (antes era a mudança de gap, que recalculava o layout). */
+  .pq-link:hover { gap: 8px; }
+  .pq-link::after { display: inline-block; transition: transform var(--dur-micro) var(--ease-out); }
+  .pq-link:is(:hover, :focus-visible)::after { transform: translateX(4px); }
+
+  /* Menu mobile: o painel abre com opacidade e escala, a partir do canto superior direito. */
+  .nx-mobile-menu[open] nav { transform-origin: top right; animation: nq-menu var(--dur-micro) var(--ease-out); }
+  @keyframes nq-menu { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+
+  /* Mensagens do formulário de contato. */
+  .err:not(:empty), .status:not(:empty) { animation: nq-msg var(--dur-msg) var(--ease-out); }
+  @keyframes nq-msg { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  /* Campo inválido: um único movimento lateral de 3px. */
+  .field .input[aria-invalid="true"] { animation: nq-nudge var(--dur-bar) var(--ease-out); }
+  @keyframes nq-nudge { 40% { transform: translateX(3px); } }
+
+  /* Âncora (#design, #sistemas...): o fundo de destaque acende e se apaga.
+     A faixa colorida à esquerda continua marcando a linha. */
+  .area { isolation: isolate; }
+  .area:target { background: none; }
+  .area:target::before {
+    content: ""; position: absolute; inset: 0 0 0 8px; z-index: -1; pointer-events: none;
+    background: var(--ice); animation: nq-target var(--dur-target) var(--ease-out) both;
+  }
+  @keyframes nq-target { from { opacity: 1; } to { opacity: 0; } }
+}
+
+/* Barra de cor sob o título das áreas (Inicial, em desktop). A borda vira uma
+   barra de mesma cor e tamanho para poder crescer com transform; em repouso
+   o resultado é idêntico ao anterior. */
+@media (prefers-reduced-motion: no-preference) and (min-width: 901px) {
+  .area-item h3 { position: relative; border-bottom-color: transparent; }
+  .area-item h3::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -5px; height: 5px;
+    background: var(--accent); transform-origin: left center;
+  }
+  :is(.area-item--sistemas, .area-item--multimidia) h3::after { transform-origin: right center; }
+  .area-item:is(:hover, :focus-within) h3::after { animation: nq-bar var(--dur-bar) var(--ease-out); }
+  @keyframes nq-bar { from { transform: scaleX(.6); } to { transform: none; } }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+
+  /* ------------------------------------------------------------------------
+     2. ENTRADA DE CENAS ILUSTRADAS AO ROLAR (um único padrão)
+     O JS (motion-publico.js) só marca como .rv-wait o que está abaixo da dobra;
+     o que já está na tela nunca fica oculto.
+     ------------------------------------------------------------------------ */
+  .js-motion [data-reveal]:not([data-reveal="montagem"]) {
+    transition: opacity var(--dur-reveal) var(--ease-out), transform var(--dur-reveal) var(--ease-out);
+  }
+  .js-motion [data-reveal].rv-wait:not([data-reveal="montagem"]) {
+    opacity: 0; transform: translateY(var(--dist-reveal));
+  }
+
+  /* Capturas de tela: a moldura parte de uma rotação 1,5° maior que a final
+     (a rotação da figura, em publico.css, não muda; a legenda não se mexe). */
+  .js-motion .gallery .shot-item:nth-child(1) .shot-frame.rv-wait { transform: translateY(var(--dist-reveal)) rotate(-1.5deg); }
+  .js-motion .gallery .shot-item:nth-child(2) .shot-frame.rv-wait { transform: translateY(var(--dist-reveal)) rotate(1.5deg); }
+  .js-motion .gallery .shot-item:nth-child(3) .shot-frame.rv-wait { transform: translateY(var(--dist-reveal)) rotate(-1.5deg); }
+
+  /* ------------------------------------------------------------------------
+     4. MONTAGEM DAS CENAS-CHAVE (SVG inline: os objetos têm .nq-obj)
+     Os objetos "pousam" nos terraços em sequência; --i é a ordem.
+     ------------------------------------------------------------------------ */
+  .nq-obj { transform-box: fill-box; transform-origin: 50% 100%; }
+  .scene--areas { --stagger: var(--stagger-areas); }
+  .scene--trilha { --stagger: var(--stagger-trilha); }
+
+  .js-motion .scene[data-reveal="montagem"].rv-wait .nq-obj,
+  .js-motion .scene--areas.rv-wait .scene-fig { opacity: 0; }
+  .js-motion .scene[data-reveal="montagem"].is-in .nq-obj {
+    animation: nq-land var(--dur-pop) var(--ease-pop) both;
+    animation-delay: calc(var(--i) * var(--stagger));
+  }
+  /* o golfinho das quatro áreas entra por último */
+  .js-motion .scene--areas.is-in .scene-fig {
+    transform-origin: 50% 100%;
+    animation: nq-land var(--dur-pop) var(--ease-pop) both;
+    animation-delay: calc(4 * var(--stagger));
+  }
+  @keyframes nq-land {
+    from { opacity: 0; transform: translateY(-14px) scale(.92); }
+    to { opacity: 1; transform: none; }
+  }
+
+  /* ------------------------------------------------------------------------
+     3. VIDA DISCRETA NO UNIVERSO DA MARCA (lenta, de baixa amplitude)
+     As nuvens e os brilhos do hero vivem dentro de cena-hero-animada.svg.
+     O JS marca [data-motion-paused] fora da tela.
+     ------------------------------------------------------------------------ */
+  .scene--hero .scene-fig { animation: nq-breathe 4s ease-in-out infinite alternate; }
+  @keyframes nq-breathe { to { transform: translateY(-4px); } }
+
+  .cta-art img { animation: nq-float 3.5s ease-in-out infinite alternate; }
+  @keyframes nq-float { to { transform: translateY(-5px); } }
+
+  /* Onda do rodapé: o elemento fica 180px mais largo à direita e desliza
+     exatamente a largura de um tile, então o laço é imperceptível. */
+  .site-footer { overflow-x: clip; }   /* o excedente da onda não vira rolagem horizontal */
+  .site-footer::before { right: -180px; animation: nq-wave 14s linear infinite; }
+  @keyframes nq-wave { to { transform: translateX(-180px); } }
+
+  /* fora da tela ou com a aba oculta: pausa */
+  .scene--hero[data-motion-paused] .scene-fig,
+  .cta[data-motion-paused] .cta-art img,
+  .site-footer[data-motion-paused]::before { animation-play-state: paused; }
+  .nq-tab-hidden .scene--hero .scene-fig,
+  .nq-tab-hidden .cta-art img,
+  .nq-tab-hidden .site-footer::before { animation-play-state: paused; }
+}
+
+/* No celular ficam só o golfinho do hero e a onda. */
+@media (prefers-reduced-motion: no-preference) and (max-width: 900px) {
+  .cta-art img { animation: none; }
+}
+
+/* A <picture> do hero não pode criar caixa própria. */
+.scene > picture { display: block; }
+
+/* Rede de segurança: com movimento reduzido, nada se move nem fica oculto. */
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal], [data-reveal] :is(.nq-obj, .scene-fig),
+  .scene-fig, .cta-art img, .site-footer::before {
+    animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important;
+  }
+}

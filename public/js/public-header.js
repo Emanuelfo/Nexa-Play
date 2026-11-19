@@ -29,20 +29,22 @@
       </details>
     </div>`;
 
-  const access = header.querySelector('.nx-nav-access');
+  /* Todo botão "Acessar a plataforma" (menu e hero) usa o mesmo fluxo de sessão. */
   let checking = false;
-  access.addEventListener('click', async event => {
-    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
-    event.preventDefault();
-    if (checking) return;
-    checking = true;
-    const indicator = setTimeout(() => access.setAttribute('aria-busy', 'true'), 300);
-    try { await NP.enterPlatform(); }
-    finally {
-      clearTimeout(indicator);
-      access.removeAttribute('aria-busy');
-      checking = false;
-    }
+  document.querySelectorAll('.nx-nav-access, [data-enter-platform]').forEach(access => {
+    access.addEventListener('click', async event => {
+      if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      if (checking) return;
+      checking = true;
+      const indicator = setTimeout(() => access.setAttribute('aria-busy', 'true'), 300);
+      try { await NP.enterPlatform(); }
+      finally {
+        clearTimeout(indicator);
+        access.removeAttribute('aria-busy');
+        checking = false;
+      }
+    });
   });
 
   const menu = header.querySelector('.nx-mobile-menu');

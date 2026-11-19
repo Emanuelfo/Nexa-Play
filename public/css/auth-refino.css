@@ -106,3 +106,19 @@ body[data-page="auth"] .or { margin-block: .5rem .25rem; font-size: .75rem; }
 @media (prefers-reduced-motion: reduce) {
   body[data-page="auth"] .btn:not(.btn-soft) { transition: none; }
 }
+
+/* Consistência com as páginas públicas: mesma borda navy e base rígida nos botões.
+   Só aparência; estrutura, campos e comportamento dos formulários não mudam. */
+body[data-page="auth"] .btn:not(.btn-soft) {
+  border: 3px solid #091e5b;
+  box-shadow: 0 5px 0 #091e5b;
+}
+body[data-page="auth"] .btn:not(.btn-soft):hover { border-color: #091e5b; }
+body[data-page="auth"] .btn:not(.btn-soft):active { box-shadow: 0 1px 0 #091e5b; }
+body[data-page="auth"] .btn.btn-soft {
+  border: 2px solid #091e5b;
+  box-shadow: 0 3px 0 #091e5b;
+  color: #091e5b;
+}
+body[data-page="auth"] .btn.btn-soft:hover { border-color: #091e5b; background: #e3f0ff; }
+body[data-page="auth"] .btn.btn-soft:active { transform: translateY(2px); box-shadow: 0 1px 0 #091e5b; }

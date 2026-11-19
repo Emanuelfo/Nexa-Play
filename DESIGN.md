@@ -1,131 +1,110 @@
 ---
 version: alpha
 name: Nexa Quest
-description: Uma plataforma educacional de criação prática e colaborativa, apresentada com clareza e leveza.
+description: Uma plataforma educacional de criação prática e colaborativa, com identidade própria: ilustração autoral, cor sólida e botões "adesivo".
 colors:
-  primary: "#2457eb"
+  primary: "#1f5eff"
   ink: "#091e5b"
   background: "#ffffff"
-  paper: "#f4f7fd"
-  border: "#dce3ef"
-  muted: "#586781"
-  pressed: "#1644bf"
+  ice: "#e3f0ff"
+  muted: "#2f4472"
+  sun: "#ffc233"
+  coral: "#ff6b5b"
+  cyan: "#4cc3ff"
 typography:
   display:
-    fontFamily: "Manrope, Inter, Segoe UI, sans-serif"
+    fontFamily: "Fredoka (Nexa Fredoka), Baloo 2, Trebuchet MS, sans-serif"
   body:
-    fontFamily: "Inter, system-ui, sans-serif"
+    fontFamily: "Nunito (Nexa Nunito), system-ui, sans-serif"
 rounded:
-  DEFAULT: "12px"
+  DEFAULT: "14px"
+  panel: "28px"
   navigation: "999px"
 spacing:
-  page-max: "1120px"
-  section: "64px"
-components:
-  button: {}
-  navigation: {}
-  footer: {}
-  project-example: {}
+  page-max: "1200px"
+  section: "clamp(64px, 9vw, 120px)"
 ---
 
 # Nexa Quest
 
 ## Overview
 
-A referência LikeLingo orienta a composição: fundo branco, ilustração expressiva
-à esquerda, título e duas ações à direita, com bastante respiro. A assinatura
-própria é o golfinho original cercado por quatro atalhos para as áreas de criação.
-Sem redesenhar o mascote, mudar os logos ou copiar personagens e cores da referência.
+A referência de estética é o uso de ilustração 2D própria, cenários completos, seções
+com composições diferentes e botões com personalidade (EnxadaHost), **adaptado** à marca:
+nada de cores, personagens ou componentes copiados. A assinatura do Nexa Quest é o
+golfinho original num "mar de circuitos": terraços arredondados, sol âmbar, nuvens-pílula
+e traços de circuito no lugar das algas.
 
-Público: estudantes interessados em tecnologia e criação digital. Idioma pt-BR.
-Registro: marketing educacional nas rotas públicas; produto nas rotas autenticadas.
-O pedido atual substitui a direção anterior de mesa pontilhada e editor demonstrativo.
-
-Fontes de contexto: briefing do usuário, README.md (API e limitações), schema de
-projetos/progresso e perfilController.js. Projetos e equipes estão implementados;
-XP, níveis e a integração de escrita do jogo não estão. Trilhas, missões e desafios
-são apresentados como proposta educacional do jogo, com disponibilidade explícita.
-A origem estudantil e a equipe vêm do briefing. Nenhum nome, foto, cargo ou parceria além dos informados é inferido.
+O mascote e os logotipos são SVGs originais e nunca são redesenhados nem recortados:
+a cena é um SVG de fundo e o mascote é o arquivo original, sobreposto por CSS (`.scene` /
+`.scene-fig`). Público: estudantes de tecnologia e criação digital. Idioma pt-BR.
+Os textos só descrevem o que existe; não há números, depoimentos nem funcionalidades inventadas.
 
 ## Colors
 
-O CSS é a fonte canônica, modelo B. `public-header.css` define `--nx-ink`,
-`--nx-white`, `--nx-ice` e a navegação. `public-pages.css` define a direção pública:
-`primary` → `--nx-blue`; `paper` → `--nq-paper`; `border` → `--nq-border`;
-`muted` → `--nq-muted`; `pressed` → `--nq-blue-pressed`.
-`ink` e `background` correspondem a `--nx-ink` e `--nx-white`.
+`public/css/publico.css` é a fonte canônica dos tokens. Azul `#1f5eff` e navy `#091e5b`
+são a marca. Gelo `#e3f0ff` é o fundo de apoio. **Âmbar** (`--sun`), **coral** e **ciano**
+são cores de apoio: aparecem em ilustrações, destaques e no botão principal sobre fundo
+escuro, nunca como fundo de página.
 
-Branco para leitura, azul escuro para títulos, azul vibrante para ações e destaques.
-Papel claro delimita apenas a seção de processo e as áreas de aprendizagem.
-Foco em azul com afastamento visível. Scrollbars têm trilho, thumb e estados
-explícitos; cores forçadas voltam à escolha do sistema.
+Cor por área (usada em barras, marcadores e retratos): Sistemas = ciano, Design = coral,
+Multimídia = âmbar, Jogos = azul. Sem degradês de fundo, sem glow, sem glassmorphism.
+O único degradê é o brilho diagonal dos botões.
 
 ## Typography
 
-Manrope, peso 800, para títulos e ações públicas (`--nq-display`).
-Inter para texto e campos (`--font`, de style.css). Títulos entre 28 e 64px,
-corpo entre 14 e 17px, com entrelinha generosa. As fontes têm fallbacks locais.
-Evitar texto em caixa alta, slogans vagos e etiquetas repetidas.
-Login e Cadastro mantêm a tipografia e a composição existentes.
+Fredoka (já presente no logotipo) em títulos, botões e rótulos; Nunito (terminações
+arredondadas, hospedada em `assets/fontes`) no texto. Títulos entre 30 e 60px, texto 17–19px,
+texto secundário em azul-navy `#2f4472` (contraste acima de 9:1 sobre branco). Sem caixa alta.
+Títulos alinhados à esquerda; nenhuma seção repete a mesma composição centralizada.
 
 ## Layout
 
-`page-max` → `.nq-container`, 1120px com margens de 20–48px. Navegação branca,
-arredondada, flutuante e em fluxo normal, com indicação discreta da página ativa.
-Links centrais: Inicial, Nexa Quest, Sobre. Acessar plataforma sempre leva ao Login.
-Até 800px, a navegação usa disclosure nativo com fechamento por Escape, clique
-externo, saída de foco e troca para desktop.
+Cada seção tem uma função e uma composição própria:
 
-Inicial: somente hero e processo em três etapas. No celular, texto e CTAs vêm
-antes da ilustração para que as ações sejam alcançadas rapidamente.
-Nexa Quest: introdução, lista editorial com exemplo de projeto, quatro áreas,
-demonstração do jogo e CTA. Sobre: origem, equipe e propósito, mais contato expansível.
-Sem alturas fixas em blocos de texto/formulários. Somente a composição ilustrada
-possui dimensões reservadas. O documento controla a rolagem.
+- **Hero**: bloco azul com circuito tom sobre tom, texto à esquerda, cena à direita, corte diagonal.
+- **Duas partes**: dois blocos de cor de ponta a ponta (rede social em azul, jogo em navy), cada um com padrão próprio.
+- **Quatro áreas**: ilustração central e uma área em cada canto, em zigue-zague.
+- **Como funciona**: faixa clara com cortes diagonais, ilustração à esquerda e lista numerada.
+- **Convite final**: o golfinho emerge da onda que abre o rodapé.
+
+Nexa Quest e Sobre variam: painel ilustrado, capturas reais inclinadas, bloco navy do jogo,
+linhas editoriais com pictograma, retratos escalonados e contato em bloco azul.
+O menu flutua em cápsula e o hero entra por baixo dele (`--header-space`).
+
+Até 900px as composições são reorganizadas: o texto vem antes da ilustração, as áreas viram
+lista com a cor ao lado, a equipe vira lista com foto ao lado e o menu usa disclosure nativo.
 
 ## Elevation & Depth
 
-Bordas claras e sombras discretas. A navegação flutua suavemente; os atalhos da
-ilustração e os botões têm uma pequena base que remete à linguagem de jogos.
-Sem glow, glassmorphism, degradês generalizados ou animação ambiente.
-A área de autenticação conserva o fundo azul escuro e formulário à direita.
+Linguagem "adesivo": o mascote tem contorno branco, então botões, molduras, painéis e menu
+usam **borda navy de 3px e base rígida** (`box-shadow: 0 6px 0`), sem sombra difusa.
+Ao pressionar, o botão desce até a base.
 
 ## Shapes
 
-Botões públicos com 12px e base de 4px; navegação em cápsula de 999px.
-O golfinho e os logos são SVGs originais, sempre em proporção natural.
-Ícones de área são vetores simples em learning.svg, sem personagens novos.
+Botões 14px, painéis 28px, menu em cápsula. Terraços, nuvens e objetos das ilustrações são
+formas simples e arredondadas, sem contorno. Cortes de seção são diagonais (`--slant`).
 
 ## Components
 
-Cabeçalho e rodapé públicos reutilizam public-header.js e public-header.css.
-public-pages.css compartilha botões, links, tipografia, containers, figuras,
-áreas de aprendizagem e detalhes. landing-quest.css contém apenas a composição
-específica da Inicial. O exemplo de projeto é estático e identificado como ilustração.
-Não há formulário ou publicação simulada na apresentação pública atual.
+- Botões: `.pq-btn` (azul, em fundo claro), `.pq-btn--sun` (âmbar, em fundo escuro), `.pq-btn--ghost` (branco). Link: `.pq-link` com sublinhado âmbar.
+- Cena: `.scene` + `.scene-bg` (SVG) + `.scene-fig` (mascote original).
+- Blocos: `.block`, `.panel`, `.area-item`, `.area`, `.member`, `.contact`.
+- Botões "Acessar plataforma" (menu e hero) usam `data-enter-platform` e o mesmo fluxo de sessão (`NP.enterPlatform`).
+- Rodapé montado por `renderFooter` (main.js); a onda vem de `.site-footer::before`.
+- Contato: IDs, nomes e `initContact` de main.js inalterados.
 
-O contato mantém os mesmos IDs, nomes e initContact de main.js. O detalhe abre
-quando acessado pelo link #contato. A área de equipe apresenta os cinco integrantes informados
-(nome, área de formação técnica, responsabilidades e foto em assets/imagens), em grade 3 + 2
-e, em telas estreitas, em lista com foto ao lado do texto. Se uma foto não carregar, o quadro mostra a inicial.
+### Ilustrações (`public/assets/ilustracoes/`)
 
-auth-refinements.css é restrito a data-page=auth: rótulos visíveis, campos uniformes,
-erros com espaço reservado, foco, alinhamento e rolagem natural em telas pequenas.
-IDs, nomes, validações, APIs, autenticação e redirecionamentos permanecem existentes.
-O botão Google, cuja integração já não estava configurada, indica indisponibilidade
-e permanece desativado, com orientação para usar e-mail ou usuário.
+`cena-hero`, `cena-areas`, `cena-trilha`, `cena-ponte`, `cena-dupla` (cenas); `objeto-social`,
+`objeto-jogo`, `area-*` (objetos e pictogramas); `padrao-circuito`, `padrao-rede`, `padrao-jogo`
+(padrões tom sobre tom); `onda`. São SVGs editáveis com a mesma paleta. Novas ilustrações devem
+seguir a mesma gramática (formas simples, cor sólida, sem degradê) e ser feitas por quem desenha a marca.
 
-Botões têm hover, foco, pressed e disabled. Links possuem destinos reais.
-Movimento reduzido é respeitado; não usar motion.js nas novas páginas públicas.
+### Login e Cadastro
 
-## Do's and Don'ts
-
-- Manter a primeira tela simples e dar protagonismo ao mascote original.
-- Mostrar somente recursos implementados ou sinalizar a indisponibilidade.
-- Usar as três páginas para separar começo, produto e equipe.
-- Não inventar integrantes, resultados, parceiros ou funcionalidades.
-- Não empilhar cards iguais, badges e grandes blocos de marketing.
-- Não alterar o backend ou fluxos autenticados para justificar a apresentação.
+Mantêm estrutura e composição. `auth-refino.css` apenas alinha os botões à borda e base navy do resto do site.
 
 ## Área social (redesign)
 
@@ -140,3 +119,57 @@ Aplica-se às páginas autenticadas (`data-protected`): início, explorar, meus 
 - **Ação principal:** "Criar projeto" fica no topo do menu (e como "+" na barra inferior do celular). Publicar uma postagem continua no campo da Início.
 - **Sem dados novos:** não há notificações, áreas de interesse, habilidades, nível ou XP no backend; a interface não finge essas informações.
 
+
+## Motion
+
+Aplica-se às páginas públicas (Inicial, Nexa Quest e Sobre). O movimento é **opcional e desligável**:
+remova `public/css/animacoes.css` e `public/js/motion-publico.js` (e as duas linhas que os carregam) e o
+site volta ao estático idêntico, sem tocar em mais nada. As ilustrações inline e o `data-reveal` ficam inertes.
+`motion.js` é das páginas de login e não é usado aqui.
+
+**Princípios.** Movimento serve a algo: feedback de ação, atenção a uma ilustração-chave ou vida discreta
+no universo da marca (mar de circuitos, golfinho, jogo). Deslocamentos pequenos (8–20px). Só `transform` e
+`opacity`. Sem dependências. Com `prefers-reduced-motion: reduce` ou sem JavaScript o site é idêntico ao
+estático e tudo fica visível: todo o CSS de movimento está dentro de `(prefers-reduced-motion: no-preference)`.
+Quando em dúvida, não anime.
+
+**Catálogo permitido (quatro tipos, e só estes).**
+
+1. *Feedback de interação (160–250ms):* brilho diagonal do `.pq-btn` desliza uma vez no hover; seta do
+   `.pq-link` desloca 4px por `transform`; painel do menu mobile abre com opacidade e `scale(.96 → 1)`;
+   barra de cor sob o título do `.area-item` cresce por `scaleX` (desktop); âncora `.area:target` acende o
+   fundo e o apaga em 600ms (a faixa lateral colorida permanece); mensagens `.err`/`.status` entram com fade
+   e 4px; campo inválido faz um único movimento lateral de 3px.
+2. *Entrada de cenas ao rolar (um padrão):* `opacity 0 → 1` + `translateY(16px → 0)`, 500ms, uma única vez.
+   Só em ilustrações: `.block-art`, `.panel--dupla`, `.panel--logo`, `.scene--ponte`, as molduras
+   `.gallery .shot-frame` (parte de 1,5° a mais de rotação; a legenda não se move) e `.member-photo`.
+   Itens do mesmo grupo (`data-reveal="grupo"`): 80ms entre eles, no máximo 3 por vez. Nunca em texto,
+   botões, cabeçalhos, rodapé ou seção inteira.
+3. *Vida discreta (ambiente, lenta):* golfinho do hero respira (`-4px`, 4s); nuvens (±24px, 44–60s) e
+   brilhos (3–4s, defasados) dentro de `cena-hero-animada.svg`; onda do rodapé desliza 180px em 14s, linear
+   e sem emenda; golfinho do convite final flutua (`-5px`, 3,5s). Pausam fora da tela
+   (`[data-motion-paused]`) e com a aba oculta. No celular ficam só o golfinho do hero e a onda.
+4. *Montagem das cenas-chave:* `cena-areas` (monitor, paleta, claquete, controle, golfinho por último, 120ms
+   entre eles, total 0,9s) e `cena-trilha` (livro, alvo, bandeira, 150ms entre eles, total 0,7s), uma vez,
+   com leve overshoot (`--ease-pop`). Essas duas cenas são SVG **inline** no HTML (`aria-hidden`, mesmo visual)
+   com cada objeto em `.nq-obj`; os arquivos `cena-areas.svg` e `cena-trilha.svg` seguem no repositório.
+
+**Tokens** (bloco "movimento" em `:root` de `publico.css`): `--dur-micro` 160ms, `--dur-ui` 240ms,
+`--dur-reveal` 500ms, `--ease-out`, `--ease-pop`, `--dist-reveal` 16px, mais `--dur-shine`, `--dur-bar`,
+`--dur-msg`, `--dur-target`, `--dur-pop` e `--stagger-*`. Não use valores soltos em `animacoes.css`
+(exceção: os laços ambientes de 3,5s a 60s, que são específicos de cada elemento, e o `<style>` do SVG do
+hero, que é outro documento e não enxerga os tokens da página).
+
+**Como funciona.** `motion-publico.js` (com `defer`) só marca `.rv-wait` nos `[data-reveal]` que estão
+*abaixo* da dobra e os revela com `IntersectionObserver`; o que já está na tela nunca é ocultado, então não há
+"piscada" nem atraso no hero. Se o observer falhar ou não responder em 3s, tudo é mostrado. `will-change` só
+existe durante a transição. O hero usa `<picture>`: a versão animada só é servida em telas largas e sem
+preferência por movimento reduzido; caso contrário vale o `cena-hero.svg` original, que não é alterado.
+O SVG do mascote nunca é editado.
+
+**Proibido.** Fade-up em texto, títulos, parágrafos, listas, botões e seções; *typing*, letras separadas,
+contadores, *blur-in*; parallax, *scroll-jacking*, cursor customizado; cards que levantam, brilham ou
+inclinam (hover só em botões, links e itens de área); glow, brilho pulsante, degradê giratório, partículas,
+orbes; botões ou ícones que pulsam ou balançam em loop; preloader, transição de página, confete; interações
+acima de 700ms; animar `width`, `height`, `top/left`, `box-shadow`, `filter` ou `clip-path`;
+`will-change` amplo; `!important` fora do bloco de movimento reduzido.

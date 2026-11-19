@@ -8,13 +8,16 @@
   <meta name="description" content="Conheça a equipe de estudantes que desenvolve o Nexa Quest e o propósito do projeto.">
   <link rel="icon" href="../assets/icones/favicon.svg">
   <link rel="preload" href="../assets/fontes/fredoka-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../assets/fontes/nunito-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="../css/fontes.css">
   <link rel="stylesheet" href="../css/publico.css">
   <link rel="stylesheet" href="../css/public-header.css">
+  <link rel="stylesheet" href="../css/animacoes.css">
   <script src="../js/functions.js" defer></script>
   <script src="../js/main.js" defer></script>
   <script src="../js/public-header.js" defer></script>
   <script src="../js/equipe.js" defer></script>
+  <script src="../js/motion-publico.js" defer></script>
 </head>
 
 <body class="pub nx-public-page" data-page="sobre" data-root="../">
@@ -22,63 +25,65 @@
   <header class="nx-header" data-public-header></header>
 
   <main id="conteudo">
-    <section class="page-head" aria-labelledby="titulo">
-      <div class="shell split">
-        <div>
+    <section class="ahead" aria-labelledby="titulo">
+      <div class="shell ahead-grid">
+        <div class="ahead-copy">
+          <p class="kicker">Sobre</p>
           <h1 id="titulo">Quem somos</h1>
           <p class="lead">O Nexa Quest surgiu como uma iniciativa desenvolvida por estudantes, reunindo conhecimentos de tecnologia, design e criação digital.</p>
           <p class="text">Somos a Nexa Play, a equipe que projeta, desenha e programa a plataforma.</p>
         </div>
-        <div class="about-mascot">
-          <img src="../assets/imagens/logo-escura.svg" width="368" height="188">
+        <div class="panel panel--logo" data-reveal>
+          <img src="../assets/imagens/logo-branca.svg" alt="Nexa Play" width="339" height="160">
+          <img class="fig-head" src="../assets/imagens/golfinho-fone.svg" alt="" width="241" height="152">
         </div>
       </div>
     </section>
 
-    <section class="section section--paper" id="equipe" aria-labelledby="equipe-titulo">
+    <section class="team" id="equipe" aria-labelledby="equipe-titulo">
       <div class="shell">
         <div class="section-head">
           <h2 id="equipe-titulo">Nossa equipe</h2>
           <p class="lead">Cinco estudantes, quatro áreas de formação técnica e um mesmo projeto.</p>
         </div>
         <ul class="team-grid">
-          <li class="member">
-            <div class="member-photo"><img src="../assets/imagens/emanuel.jpeg" alt="Foto de Emanuel Fontes" width="480" height="480" loading="lazy" decoding="async"></div>
+          <li class="member member--sistemas">
+            <div class="member-photo" data-reveal="grupo"><img src="../assets/imagens/emanuel.jpeg" alt="Foto de Emanuel Fontes" width="480" height="480" loading="lazy" decoding="async"></div>
             <div class="member-info">
               <h3>Emanuel Fontes</h3>
-              <p class="member-area"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icones/areas.svg#i-sistemas"/></svg>Desenvolvimento de Sistemas</p>
+              <p class="member-area">Desenvolvimento de Sistemas</p>
               <p class="member-about">Responsável pelo desenvolvimento técnico da plataforma, incluindo frontend, backend, banco de dados e infraestrutura do servidor.</p>
             </div>
           </li>
-          <li class="member">
-            <div class="member-photo"><img src="../assets/imagens/yuri.jpeg" alt="Foto de Yuri" width="480" height="480" loading="lazy" decoding="async"></div>
+          <li class="member member--design">
+            <div class="member-photo" data-reveal="grupo"><img src="../assets/imagens/yuri.jpeg" alt="Foto de Yuri" width="480" height="480" loading="lazy" decoding="async"></div>
             <div class="member-info">
               <h3>Yuri Sant'Ana</h3>
-              <p class="member-area"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icones/areas.svg#i-design"/></svg>Design</p>
+              <p class="member-area">Design</p>
               <p class="member-about">Responsável pela identidade visual do Nexa Quest, incluindo a criação do mascote e dos elementos gráficos que compõem a identidade do projeto.</p>
             </div>
           </li>
-          <li class="member">
-            <div class="member-photo"><img src="../assets/imagens/alice.jpeg" alt="Foto de Alice" width="480" height="480" loading="lazy" decoding="async"></div>
+          <li class="member member--multimidia">
+            <div class="member-photo" data-reveal="grupo"><img src="../assets/imagens/alice.jpeg" alt="Foto de Alice" width="480" height="480" loading="lazy" decoding="async"></div>
             <div class="member-info">
               <h3>Alice Casé</h3>
-              <p class="member-area"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icones/areas.svg#i-multimidia"/></svg>Multimídia</p>
+              <p class="member-area">Multimídia</p>
               <p class="member-about">Atua na criação da interface e na comunicação visual da plataforma, aplicando conhecimentos de multimídia, publicidade e propaganda.</p>
             </div>
           </li>
-          <li class="member">
-            <div class="member-photo"><img src="../assets/imagens/flavia.jpeg" alt="Foto de Flávia" width="480" height="480" loading="lazy" decoding="async"></div>
+          <li class="member member--multimidia">
+            <div class="member-photo" data-reveal="grupo"><img src="../assets/imagens/flavia.jpeg" alt="Foto de Flávia" width="480" height="480" loading="lazy" decoding="async"></div>
             <div class="member-info">
               <h3>Flávia Alves</h3>
-              <p class="member-area"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icones/areas.svg#i-multimidia"/></svg>Multimídia</p>
+              <p class="member-area">Multimídia</p>
               <p class="member-about">Atua no desenvolvimento da interface e na apresentação visual do projeto, contribuindo com soluções de multimídia, publicidade e propaganda.</p>
             </div>
           </li>
-          <li class="member">
-            <div class="member-photo"><img src="../assets/imagens/raphael.jpeg" alt="Foto de Raphael Henriques" width="480" height="480" loading="lazy" decoding="async"></div>
+          <li class="member member--jogos">
+            <div class="member-photo" data-reveal="grupo"><img src="../assets/imagens/raphael.jpeg" alt="Foto de Raphael Henriques" width="480" height="480" loading="lazy" decoding="async"></div>
             <div class="member-info">
               <h3>Raphael Henriques</h3>
-              <p class="member-area"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icones/areas.svg#i-jogos"/></svg>Jogos Digitais</p>
+              <p class="member-area">Jogos Digitais</p>
               <p class="member-about">Responsável pelo desenvolvimento do jogo Nexa Quest, incluindo suas mecânicas, desafios e elementos de gamificação.</p>
             </div>
           </li>
@@ -86,13 +91,13 @@
       </div>
     </section>
 
-    <section class="section" id="proposito" aria-labelledby="proposito-titulo">
+    <section class="purpose on-dark" id="proposito" aria-labelledby="proposito-titulo">
       <div class="shell about-purpose">
         <div>
           <h2 id="proposito-titulo">Nosso propósito</h2>
           <p class="lead">Tornar a aprendizagem mais prática, colaborativa e conectada à criação de projetos.</p>
           <p class="text">Acreditamos que se aprende melhor fazendo, e que fazer junto com outras pessoas leva mais longe.</p>
-          <p><a class="pq-link" href="nexa-quest.html">Ver como o Nexa Quest funciona</a></p>
+          <a class="pq-link" href="nexa-quest.html">Ver como o Nexa Quest funciona</a>
         </div>
 
         <section class="contact" id="contato" aria-labelledby="contato-titulo">
