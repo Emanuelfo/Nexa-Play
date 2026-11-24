@@ -3596,6 +3596,10 @@ body[data-page="amigos"] .nq-search {
 
 
 /* ---------- Jogo (NEXA QUEST incorporado) ---------- */
+/* Estrutura: .game-stage (alvo da Fullscreen API) > .game-frame (caixa 16:9) > iframe.
+   O mesmo .game-stage cobre os dois modos de tela cheia, ambos marcados com .is-active:
+   - nativo (Fullscreen API): Android, desktop e iPad;
+   - imersivo (position: fixed): só quando o navegador não oferece a API (iPhone/Safari). */
 body[data-page="jogo"] .nq-body {
   max-width: 1600px;
   padding-bottom: 24px;
@@ -3622,21 +3626,36 @@ body[data-page="jogo"] .nq-body {
   height: 18px;
 }
 
-/* Proporção 16:9 e, no desktop, a largura é limitada para o jogo caber na altura da tela sem rolagem
-   (170px = topo 64 + respiros + linha de ações + margem inferior). */
+.game-fs-btn[data-state="off"] .game-ico-compress,
+.game-fs-btn[data-state="on"] .game-ico-expand {
+  display: none;
+}
+
+/* Na página: proporção do jogo (16:9 por padrão, ajustada por JS a partir de GET /api/jogo) e, no desktop,
+   largura limitada para o jogo caber na altura da tela sem rolagem
+   (--game-chrome = topo 64 + respiros + linha de ações + margem inferior). */
 .game-stage {
+  --game-ratio: 1.7778;
+  --game-chrome: 170px;
   position: relative;
-  width: min(100%, calc((100vh - 170px) * 16 / 9));
-  width: min(100%, calc((100dvh - 170px) * 16 / 9));
-  aspect-ratio: 16 / 9;
+  width: min(100%, max(240px, calc((100vh - var(--game-chrome)) * var(--game-ratio))));
+  width: min(100%, max(240px, calc((100dvh - var(--game-chrome)) * var(--game-ratio))));
   margin-inline: auto;
+}
+
+.game-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--game-ratio);
   overflow: hidden;
   background: #000;
   border: 1px solid var(--nq-border);
   border-radius: var(--nq-r-lg);
+  /* Arrastar sobre o jogo não rola a página durante a partida. */
+  touch-action: none;
 }
 
-.game-stage iframe {
+.game-frame iframe {
   position: absolute;
   inset: 0;
   display: block;
@@ -3644,6 +3663,16 @@ body[data-page="jogo"] .nq-body {
   height: 100%;
   border: 0;
   background: #000;
+}
+
+/* Modo "scaled": o iframe mantém o tamanho fixo configurado no itch.io e é reduzido por transform
+   (a escala é calculada em main.js), então nada é cortado e a proporção é preservada. */
+.game-frame.is-scaled iframe {
+  inset: auto;
+  top: 0;
+  left: 0;
+  max-width: none;
+  transform-origin: 0 0;
 }
 
 .game-status {
@@ -3667,15 +3696,86 @@ body[data-page="jogo"] .nq-body {
 }
 
 .game-status[hidden],
-.game-exit[hidden] {
+.game-exit[hidden],
+.game-hint[hidden] {
   display: none;
 }
 
+/* Saída discreta da tela cheia. Só aparece com o jogo ativo e fica sempre FORA da área do jogo quando a
+   tela tem faixas pretas (data-slot="corner"). Sem faixas, vira uma aba pequena e translúcida no centro
+   da borda superior (data-slot="edge"): o conteúdo do iframe é de outra origem e não dá para saber
+   onde ficam os controles do jogo. */
 .game-exit {
   position: absolute;
-  top: calc(10px + env(safe-area-inset-top, 0px));
-  right: calc(10px + env(safe-area-inset-right, 0px));
   z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  color: #fff;
+  background: rgba(15, 23, 42, .62);
+  border: 1px solid rgba(255, 255, 255, .28);
+  border-radius: 999px;
+  cursor: pointer;
+  opacity: .9;
+  transition: opacity .2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.game-exit svg {
+  width: 20px;
+  height: 20px;
+}
+
+.game-exit:hover,
+.game-exit:focus-visible {
+  opacity: 1;
+}
+
+.game-exit[data-slot="corner"] {
+  top: var(--game-exit-top, calc(env(safe-area-inset-top, 0px) + 8px));
+  right: calc(env(safe-area-inset-right, 0px) + 8px);
+}
+
+.game-exit[data-slot="edge"] {
+  top: env(safe-area-inset-top, 0px);
+  left: 50%;
+  width: 44px;
+  height: 22px;
+  border-top: 0;
+  border-radius: 0 0 12px 12px;
+  opacity: .45;
+  transform: translateX(-50%);
+}
+
+.game-exit[data-slot="edge"] svg {
+  width: 14px;
+  height: 14px;
+}
+
+.game-exit[data-slot="edge"]:hover,
+.game-exit[data-slot="edge"]:focus-visible {
+  opacity: 1;
+}
+
+/* Pedido para girar o celular: fica na faixa preta abaixo do jogo e nunca captura toques. */
+.game-hint {
+  position: absolute;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+  left: 50%;
+  z-index: 2;
+  max-width: calc(100% - 32px);
+  margin: 0;
+  padding: 8px 14px;
+  font-size: 13px;
+  line-height: 1.3;
+  color: #fff;
+  text-align: center;
+  background: rgba(15, 23, 42, .72);
+  border-radius: 999px;
+  transform: translateX(-50%);
+  pointer-events: none;
 }
 
 .game-rotate {
@@ -3686,43 +3786,9 @@ body[data-page="jogo"] .nq-body {
   text-align: center;
 }
 
-/* Tela cheia nativa: o jogo mantém 16:9 e ocupa o máximo da tela, com barras pretas se necessário. */
-.game-stage:fullscreen {
-  display: grid;
-  place-items: center;
-  width: 100%;
-  max-width: none;
-  height: 100%;
-  aspect-ratio: auto;
-  border: 0;
-  border-radius: 0;
-}
-
-.game-stage:fullscreen iframe {
-  position: static;
-  width: min(100vw, calc(100vh * 16 / 9));
-  height: min(100vh, calc(100vw * 9 / 16));
-}
-
-.game-stage:-webkit-full-screen {
-  display: grid;
-  place-items: center;
-  width: 100%;
-  max-width: none;
-  height: 100%;
-  aspect-ratio: auto;
-  border: 0;
-  border-radius: 0;
-}
-
-.game-stage:-webkit-full-screen iframe {
-  position: static;
-  width: min(100vw, calc(100vh * 16 / 9));
-  height: min(100vh, calc(100vw * 9 / 16));
-}
-
-/* Alternativa quando o navegador não oferece tela cheia (ex.: iPhone). */
-.game-stage.is-expanded {
+/* Jogo ativo (tela cheia nativa ou imersiva): ocupa a tela inteira, sem menus, e o jogo é encaixado
+   em 16:9 dentro da área segura (notch/barras), com faixas pretas se a tela tiver outra proporção. */
+.game-stage.is-active {
   position: fixed;
   inset: 0;
   z-index: 200;
@@ -3732,28 +3798,27 @@ body[data-page="jogo"] .nq-body {
   max-width: none;
   height: 100vh;
   height: 100dvh;
-  aspect-ratio: auto;
+  margin: 0;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  overflow: hidden;
+  background: #000;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+.game-stage.is-active .game-frame {
+  --game-avail-h: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  --game-avail-h: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  width: min(100%, calc(var(--game-avail-h) * var(--game-ratio)));
   border: 0;
   border-radius: 0;
 }
 
-.game-stage.is-expanded iframe {
-  position: static;
-  width: min(100vw, calc(100vh * 16 / 9));
-  height: min(100vh, calc(100vw * 9 / 16));
-  width: min(100vw, calc(100dvh * 16 / 9));
-  height: min(100dvh, calc(100vw * 9 / 16));
-}
-
-html.game-expanded {
+/* Sem rolagem da página enquanto o jogo está em modo imersivo (iPhone). */
+html.game-immersive,
+html.game-immersive body {
   overflow: hidden;
-}
-
-/* Telas baixas (celular na horizontal): usa toda a largura e deixa a página rolar. */
-@media (max-height: 560px) {
-  .game-stage {
-    width: 100%;
-  }
+  overscroll-behavior: none;
 }
 
 @media (max-width: 699px) {
@@ -3761,8 +3826,12 @@ html.game-expanded {
     padding: 12px 12px calc(var(--nq-tab) + env(safe-area-inset-bottom, 0px) + 20px);
   }
 
+  /* + barra de abas inferior (60px) */
   .game-stage {
-    width: 100%;
+    --game-chrome: 232px;
+  }
+
+  .game-frame {
     border-radius: var(--nq-r);
   }
 

@@ -2980,60 +2980,218 @@ function initProjectDetail() {
 }
 
 /* Página do jogo: a URL de incorporação vem de GET /api/jogo (exige sessão válida no servidor)
-   e só então o iframe é criado. O HTML estático não contém o endereço do jogo. */
+   e só então o iframe é criado. O HTML estático não contém o endereço do jogo.
+
+   Tela cheia (um único controle: o botão da plataforma):
+   - nativa, pela Fullscreen API aplicada ao #game-stage (ancestral do iframe, que nunca é movido nem recarregado);
+   - imersiva (position: fixed + rolagem travada), usada somente quando o navegador não oferece a API
+     para elementos (iPhone/Safari). É o limite da plataforma: não há tela cheia real nesse caso.
+   O iframe NÃO recebe a permissão "fullscreen": assim o botão nativo do itch.io não funciona dentro da
+   plataforma e não compete com o botão do Nexa Quest. */
 function initGame() {
   const stage = $('#game-stage');
+  const box = $('#game-frame');
   const status = $('#game-status');
   const fullscreenButton = $('#game-fullscreen');
   const exitButton = $('#game-exit');
-  if (!stage || !status || !fullscreenButton) return;
+  const hint = $('#game-hint');
+  if (!stage || !box || !status || !fullscreenButton || !exitButton || !hint) return;
 
-  const nativeEnter = stage.requestFullscreen || stage.webkitRequestFullscreen;
-  const fullscreenElement = () => document.fullscreenElement || document.webkitFullscreenElement || null;
-  const isFullscreen = () => fullscreenElement() === stage || stage.classList.contains('is-expanded');
+  const root = document.documentElement;
   const label = $('span', fullscreenButton);
+  const touchScreen = window.matchMedia('(pointer: coarse)');
+  const portrait = window.matchMedia('(orientation: portrait)');
+  const requestNative = stage.requestFullscreen || stage.webkitRequestFullscreen;
+  const exitNative = document.exitFullscreen || document.webkitExitFullscreen;
+  const nativeElement = () => document.fullscreenElement || document.webkitFullscreenElement || null;
+  const nativeSupported = () => Boolean(requestNative && exitNative)
+    && (document.fullscreenEnabled ?? document.webkitFullscreenEnabled) !== false;
 
-  function syncFullscreenState() {
-    const active = isFullscreen();
-    fullscreenButton.setAttribute('aria-pressed', String(active));
+  let mode = 'off'; // 'off' | 'native' | 'immersive'
+  let busy = false;
+  let orientationLocked = false;
+  let savedScroll = 0;
+  let game = { largura: 1920, altura: 1080, modo: 'fluid' };
+
+  function onMedia(query, handler) {
+    if (query.addEventListener) query.addEventListener('change', handler);
+    else if (query.addListener) query.addListener(handler); // Safari < 14
+  }
+
+  /* ---------- Layout ---------- */
+  // Modo "scaled": o iframe mantém o tamanho fixo do itch.io e é reduzido para caber na caixa.
+  function fitScaled() {
+    const frame = box.querySelector('iframe');
+    if (!frame || game.modo !== 'scaled') return;
+    const scale = box.clientWidth / game.largura;
+    if (scale > 0) frame.style.transform = `scale(${scale})`;
+  }
+
+  // O botão de saída fica numa faixa preta quando existe espaço (nunca cobre o jogo); sem faixas, vira uma aba
+  // pequena e translúcida na borda superior.
+  function placeExit() {
+    if (exitButton.hidden) return;
+    const stageRect = stage.getBoundingClientRect();
+    const gameRect = box.getBoundingClientRect();
+    const styles = getComputedStyle(stage);
+    const insetTop = parseFloat(styles.paddingTop) || 0;
+    const insetRight = parseFloat(styles.paddingRight) || 0;
+    const roomAbove = gameRect.top - stageRect.top - insetTop;
+    const roomBeside = stageRect.right - gameRect.right - insetRight;
+    let slot = 'edge';
+    if (roomAbove >= 44) {
+      // faixa superior (ex.: notebook 16:10, celular na vertical): centraliza se for estreita
+      slot = 'corner';
+      exitButton.style.setProperty('--game-exit-top', `${insetTop + Math.min(8, Math.max(2, (roomAbove - 40) / 2))}px`);
+    } else if (roomBeside >= 56) {
+      // faixa lateral (ex.: celular 19.5:9, monitor ultrawide)
+      slot = 'corner';
+      exitButton.style.setProperty('--game-exit-top', `${insetTop + 8}px`);
+    }
+    exitButton.dataset.slot = slot;
+  }
+
+  function render() {
+    const active = mode !== 'off';
+    stage.classList.toggle('is-active', active);
+    root.classList.toggle('game-immersive', mode === 'immersive');
+    fullscreenButton.dataset.state = active ? 'on' : 'off';
     if (label) label.textContent = active ? 'Sair da tela cheia' : 'Tela cheia';
-    exitButton.hidden = !stage.classList.contains('is-expanded');
+    exitButton.hidden = !active;
+    // Só pede para girar quando o aparelho realmente continua na vertical (se o lock funcionou, já é horizontal).
+    hint.hidden = !(active && touchScreen.matches && portrait.matches);
+    placeExit();
+    fitScaled();
   }
 
-  async function enterFullscreen() {
-    if (nativeEnter) {
-      try {
-        await nativeEnter.call(stage, { navigationUI: 'hide' });
-        try { await screen.orientation?.lock?.('landscape'); } catch { /* nem todos os navegadores permitem */ }
-        return;
-      } catch { /* cai para o modo expandido abaixo */ }
+  /* ---------- Orientação ---------- */
+  // Só celulares/tablets, e só em tela cheia nativa (o Chrome do Android exige isso). Safari/iPhone e Firefox
+  // não permitem travar: nesses casos o aviso "Gire o celular" cobre a limitação.
+  async function lockLandscape() {
+    if (!touchScreen.matches || !screen.orientation || typeof screen.orientation.lock !== 'function') return;
+    try {
+      await screen.orientation.lock('landscape');
+      orientationLocked = true;
+    } catch {
+      orientationLocked = false;
     }
-    // iPhone/Safari não oferece tela cheia nativa para elementos: expande a área do jogo sobre a página.
-    stage.classList.add('is-expanded');
-    document.documentElement.classList.add('game-expanded');
-    syncFullscreenState();
+    render();
   }
 
-  async function exitFullscreen() {
-    if (fullscreenElement()) {
-      try { await (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch { /* já saiu */ }
+  function unlockOrientation() {
+    if (!orientationLocked) return;
+    orientationLocked = false;
+    try { screen.orientation.unlock(); } catch { /* sem suporte */ }
+  }
+
+  /* ---------- Entrada e saída ---------- */
+  function focusGame() {
+    // O foco precisa ir para o jogo, senão o teclado continua no botão (agora escondido).
+    box.querySelector('iframe')?.focus({ preventScroll: true });
+  }
+
+  function waitForNative(ms) {
+    return new Promise(resolve => {
+      const done = () => {
+        clearTimeout(timer);
+        document.removeEventListener('fullscreenchange', done);
+        document.removeEventListener('webkitfullscreenchange', done);
+        resolve();
+      };
+      const timer = setTimeout(done, ms);
+      document.addEventListener('fullscreenchange', done);
+      document.addEventListener('webkitfullscreenchange', done);
+    });
+  }
+
+  async function enterNative() {
+    const result = requestNative.call(stage, { navigationUI: 'hide' });
+    if (result && typeof result.then === 'function') await result;
+    else await waitForNative(800); // prefixo webkit (iPad) não devolve Promise
+    if (nativeElement() !== stage) throw new Error('A tela cheia nativa não foi concedida.');
+  }
+
+  function enterImmersive() {
+    savedScroll = window.scrollY;
+    mode = 'immersive';
+    render();
+    // Foco no botão de saída (não no jogo): o ESC dentro do iframe, de outra origem, nunca chegaria à página.
+    exitButton.focus({ preventScroll: true });
+  }
+
+  async function enter() {
+    if (mode !== 'off' || busy) return;
+    busy = true;
+    try {
+      if (nativeSupported()) {
+        try {
+          await enterNative(); // onNativeChange define o modo e trava a orientação
+          return;
+        } catch (error) {
+          console.warn('NEXA QUEST: tela cheia nativa indisponível; usando o modo imersivo.', error);
+        }
+      }
+      enterImmersive();
+    } finally {
+      busy = false;
     }
-    stage.classList.remove('is-expanded');
-    document.documentElement.classList.remove('game-expanded');
-    try { screen.orientation?.unlock?.(); } catch { /* sem suporte */ }
-    syncFullscreenState();
   }
 
-  fullscreenButton.addEventListener('click', () => (isFullscreen() ? exitFullscreen() : enterFullscreen()));
-  exitButton.addEventListener('click', exitFullscreen);
-  document.addEventListener('fullscreenchange', syncFullscreenState);
-  document.addEventListener('webkitfullscreenchange', syncFullscreenState);
+  // Limpeza única, chamada por qualquer caminho de saída (botão, ESC, gesto do sistema, botão Voltar).
+  function leave() {
+    const wasImmersive = mode === 'immersive';
+    mode = 'off';
+    unlockOrientation();
+    render();
+    if (wasImmersive) window.scrollTo(0, savedScroll);
+    fullscreenButton.focus({ preventScroll: true });
+  }
+
+  async function exit() {
+    if (mode === 'off') return;
+    if (nativeElement() === stage) {
+      try { await exitNative.call(document); } catch { /* já saiu */ }
+      if (mode === 'native' && nativeElement() !== stage) leave();
+    } else {
+      leave();
+    }
+  }
+
+  function onNativeChange() {
+    const inNative = nativeElement() === stage;
+    if (inNative && mode === 'off') {
+      mode = 'native';
+      render();
+      lockLandscape();
+      focusGame();
+      return;
+    }
+    if (!inNative && mode === 'native') return leave(); // saída por ESC, gesto ou Voltar
+    render();
+  }
+
+  fullscreenButton.addEventListener('click', () => (mode === 'off' ? enter() : exit()));
+  exitButton.addEventListener('click', exit);
+  document.addEventListener('fullscreenchange', onNativeChange);
+  document.addEventListener('webkitfullscreenchange', onNativeChange);
   document.addEventListener('keydown', event => {
-    if (event.key === 'Escape' && stage.classList.contains('is-expanded')) exitFullscreen();
+    // Em tela cheia nativa o próprio navegador trata o ESC; no modo imersivo é a página que trata.
+    if (event.key === 'Escape' && mode === 'immersive') exit();
   });
+  window.addEventListener('pagehide', unlockOrientation);
+  window.addEventListener('resize', () => { placeExit(); fitScaled(); });
+  onMedia(touchScreen, render);
+  onMedia(portrait, render);
+  if ('ResizeObserver' in window) {
+    const observer = new ResizeObserver(() => { placeExit(); fitScaled(); });
+    observer.observe(stage);
+    observer.observe(box);
+  }
 
+  /* ---------- Carregamento ---------- */
   function showError(message) {
     stage.setAttribute('aria-busy', 'false');
+    status.hidden = false;
     status.textContent = '';
     status.append(message + ' ');
     const retry = document.createElement('button');
@@ -3051,27 +3209,44 @@ function initGame() {
     } catch { return false; }
   }
 
+  function dimension(value, fallback) {
+    return Number.isInteger(value) && value >= 320 && value <= 7680 ? value : fallback;
+  }
+
   async function loadGame() {
     stage.setAttribute('aria-busy', 'true');
+    status.hidden = false;
     status.textContent = 'Carregando o jogo…';
     const response = await NP.api('/jogo');
     if (response.status === 401) return; // NP.api já encaminha para o login
     if (!response.ok || !isEmbedUrl(response.data.url)) {
       return showError(response.ok ? 'O endereço do jogo é inválido.' : (response.data.mensagem || 'Não foi possível carregar o jogo.'));
     }
-    stage.querySelector('iframe')?.remove();
+    game = {
+      largura: dimension(response.data.largura, 1920),
+      altura: dimension(response.data.altura, 1080),
+      modo: response.data.modo === 'scaled' ? 'scaled' : 'fluid',
+    };
+    stage.style.setProperty('--game-ratio', (game.largura / game.altura).toFixed(4));
+    box.classList.toggle('is-scaled', game.modo === 'scaled');
+    box.querySelector('iframe')?.remove();
     const frame = document.createElement('iframe');
     frame.title = 'NEXA QUEST';
-    frame.setAttribute('allow', 'fullscreen; autoplay; gamepad; clipboard-write');
-    frame.setAttribute('allowfullscreen', '');
+    // Sem "fullscreen" de propósito (ver o comentário no topo): a tela cheia é do botão da plataforma.
+    frame.setAttribute('allow', 'autoplay; gamepad; clipboard-write');
     frame.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
     frame.setAttribute('scrolling', 'no');
+    if (game.modo === 'scaled') {
+      frame.style.width = `${game.largura}px`;
+      frame.style.height = `${game.altura}px`;
+    }
     frame.addEventListener('load', () => {
       stage.setAttribute('aria-busy', 'false');
       status.hidden = true;
     }, { once: true });
     frame.src = response.data.url;
-    stage.prepend(frame);
+    box.prepend(frame);
+    fitScaled();
     fullscreenButton.disabled = false;
   }
 

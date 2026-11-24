@@ -25,16 +25,22 @@
           <p>Clique no jogo para ativar o teclado e o mouse.</p>
         </div>
         <div class="nq-pagehead-actions">
-          <button class="btn btn-soft btn-sm game-fs-btn" id="game-fullscreen" type="button" aria-pressed="false" disabled>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+          <button class="btn btn-soft btn-sm game-fs-btn" id="game-fullscreen" type="button" data-state="off" disabled>
+            <svg class="game-ico-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+            <svg class="game-ico-compress" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>
             <span>Tela cheia</span>
           </button>
         </div>
       </div>
 
       <div class="game-stage" id="game-stage" aria-busy="true">
-        <p class="game-status" id="game-status" role="status" aria-live="polite">Carregando o jogo…</p>
-        <button class="btn btn-sm game-exit" id="game-exit" type="button" hidden>Sair da tela cheia</button>
+        <div class="game-frame" id="game-frame">
+          <p class="game-status" id="game-status" role="status" aria-live="polite">Carregando o jogo…</p>
+        </div>
+        <button class="game-exit" id="game-exit" type="button" aria-label="Sair da tela cheia" title="Sair da tela cheia" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>
+        </button>
+        <p class="game-hint" id="game-hint" role="status" hidden>Gire o celular para jogar na horizontal.</p>
       </div>
 
       <p class="game-rotate">Para jogar melhor, gire o celular ou use a tela cheia.</p>

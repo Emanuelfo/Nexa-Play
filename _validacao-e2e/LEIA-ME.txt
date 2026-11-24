@@ -1,0 +1,6 @@
+Testes de navegador (Chromium real) usados para validar a tela cheia. Não fazem parte do projeto.
+  npm i @sparticuz/chromium puppeteer-core   (em uma pasta separada, junto com estes dois arquivos)
+  ajuste PUBLIC em harness.mjs para a pasta public/ do projeto
+  node test.mjs
+Simulam: desktop 16:10 e 16:9, Android/Chrome (lock ok e rejeitado), iPhone/Safari (sem Fullscreen API),
+Safari/iPad (prefixo webkit sem Promise), erro da Fullscreen API, notch (safe-area) e modo scaled.
