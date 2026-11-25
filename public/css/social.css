@@ -878,6 +878,22 @@ label {
   flex: none;
 }
 
+/* "Criar projeto" realocado da barra inferior: no desktop o menu lateral e o menu da conta já cobrem. */
+.nq-create-mobile,
+.user-menu .nq-menu-create {
+  display: none;
+}
+
+@media (max-width: 699px) {
+  .nq-create-mobile {
+    display: flex;
+  }
+
+  .user-menu .nq-menu-create {
+    display: flex;
+  }
+}
+
 /* ---------- Abas ---------- */
 .nq-tabs {
   display: flex;
@@ -3419,12 +3435,14 @@ body[data-page="amigos"] .nq-search { display: none; }
     padding: 16px 14px calc(var(--nq-tab) + env(safe-area-inset-bottom, 0px) + 28px);
   }
 
+  /* Cinco colunas idênticas (minmax(0, 1fr) impede que o conteúdo alargue uma coluna):
+     a do meio é sempre o centro exato da barra e as outras quatro se distribuem simetricamente. */
   .nq-tabbar {
     position: fixed;
     inset: auto 0 0;
     z-index: 60;
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     height: calc(var(--nq-tab) + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px);
     background: var(--nq-surface);
@@ -3438,22 +3456,31 @@ body[data-page="amigos"] .nq-search { display: none; }
     align-items: center;
     justify-content: center;
     gap: 2px;
-    min-width: 44px;
+    min-width: 0;
     font-size: 11px;
     font-weight: 600;
     color: var(--nq-muted);
   }
 
   .nq-tabbar a svg {
+    flex: none;
     width: 22px;
     height: 22px;
+  }
+
+  .nq-tabbar a span {
+    max-width: 100%;
+    padding: 0 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .nq-tabbar a[aria-current="page"] {
     color: var(--nq-blue-dark);
   }
 
-  .nq-tabbar a[aria-current="page"]:not(.is-create)::before {
+  .nq-tabbar a[aria-current="page"]:not(.is-game)::before {
     content: "";
     position: absolute;
     top: 0;
@@ -3463,14 +3490,31 @@ body[data-page="amigos"] .nq-search { display: none; }
     background: var(--nq-blue);
   }
 
-  .nq-tabbar .is-create svg {
-    width: 46px;
-    height: 46px;
-    padding: 12px;
+  /* Botão central em destaque (antes do "+"): o próprio link é o "adesivo" azul, com a mesma
+     borda inferior, raio e cores, agora com ícone + rótulo. Largura acompanha a coluna
+     (com folga lateral) e para em 72px, então nunca encosta nos vizinhos nem fica desproporcional. */
+  .nq-tabbar a.is-game {
+    align-self: center;
+    justify-self: center;
+    width: min(calc(100% - 8px), 72px);
+    height: 48px;
+    line-height: 1.2;
     border-bottom: 3px solid var(--nq-blue-dark);
     border-radius: 12px;
     background: var(--nq-blue);
     color: #fff;
+  }
+
+  .nq-tabbar a.is-game:active {
+    translate: 0 1px;
+    border-bottom-width: 2px;
+  }
+
+  /* Aba ativa do botão em destaque: anel duplo (folga + azul), pois a barra superior das
+     outras abas não aparece sobre um botão que já é todo azul. */
+  .nq-tabbar a.is-game[aria-current="page"] {
+    color: #fff;
+    box-shadow: 0 0 0 2px var(--nq-surface), 0 0 0 3px var(--nq-blue);
   }
 
   .nq-tabbar .nq-badge {

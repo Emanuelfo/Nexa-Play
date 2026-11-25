@@ -326,6 +326,7 @@ function renderSocialShell(host, user) {
           <div class="menu-id"><strong data-menu-name></strong><span>@${user.nome_usuario}</span></div>
           <a href="${profile}">Meu perfil</a>
           <a href="${root}paginas/meus-projetos.html">Meus projetos</a>
+          <a class="nq-menu-create" href="${createHref}"${page === 'projeto-criar' ? ' aria-current="page"' : ''}>Criar projeto</a>
           <a href="${root}paginas/estatisticas.html">Atividade no jogo</a>
           <a href="${root}${GAME_PAGE}" data-game>Acessar o jogo</a>
           <button type="button" id="logout">Sair da conta</button>
@@ -378,10 +379,12 @@ function renderSocialShell(host, user) {
   const tabbar = document.createElement('nav');
   tabbar.className = 'nq-tabbar';
   tabbar.setAttribute('aria-label', 'Navegação principal');
+  // Cinco itens, sempre em número ímpar: o do meio (Jogo) é o botão em destaque e fica no centro exato da barra.
+  // "Criar projeto" saiu daqui e continua acessível no cabeçalho de Explorar/Meus projetos, na Início, no Perfil e no menu da conta.
   const byKey = key => navigation.find(item => item.key === key);
-  tabbar.innerHTML = [byKey('inicio'), byKey('projetos-explorar')].map(item => link(item, '', true)).join('')
-    + `<a class="is-create" href="${createHref}" aria-label="Criar projeto"${page === 'projeto-criar' ? ' aria-current="page"' : ''}>${nqSvg(NQ_ICON.plus)}<span class="sr-only">Criar projeto</span></a>`
-    + [byKey('jogo'), byKey('amigos'), byKey('perfil')].map(item => link(item, '', true)).join('');
+  tabbar.innerHTML = ['inicio', 'projetos-explorar', 'jogo', 'amigos', 'perfil']
+    .map(key => link(byKey(key), key === 'jogo' ? ' class="is-game"' : '', true))
+    .join('');
 
   const main = $('main');
   if (!main) return;

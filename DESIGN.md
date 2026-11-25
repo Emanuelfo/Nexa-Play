@@ -116,7 +116,7 @@ Aplica-se às páginas autenticadas (`data-protected`): início, explorar, meus 
 - **Cards diferenciados por função:** projeto (área, título, resumo, autoria), publicação (lista com divisores), equipe (lista), atualizações (linha do tempo), estatística (tile) e solicitações pendentes (bloco em tom suave).
 - **Botões:** primário (`.btn`), secundário (`.btn-soft`), discreto (`.profile-text-button`), `:disabled` e carregando (`.is-loading`, via `setBusy()` em `main.js`).
 - **Tokens de tema:** `--nq-heading` (títulos), `--nq-nav-*` (menu). Em modo escuro o menu usa `#1a3a82`.
-- **Ação principal:** "Criar projeto" fica no topo do menu (e como "+" na barra inferior do celular). Publicar uma postagem continua no campo da Início.
+- **Ação principal:** "Criar projeto" fica no topo do menu lateral. No celular a barra inferior tem 5 itens (Início, Explorar, **Jogo** em destaque no centro, Pessoas, Perfil) e a ação aparece no cabeçalho de Explorar e Meus projetos, na Início, no Perfil e no menu da conta. Publicar uma postagem continua no campo da Início.
 - **Sem dados novos:** não há notificações, áreas de interesse, habilidades, nível ou XP no backend; a interface não finge essas informações.
 
 
