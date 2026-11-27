@@ -110,7 +110,7 @@ Mantêm estrutura e composição. `auth-refino.css` apenas alinha os botões à 
 
 Aplica-se às páginas autenticadas (`data-protected`): início, explorar, meus projetos, criar/detalhe de projeto, perfil, pessoas e atividade no jogo. Estilos em `public/css/social.css` e `theme.css`; estrutura montada por `renderSocialShell` em `public/js/main.js`.
 
-- **Estrutura:** menu lateral azul (`#2457eb`, 232px; 76px só com ícones no tablet; barra inferior no celular), cabeçalho branco de 64px (título da página, busca de pessoas, tema, conta) e área principal cinza `#f4f6fa` com cards brancos.
+- **Estrutura:** menu lateral neutro (superfície do tema, 232px; 76px só com ícones no tablet; barra inferior no celular), cabeçalho branco de 64px (título da página, busca de pessoas, tema, conta) e área principal cinza `#f4f6fa` com cards brancos.
 - **Identidade herdada da landing:** azul `#2457eb`, azul pressionado `#1644bf`, tinta `#091e5b`, Fredoka em títulos e botões, Inter no texto (fontes hospedadas via `fontes.css`), botão primário com "base" de 3px, logo branco no menu e golfinho original.
 - **Raios e sombras:** 12px em controles e cards comuns, 16px em cards grandes; sem gradientes, glow ou sombras decorativas (só o menu da conta e a busca têm sombra leve).
 - **Cards diferenciados por função:** projeto (área, título, resumo, autoria), publicação (lista com divisores), equipe (lista), atualizações (linha do tempo), estatística (tile) e solicitações pendentes (bloco em tom suave).
@@ -219,3 +219,10 @@ Não há `<style>`, `<script>` ou `style=""` inline: a CSP `script-src 'self'; s
 
 **Ao criar uma página nova**, copie o cabeçalho e o início do `<body>` de uma página existente da mesma família; `tests/preloader.test.js` valida o contrato.
 
+
+
+### Composição social orientada a conversas
+
+Referências consultadas: Reddit (busca central, navegação simples e divisores) e Nexa Quest publicado (identidade oficial). Composição própria: cabeçalho transversal de 64px com logo, busca de pessoas/habilidades (até 700px), Publicar e conta. Sidebar neutra de 232px sob o cabeçalho; Criar projeto fica depois de Meus projetos. O feed tem superfície uniforme, sem caixa externa, com divisores e ações em cápsulas. Pessoas usa lista compacta. A seleção usa fundo suave e acento azul; `theme.css` adapta `--nq-nav-*` aos tokens semânticos existentes. No celular, publicar continua no compositor e a navegação inferior é preservada.
+
+Esta decisão substitui o painel azul lateral anterior; azul intenso fica nas ações. Backend, rotas e modelo social permanecem os mesmos. Evidências desta revisão: `artifacts/social/redesign-checks.json`, `rede-desktop.jpg`, `rede-celular.jpg` e `rede-desktop-escuro.jpg`.

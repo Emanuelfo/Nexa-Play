@@ -443,10 +443,10 @@ function renderSocialShell(host, user) {
   const page = document.body.dataset.page;
   const navigation = [
     { key: 'inicio', label: 'Início', href: `${root}paginas/inicio.html`, path: NQ_ICON.home },
-    { key: 'jogo', label: 'Jogo', href: `${root}${GAME_PAGE}`, path: NQ_ICON.game },
-    { key: 'projetos-explorar', label: 'Projetos', short: 'Projetos', href: `${root}paginas/explorar-projetos.html`, path: NQ_ICON.explore },
+        { key: 'projetos-explorar', label: 'Explorar projetos', short: 'Projetos', href: `${root}paginas/explorar-projetos.html`, path: NQ_ICON.explore },
     { key: 'amigos', label: 'Pessoas', href: `${root}paginas/amigos.html`, path: NQ_ICON.people },
     { key: 'meus-projetos', label: 'Meus projetos', href: `${root}paginas/meus-projetos.html`, path: NQ_ICON.projects },
+    { key: 'jogo', label: 'Jogo', href: `${root}${GAME_PAGE}`, path: NQ_ICON.game },
     { key: 'perfil', label: 'Meu perfil', short: 'Perfil', href: profile, path: NQ_ICON.user },
   ];
   const activeMap = { 'perfil-publico': String(new URLSearchParams(location.search).get('id')) === String(user.id) ? 'perfil' : 'amigos', 'estatisticas-jogo': 'estatisticas-jogo', 'projeto-detalhe': 'projetos-explorar', 'projeto-criar': 'projetos-explorar' };
@@ -466,6 +466,7 @@ function renderSocialShell(host, user) {
       <div class="nq-suggest" id="nq-suggest" role="listbox" aria-label="Pessoas encontradas" hidden></div>
     </form>
     <div class="nq-top-actions">
+      <a class="nq-publish" href="${root}paginas/inicio.html?novo=1" data-publish>${nqSvg(NQ_ICON.plus)}<span>Publicar</span></a>
       <button class="nq-search-toggle" type="button" aria-label="Buscar pessoas" aria-expanded="false">${nqSvg(NQ_ICON.search)}</button>
       <button class="theme-toggle" data-theme-toggle type="button" aria-label="Alternar entre modo claro e escuro" title="Ativar modo escuro" aria-pressed="false">
         <svg data-theme-icon="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 15.4A8.5 8.5 0 0 1 8.6 3.8 8.5 8.5 0 1 0 20.2 15.4Z"></path></svg>
@@ -524,12 +525,9 @@ function renderSocialShell(host, user) {
   const sidebar = document.createElement('nav');
   sidebar.className = 'nq-nav';
   sidebar.setAttribute('aria-label', 'Principal');
-  sidebar.innerHTML = `<a class="nq-brand" href="${root}paginas/inicio.html" aria-label="Nexa Quest — início"><img src="${root}assets/imagens/logo-branca-quest.svg" alt="Nexa Quest" width="96" height="74"></a>
-    <a class="nq-create" href="${createHref}"${page === 'projeto-criar' ? ' aria-current="page"' : ''}>${nqSvg(NQ_ICON.plus)}<span>Criar projeto</span></a>
-    <ul>${navigation.map(item => `<li>${link(item)}</li>`).join('')}</ul>
-    <ul class="nq-nav-secondary">
-      <li>${link(statsItem)}</li>
-    </ul>`;
+  sidebar.innerHTML = `<p class="nq-nav-label">Comunidade</p>
+    <ul>${navigation.map(item => `<li>${link(item)}</li>${item.key === 'meus-projetos' ? `<li class="nq-create-row"><a class="nq-create" href="${createHref}">${nqSvg(NQ_ICON.plus)}<span>Criar projeto</span></a></li>` : ''}`).join('')}</ul>
+    <ul class="nq-nav-secondary"><li>${link(statsItem)}</li></ul>`;
 
   const tabbar = document.createElement('nav');
   tabbar.className = 'nq-tabbar';
@@ -548,9 +546,9 @@ function renderSocialShell(host, user) {
   const body = document.createElement('div');
   body.className = 'nq-body';
   host.after(shell);
-  stage.append(host, body);
+  stage.append(body);
   body.append(main);
-  shell.append(sidebar, stage);
+  shell.append(host, sidebar, stage);
 
   if (page === 'inicio') {
     const side = document.createElement('aside');

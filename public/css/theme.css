@@ -168,3 +168,19 @@ html[data-social-theme][data-theme="dark"] .theme-toggle [data-theme-icon="sun"]
     height: 40px;
   }
 }
+
+/* A navegação compartilha as superfícies do produto nos dois temas. */
+html[data-social-theme] {
+  --nq-nav-bg: var(--nq-surface);
+  --nq-nav-ink: var(--nq-ink);
+  --nq-nav-muted: var(--nq-muted);
+  --nq-nav-hover: var(--nq-soft);
+  --nq-nav-line: var(--nq-border);
+  --nq-nav-active-bg: var(--nq-soft);
+  --nq-nav-active-ink: var(--nq-blue-dark);
+}
+html[data-social-theme][data-theme="dark"] {
+  --nq-nav-bg: var(--nq-surface);
+  --nq-nav-active-bg: var(--nq-soft);
+  --nq-nav-active-ink: var(--nq-blue-dark);
+}
