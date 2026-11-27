@@ -226,3 +226,13 @@ Não há `<style>`, `<script>` ou `style=""` inline: a CSP `script-src 'self'; s
 Referências consultadas: Reddit (busca central, navegação simples e divisores) e Nexa Quest publicado (identidade oficial). Composição própria: cabeçalho transversal de 64px com logo, busca de pessoas/habilidades (até 700px), Publicar e conta. Sidebar neutra de 232px sob o cabeçalho; Criar projeto fica depois de Meus projetos. O feed tem superfície uniforme, sem caixa externa, com divisores e ações em cápsulas. Pessoas usa lista compacta. A seleção usa fundo suave e acento azul; `theme.css` adapta `--nq-nav-*` aos tokens semânticos existentes. No celular, publicar continua no compositor e a navegação inferior é preservada.
 
 Esta decisão substitui o painel azul lateral anterior; azul intenso fica nas ações. Backend, rotas e modelo social permanecem os mesmos. Evidências desta revisão: `artifacts/social/redesign-checks.json`, `rede-desktop.jpg`, `rede-celular.jpg` e `rede-desktop-escuro.jpg`.
+
+
+### Correção de alinhamento e estados de conexões
+
+O cabeçalho social usa três tracks explícitos: `--nq-nav-w`, centro flexível e ações. O logo é centralizado no primeiro track; ações permanecem no terceiro mesmo quando Pessoas usa apenas a busca local. O corpo usa margem inicial zero e largura máxima de 1440px (Início 1108px para preservar a medida do feed). Títulos `.nq-pagehead h1` são visíveis: o título oculto do antigo shell havia ficado sem correspondente no novo cabeçalho. Menu reserva borda transparente para não deslocar o item ativo; ícones e rótulos mantêm eixos iguais. Criação usa controle compacto de 172px junto de Meus projetos; grupos com respiro uniforme e Atividade acessível por rolagem interna em telas baixas. Pessoas usa abas em duas linhas no celular, contagens reais e estados de erro com nova tentativa. Evidências: `artifacts/social/correcao-layout-checks.json` e capturas `correcao-pessoas-*.jpg`.
+
+
+### Restauração seletiva dos temas
+
+A paleta hexadecimal permanece idêntica à versão `44e956b` (comparação automatizada com Git), mantendo a navegação neutra de `735a575`. Escuro: canvas `#101722`, superfície `#182230`, apoio `#222e3e`, borda `#2d3b4e`, texto `#e6edf8`, texto secundário/placeholder `#a7b3c8`, ação `#3a68d1`, link `#91b2ff` e ciano `#70dcff`. Sem preferência salva, o padrão e o fallback HTML são escuros; escolhas explícitas claras continuam válidas. `theme.css` é dono tanto da paleta quanto de color-scheme; o script não aplica estilo inline paralelo. Regras de hover primário excluem variantes secundárias; abas usam o token de seleção. Alteração restrita a cores e persistência de tema, sem reverter estrutura ou consultas de conexões.

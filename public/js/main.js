@@ -401,6 +401,10 @@ function renderRailSuggestions(box) {
       empty.className = 'nq-support-empty';
       empty.textContent = response.ok ? 'Busque por uma habilidade para encontrar colaboradores.' : 'Não foi possível carregar as sugestões. Tente pela seção Pessoas.';
       list.replaceChildren(empty);
+      if (!response.ok) {
+        const retry = document.createElement('button'); retry.type = 'button'; retry.className = 'btn-soft btn-sm'; retry.textContent = 'Tentar novamente';
+        retry.onclick = () => { list.replaceChildren(); renderRailSuggestions(box); }; empty.append(' ', retry);
+      }
       return;
     }
     users.forEach(person => {
@@ -526,7 +530,8 @@ function renderSocialShell(host, user) {
   sidebar.className = 'nq-nav';
   sidebar.setAttribute('aria-label', 'Principal');
   sidebar.innerHTML = `<p class="nq-nav-label">Comunidade</p>
-    <ul>${navigation.map(item => `<li>${link(item)}</li>${item.key === 'meus-projetos' ? `<li class="nq-create-row"><a class="nq-create" href="${createHref}">${nqSvg(NQ_ICON.plus)}<span>Criar projeto</span></a></li>` : ''}`).join('')}</ul>
+    <ul>${navigation.slice(0,3).map(item => `<li>${link(item)}</li>`).join('')}</ul>
+    <ul class="nq-nav-group">${navigation.slice(3).map(item => `<li>${link(item)}</li>${item.key === 'meus-projetos' ? `<li class="nq-create-row"><a class="nq-create" href="${createHref}">${nqSvg(NQ_ICON.plus)}<span>Criar projeto</span></a></li>` : ''}`).join('')}</ul>
     <ul class="nq-nav-secondary"><li>${link(statsItem)}</li></ul>`;
 
   const tabbar = document.createElement('nav');
@@ -2628,7 +2633,6 @@ function renderFriendList(target, users, emptyMessage) {
 
 let friendActionInProgress = false;
 let friendsTabs = null;
-let friendsTabsOpened = false;
 let friendSearchHasResults = false;
 
 async function executarAcaoAmizade(user, action) {
@@ -2654,7 +2658,10 @@ async function executarAcaoAmizade(user, action) {
   if (friendSearchHasResults) await pesquisarAmigos($('#friends-search-input').value);
 }
 
+let connectionsLoadId = 0;
+let suggestionsLoadId = 0;
 async function carregarPainelAmizades() {
+  const loadId = ++connectionsLoadId;
   const targets = [
     ['#friends-list-content', '#friends-list-status'],
     ['#friend-requests-received-list', '#friend-requests-received-status'],
@@ -2662,15 +2669,15 @@ async function carregarPainelAmizades() {
   ];
   targets.forEach(([listSelector, statusSelector]) => {
     $(listSelector).setAttribute('aria-busy', 'true');
-    $(statusSelector).textContent = 'Carregando…';
+    connectionStatus($(statusSelector), 'Buscando conexões…');
   });
   const response = await NP.api('/me/amizades');
+  if (loadId !== connectionsLoadId) return;
   targets.forEach(([listSelector]) => $(listSelector).setAttribute('aria-busy', 'false'));
-  if (!response.ok) {
+  if (!response.ok || !['amigos', 'recebidas', 'enviadas'].every(key => Array.isArray(response.data[key]))) {
     targets.forEach(([, statusSelector]) => {
-      $(statusSelector).textContent = response.data.mensagem || 'Não foi possível carregar esta seção.';
+      connectionStatus($(statusSelector), response.data.mensagem || 'Não foi possível carregar suas conexões.', carregarPainelAmizades);
     });
-    $('#friends-count').textContent = '—';
     return;
   }
   const friends = Array.isArray(response.data.amigos) ? response.data.amigos : [];
@@ -2687,25 +2694,34 @@ async function carregarPainelAmizades() {
   $('#friend-requests-sent-count').textContent = String(sent.length);
   $('#friend-requests-received-count').classList.toggle('is-alert', received.length > 0);
   setFriendsBadge(received.length);
-  if (!friendsTabsOpened) {
-    friendsTabsOpened = true;
-    if (received.length > 0 && !new URLSearchParams(location.search).get('q')) friendsTabs?.select('friend-requests-received');
-  }
 }
 
 async function carregarSugestoesAmizade() {
+  const loadId = ++suggestionsLoadId;
   const list = $('#friend-suggestions');
   const status = $('#friend-suggestions-status');
   list.setAttribute('aria-busy', 'true');
-  status.textContent = 'Carregando sugestões…';
+  connectionStatus(status, 'Buscando sugestões…');
   const response = await NP.api('/usuarios/sugestoes');
+  if (loadId !== suggestionsLoadId) return;
   list.setAttribute('aria-busy', 'false');
   if (!response.ok || !Array.isArray(response.data.usuarios)) {
-    status.textContent = response.data.mensagem || 'Não foi possível carregar sugestões.';
+    connectionStatus(status, response.data.mensagem || 'Não foi possível carregar sugestões.', carregarSugestoesAmizade);
     return;
   }
   renderFriendList(list, response.data.usuarios, 'Sem sugestões por enquanto. Use a busca para encontrar alguém.');
   status.textContent = '';
+}
+
+function connectionStatus(host, message, retry) {
+  host.replaceChildren(document.createTextNode(message));
+  host.className = `friends-status${retry ? ' is-error' : ''}`;
+  if (retry) {
+    const button = document.createElement('button');
+    button.type = 'button'; button.className = 'btn-soft btn-sm'; button.textContent = 'Tentar novamente';
+    button.onclick = () => { button.disabled = true; retry(); };
+    host.append(button);
+  }
 }
 
 let friendSearchController = null;
@@ -2725,13 +2741,14 @@ async function pesquisarAmigos(term) {
   const searchBlock = $('#friends-search-block');
   if (searchBlock) searchBlock.hidden = !friendSearchHasResults;
   if (!friendSearchHasResults) {
+    results.setAttribute('aria-busy', 'false');
     status.textContent = value ? 'Digite pelo menos 2 caracteres ou escolha uma área.' : '';
     $$('.pf-panel').forEach(panel => panel.hidden = false);
     $('#friends-tabs').hidden = false;
     return;
   }
   results.setAttribute('aria-busy', 'true');
-  status.textContent = 'Pesquisando pessoas…';
+  connectionStatus(status, 'Pesquisando pessoas…');
   // A7: só a pesquisa mais recente pode escrever na tela; as anteriores são canceladas
   $('#friends-tabs').hidden = true;
   $$('.pf-panel').forEach(panel => panel.hidden = true);
@@ -2741,10 +2758,15 @@ async function pesquisarAmigos(term) {
   results.setAttribute('aria-busy', 'false');
   if (!response.ok || !Array.isArray(response.data.usuarios)) {
     results.replaceChildren();
-    status.textContent = response.data.mensagem || 'Não foi possível pesquisar usuários. Tente novamente.';
+    connectionStatus(status, response.data.mensagem || 'Não foi possível pesquisar pessoas.', () => pesquisarAmigos($('#friends-search-input').value));
     return;
   }
   renderFriendList(results, response.data.usuarios, 'Nenhuma pessoa encontrada. Tente outra habilidade, ajuste a área ou limpe os filtros.');
+  if (!response.data.usuarios.length) {
+    const clear = document.createElement('button'); clear.type = 'button'; clear.className = 'btn-soft'; clear.textContent = 'Limpar filtros';
+    clear.onclick = () => $('#friends-clear').click();
+    results.querySelector('.friends-empty').append(document.createElement('br'), clear);
+  }
   status.textContent = `${response.data.usuarios.length} ${response.data.usuarios.length === 1 ? 'pessoa encontrada' : 'pessoas encontradas'}.`;
 }
 

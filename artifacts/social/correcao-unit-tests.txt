@@ -1,0 +1,99 @@
+
+> nexaplay@1.0.0 test
+> node --test tests/*.test.js
+
+{"event":"authentication_rejected","path":"/api/me"}
+✔ password and registration issue the same session; refresh and server logout use that session (647.196ms)
+◇ injected env (1) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+✔ URL do jogo: usa o padrão e rejeita valores que não sejam embed do itch.io (0.9631ms)
+{"event":"authentication_rejected","path":"/api/jogo"}
+✔ GET /api/jogo exige sessão: sem cookie/token responde 401 e não revela a URL (44.5456ms)
+✔ dimensões do jogo: aceita inteiros entre 320 e 7680 e cai no padrão para o resto (0.348ms)
+✔ modo de exibição: "fluid" por padrão e "scaled" somente quando configurado (0.2662ms)
+✔ toda página tem o preloader, preloader.css como 1ª folha e preloader.js como 1º script (26.8222ms)
+✔ páginas com sessão antecipam a verificação (session-boot.js entre functions.js e main.js) (31.9032ms)
+✔ páginas da área logada carregam fontes.css direto (sem cadeia @import) e pré-carregam as fontes (20.2579ms)
+✔ preloader.css: navy da marca, sem degradê/glow e com rede de segurança em CSS (1.2794ms)
+✔ preloader.js: gates, limites de espera e sem atraso artificial (0.6676ms)
+✔ main.js libera o preloader sempre (finally) e mantém a página oculta só quando vai navegar (2.1686ms)
+✔ nivelAcesso diferencia proprietário, participante, convite, solicitação e estranho (1.5814ms)
+✔ projeto público é visível a qualquer usuário, mesmo com solicitação pendente ou recusada (0.2565ms)
+✔ convite para projeto privado recebe visão mínima, sem dados privados (0.3244ms)
+✔ GET /projetos/:id aplica a mesma regra para cada tipo de usuário em projeto privado (118.8778ms)
+✔ GET /me/projetos não entrega dados privados a quem só tem convite ou solicitação (9.0394ms)
+✔ tornar um projeto público em privado encerra solicitações pendentes e preserva equipe e convites (21.4143ms)
+✔ manter o projeto privado, ou torná-lo público, não apaga solicitações (9.9632ms)
+✔ quem não é proprietário não consegue editar nem alterar a visibilidade (4.1351ms)
+✔ solicitar participação: novo pedido, duplicados e reabertura após recusa (A11) (54.6014ms)
+✔ reconvidar usuário que recusou respeita o mesmo intervalo mínimo (5.6494ms)
+✔ vercel.json e public/vercel.json são idênticos e têm CSP estrita para os documentos (5.7466ms)
+✔ páginas não usam estilos nem scripts inline (compatível com a CSP) (18.6992ms)
+✔ não há recursos externos além do itch.io e do YouTube nos arquivos do site (92.363ms)
+✖ login com Google e recuperação de senha não existem mais no código nem na interface (6.8598ms)
+✔ entry validates before choosing login or the internal home, with same-origin credentials (7.3416ms)
+✔ temporary outages preserve legacy credentials and do not redirect to login (3.0794ms)
+✔ legacy migration removes localStorage credentials after cookie exchange and checks /me (3.9532ms)
+✔ logout waits for server success and reports failure without claiming the session ended (5.198ms)
+✔ logout still completes when cross-tab messaging is blocked (1.6455ms)
+✔ simultaneous validations share one request (1.7064ms)
+✔ HTML fallback and malformed session data cannot be treated as an authenticated session (5.561ms)
+✔ network failure during session confirmation keeps its network message (2.2452ms)
+✔ a pending validation cannot restore the user after logout (1.594ms)
+✔ an old failed validation cannot clear a newly established session (1.868ms)
+✔ each supported Vercel project root forwards all API paths to Render (3.7384ms)
+{"event":"authentication_rejected"}
+{"event":"authentication_rejected"}
+{"event":"authentication_rejected"}
+{"event":"authentication_rejected"}
+{"event":"authentication_rejected"}
+{"event":"authentication_rejected"}
+{"event":"authentication_rejected"}
+✔ cookie uses HttpOnly, HTTPS Secure, Lax and API-only scope; persistence follows JWT expiry (4.5586ms)
+✔ valid JWT survives independent requests, then logout revokes cookie and legacy Bearer copies (3.7736ms)
+✔ missing, expired, malformed and invalidly signed tokens cannot access protected data (2.1153ms)
+✔ migration preserves the original expiration, including persistent legacy tokens (0.825ms)
+✔ habilidades são opcionais, limitadas e deduplicadas sem perder a grafia (2.0957ms)
+✔ busca permite apenas área, rejeita área inválida e parametriza habilidade (0.6164ms)
+✔ perfil salva habilidades, área e portfólio e preserva metadados omitidos por clientes antigos (1.1129ms)
+✔ perfil rejeita habilidades e links inválidos antes de gravar (0.2485ms)
+✔ criação aceita as quatro áreas e categorias antigas, persistindo as necessidades e a etapa (0.5612ms)
+✔ projetos antigos funcionam sem novos campos e conteúdo inválido não é gravado (0.3987ms)
+✔ register blocks duplicate submissions until session verification completes (31.0034ms)
+✔ register enables retry after session confirmation fails (4.1223ms)
+✔ register reports network failures as connectivity errors and permits another attempt (3.2632ms)
+✔ login blocks duplicate submissions until session verification completes (20.417ms)
+✔ login enables retry after session confirmation fails (4.8748ms)
+✔ login reports network failures as connectivity errors and permits another attempt (3.9937ms)
+ℹ tests 52
+ℹ suites 0
+ℹ pass 51
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1537.9146
+
+✖ failing tests:
+
+test at tests\seguranca-estatica.test.js:58:1
+✖ login com Google e recuperação de senha não existem mais no código nem na interface (6.8598ms)
+  AssertionError [ERR_ASSERTION]: src\controllers\googleAuthController.js: referência ao Google
+      at TestContext.<anonymous> (C:\Users\Emanuelfo\Downloads\nexaplay\tests\seguranca-estatica.test.js:65:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'const { setSession } = require("../services/session");\r\nconst crypto = require("node:crypto");\r\nconst { where, fn, col } = require("sequelize");\r\nconst Usuario = require("../models/Usuario");\r\nconst { ehEmail } = require("../utils/validacao");\r\nconst { dadosPublicos, gerarToken } = require("./usuarioController");\r\nconst {\r\n  verificarIdToken,\r\n  googleConfigurado,\r\n  clientId,\r\n  gerarTokenVinculo,\r\n  GoogleTokenInvalidoError,\r\n  GoogleEmailNaoVerificadoError,\r\n  GoogleIndisponivelError,\r\n} = require("../services/googleAuth");\r\n\r\nconst MAX_TENTATIVAS_NOME = 8;\r\n\r\n// O Client ID é público por definição (aparece no navegador); o front-end estático o busca aqui,\r\n// assim a mesma variável GOOGLE_CLIENT_ID do Render vale para o servidor e para o botão.\r\nfunction configGoogle(req, res) {\r\n  if (!googleConfigurado()) {\r\n    return res.status(503).json({ mensagem: "O login com Google não está disponível no momento." });\r\n  }\r\n  res.setHeader("Cache-Control", "public, max-age=300");\r\n  return res.json({ client_id: clientId() });\r\n}\r\n\r\nconst semAcento = (texto) => texto.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "");\r\n\r\n// nome_usuario segue a regra do cadastro: /^[a-z0-9_]{3,30}$/\r\nfunction baseNomeUsuario(email) {\r\n  let base = semAcento(email.split("@")[0]).toLowerCase().replace(/[^a-z0-9_]+/g, "_").replace(/^_+|_+$/g, "");\r\n  if (base.length < 3) base = `jogador${base}`;\r\n  return base.slice(0, 22);\r\n}\r\n\r\nfunction candidatoNomeUsuario(base, tentativa) {\r\n  if (tentativa === 0) return base;\r\n  const sufixo = crypto.randomInt(0, 36 ** 5).toString(36).padStart(5, "0");\r\n  return `${base}_${sufixo}`.slice(0, 30);\r\n}\r\n\r\nconst nomeUsuarioEmUso = async (nome) => !!(await Usuario.findOne({\r\n  where: where(fn("lower", col("nome_usuario")), nome),\r\n  attributes: ["id"],\r\n}));\r\n\r\nconst eUnicidade = (erro) => erro?.name === "SequelizeUniqueConstraintError" || (erro?.parent || erro?.original)?.code === "23505";\r\n\r\nfunction respostaLogin(req, res, usuario, lembrar, extra = {}) {\r\n  setSession(req, res, gerarToken(usuario, lembrar), lembrar);\r\n  return res.json({ usuario: dadosPublicos(usuario), ...extra });\r\n}\r\n\r\nasync function criarContaGoogle(google) {\r\n  const nomeExibicao = (google.nome || google.email.split("@")[0]).slice(0, 100);\r\n  const base = baseNomeUsuario(google.email);\r\n  for (let tentativa = 0; tentativa < MAX_TENTATIVAS_NOME; tentativa += 1) {\r\n    const nomeUsuario = candidatoNomeUsuario(base, tentativa);\r\n    if (await nomeUsuarioEmUso(nomeUsuario)) continue;\r\n    try {\r\n      const usuario = await Usuario.create({\r\n        nome_usuario: nomeUsuario,\r\n        nome_exibicao: nomeExibicao,\r\n        email: google.email,\r\n        senha: null, // conta Google: sem senha local\r\n        google_sub: google.sub,\r\n        google_vinculado_em: new Date(),\r\n      });\r\n      return { usuario, criado: true };\r\n    } catch (erro) {\r\n      if (!eUnicidade(erro)) throw erro;\r\n      // Requisição simultânea (ou nome ocupado no meio-tempo): reavalia o estado real do banco.\r\n      const porSub = await Usuario.findOne({ where: { google_sub: google.sub } });\r\n      if (porSub) return { usuario: porSub, criado: false };\r\n      if (await Usuario.findOne({ where: { email: google.email }, attributes: ["id"] })) {\r\n        const conflito = new Error("email_em_uso");\r\n        conflito.name = "EmailEmUsoError";\r\n        throw conflito;\r\n      }\r\n      // senão foi colisão de nome_usuario: tenta outro candidato\r\n    }\r\n  }\r\n  throw new Error("Não foi possível gerar um nome de usuário único.");\r\n}\r\n\r\nasync function loginGoogle(req, res) {\r\n  try {\r\n    const { credential, lembrar } = req.body;\r\n    if (typeof credential !== "string" || !credential\r\n      || (lembrar !== undefined && typeof lembrar !== "boolean")) {\r\n      return res.status(400).json({ codigo: "requisicao_invalida", mensagem: "Não foi possível ler a resposta do Google. Tente novamente." });\r\n    }\r\n\r\n    const google = await verificarIdToken(credential);\r\n\r\n    // 1) Conta já vinculada a este Google (identificador externo "sub")\r\n    const vinculado = await Usuario.findOne({ where: { google_sub: google.sub } });\r\n    if (vinculado) return respostaLogin(req, res, vinculado, !!lembrar, { novo_usuario: false });\r\n\r\n    // 2) Mesmo e-mail em conta existente: NÃO vincula automaticamente\r\n    const existente = ehEmail(google.email)\r\n      ? await Usuario.findOne({ where: { email: google.email } })\r\n      : null;\r\n    if (existente) {\r\n      // Conta criada/vinculada a este mesmo Google por uma requisição simultânea: é a mesma pessoa\r\n      if (existente.google_sub === google.sub) return respostaLogin(req, res, existente, !!lembrar, { novo_usuario: false });\r\n      if (existente.google_sub) {\r\n        return res.status(409).json({\r\n          codigo: "conta_vinculada_outro_google",\r\n          mensagem: "Este e-mail pertence a uma conta Nexa já vinculada a outra conta do Google.",\r\n        });\r\n      }\r\n      return res.status(409).json({\r\n        codigo: "conta_existente",\r\n        email: existente.email,\r\n        vinculo_token: gerarTokenVinculo({ sub: google.sub, email: existente.email }),\r\n        mensagem: `Já existe uma conta Nexa com o e-mail ${existente.email}. Digite a senha dela para vincular o seu Google.`,\r\n      });\r\n    }\r\n\r\n    // 3) Conta nova (e-mail validado pelo Google; sem senha local)\r\n    if (!ehEmail(google.email) || google.email.length > 255) {\r\n      return res.status(400).json({ codigo: "email_invalido", mensagem: "O e-mail da conta Google não pôde ser usado." });\r\n    }\r\n    const { usuario, criado } = await criarContaGoogle(google);\r\n    return respostaLogin(req, res, usuario, !!lembrar, { novo_usuario: criado });\r\n  } catch (erro) {\r\n    if (erro instanceof GoogleTokenInvalidoError) {\r\n      return res.status(401).json({ codigo: "google_token_invalido", mensagem: "Não foi possível confirmar sua conta do Google. Tente novamente." });\r\n    }\r\n    if (erro instanceof GoogleEmailNaoVerificadoError) {\r\n      return res.status(403).json({ codigo: "email_nao_verificado", mensagem: "O e-mail da sua conta Google ainda não foi verificado." });\r\n    }\r\n    if (erro instanceof GoogleIndisponivelError) {\r\n      return res.status(503).json({ codigo: "google_indisponivel", mensagem: "O login com Google está indisponível no momento. Tente novamente em instantes ou use e-mail e senha." });\r\n    }\r\n    if (erro?.name === "EmailEmUsoError") {\r\n      return res.status(409).json({ codigo: "conta_existente", mensagem: "Já existe uma conta com este e-mail. Tente entrar novamente." });\r\n    }\r\n    console.error(JSON.stringify({\r\n      event: "google_login_error",\r\n      request_id: req.requestId,\r\n      error: erro.original?.code || erro.parent?.code || erro.name,\r\n    }));\r\n    return res.status(500).json({ mensagem: "Não foi possível entrar com o Google." });\r\n  }\r\n}\r\n\r\nmodule.exports = { configGoogle, loginGoogle };\r\n',
+    expected: /accounts\.google|google-auth-library|GOOGLE_CLIENT_ID|initGoogleLogin|googleVinculo|google_sub/i,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }
+npm notice
+npm notice New major version of npm available! 11.17.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

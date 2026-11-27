@@ -1,0 +1,322 @@
+[
+  {
+    "actionsRight": 336,
+    "contentLeft": 14,
+    "overflow": false,
+    "page": "amigos",
+    "theme": "dark",
+    "width": 360
+  },
+  {
+    "actionsRight": 336,
+    "contentLeft": 14,
+    "overflow": false,
+    "page": "inicio",
+    "theme": "dark",
+    "width": 360
+  },
+  {
+    "actionsRight": 336,
+    "contentLeft": 14,
+    "overflow": false,
+    "page": "projetos-explorar",
+    "theme": "dark",
+    "width": 360
+  },
+  {
+    "actionsRight": 336,
+    "contentLeft": 14,
+    "overflow": false,
+    "page": "perfil",
+    "theme": "dark",
+    "width": 360
+  },
+  {
+    "actionsRight": 366,
+    "contentLeft": 14,
+    "overflow": false,
+    "page": "amigos",
+    "theme": "dark",
+    "width": 390
+  },
+  {
+    "actionsRight": 366,
+    "contentLeft": 14,
+    "overflow": false,
+    "page": "inicio",
+    "theme": "dark",
+    "width": 390
+  },
+  {
+    "actionsRight": 366,
+    "contentLeft": 14,
+    "overflow": false,
+    "page": "projetos-explorar",
+    "theme": "dark",
+    "width": 390
+  },
+  {
+    "actionsRight": 366,
+    "contentLeft": 14,
+    "overflow": false,
+    "page": "perfil",
+    "theme": "dark",
+    "width": 390
+  },
+  {
+    "actionsRight": 406,
+    "contentLeft": 14,
+    "overflow": false,
+    "page": "amigos",
+    "theme": "dark",
+    "width": 430
+  },
+  {
+    "actionsRight": 406,
+    "contentLeft": 14,
+    "overflow": false,
+    "page": "inicio",
+    "theme": "dark",
+    "width": 430
+  },
+  {
+    "actionsRight": 406,
+    "contentLeft": 14,
+    "overflow": false,
+    "page": "projetos-explorar",
+    "theme": "dark",
+    "width": 430
+  },
+  {
+    "actionsRight": 406,
+    "contentLeft": 14,
+    "overflow": false,
+    "page": "perfil",
+    "theme": "dark",
+    "width": 430
+  },
+  {
+    "actionsRight": 1328,
+    "contentLeft": 260,
+    "overflow": false,
+    "page": "amigos",
+    "theme": "dark",
+    "width": 1366
+  },
+  {
+    "actionsRight": 1328,
+    "contentLeft": 260,
+    "overflow": false,
+    "page": "inicio",
+    "theme": "dark",
+    "width": 1366
+  },
+  {
+    "actionsRight": 1328,
+    "contentLeft": 260,
+    "overflow": false,
+    "page": "projetos-explorar",
+    "theme": "dark",
+    "width": 1366
+  },
+  {
+    "actionsRight": 1328,
+    "contentLeft": 260,
+    "overflow": false,
+    "page": "perfil",
+    "theme": "dark",
+    "width": 1366
+  },
+  {
+    "actionsRight": 1858,
+    "contentLeft": 260,
+    "overflow": false,
+    "page": "amigos",
+    "theme": "dark",
+    "width": 1896
+  },
+  {
+    "actionsRight": 1858,
+    "contentLeft": 260,
+    "overflow": false,
+    "page": "inicio",
+    "theme": "dark",
+    "width": 1896
+  },
+  {
+    "actionsRight": 1858,
+    "contentLeft": 260,
+    "overflow": false,
+    "page": "projetos-explorar",
+    "theme": "dark",
+    "width": 1896
+  },
+  {
+    "actionsRight": 1858,
+    "contentLeft": 260,
+    "overflow": false,
+    "page": "perfil",
+    "theme": "dark",
+    "width": 1896
+  },
+  {
+    "actionsRight": 336,
+    "contentLeft": 14,
+    "overflow": false,
+    "page": "amigos",
+    "theme": "light",
+    "width": 360
+  },
+  {
+    "actionsRight": 336,
+    "contentLeft": 14,
+    "overflow": false,
+    "page": "inicio",
+    "theme": "light",
+    "width": 360
+  },
+  {
+    "actionsRight": 336,
+    "contentLeft": 14,
+    "overflow": false,
+    "page": "projetos-explorar",
+    "theme": "light",
+    "width": 360
+  },
+  {
+    "actionsRight": 336,
+    "contentLeft": 14,
+    "overflow": false,
+    "page": "perfil",
+    "theme": "light",
+    "width": 360
+  },
+  {
+    "actionsRight": 366,
+    "contentLeft": 14,
+    "overflow": false,
+    "page": "amigos",
+    "theme": "light",
+    "width": 390
+  },
+  {
+    "actionsRight": 366,
+    "contentLeft": 14,
+    "overflow": false,
+    "page": "inicio",
+    "theme": "light",
+    "width": 390
+  },
+  {
+    "actionsRight": 366,
+    "contentLeft": 14,
+    "overflow": false,
+    "page": "projetos-explorar",
+    "theme": "light",
+    "width": 390
+  },
+  {
+    "actionsRight": 366,
+    "contentLeft": 14,
+    "overflow": false,
+    "page": "perfil",
+    "theme": "light",
+    "width": 390
+  },
+  {
+    "actionsRight": 406,
+    "contentLeft": 14,
+    "overflow": false,
+    "page": "amigos",
+    "theme": "light",
+    "width": 430
+  },
+  {
+    "actionsRight": 406,
+    "contentLeft": 14,
+    "overflow": false,
+    "page": "inicio",
+    "theme": "light",
+    "width": 430
+  },
+  {
+    "actionsRight": 406,
+    "contentLeft": 14,
+    "overflow": false,
+    "page": "projetos-explorar",
+    "theme": "light",
+    "width": 430
+  },
+  {
+    "actionsRight": 406,
+    "contentLeft": 14,
+    "overflow": false,
+    "page": "perfil",
+    "theme": "light",
+    "width": 430
+  },
+  {
+    "actionsRight": 1328,
+    "contentLeft": 260,
+    "overflow": false,
+    "page": "amigos",
+    "theme": "light",
+    "width": 1366
+  },
+  {
+    "actionsRight": 1328,
+    "contentLeft": 260,
+    "overflow": false,
+    "page": "inicio",
+    "theme": "light",
+    "width": 1366
+  },
+  {
+    "actionsRight": 1328,
+    "contentLeft": 260,
+    "overflow": false,
+    "page": "projetos-explorar",
+    "theme": "light",
+    "width": 1366
+  },
+  {
+    "actionsRight": 1328,
+    "contentLeft": 260,
+    "overflow": false,
+    "page": "perfil",
+    "theme": "light",
+    "width": 1366
+  },
+  {
+    "actionsRight": 1858,
+    "contentLeft": 260,
+    "overflow": false,
+    "page": "amigos",
+    "theme": "light",
+    "width": 1896
+  },
+  {
+    "actionsRight": 1858,
+    "contentLeft": 260,
+    "overflow": false,
+    "page": "inicio",
+    "theme": "light",
+    "width": 1896
+  },
+  {
+    "actionsRight": 1858,
+    "contentLeft": 260,
+    "overflow": false,
+    "page": "projetos-explorar",
+    "theme": "light",
+    "width": 1896
+  },
+  {
+    "actionsRight": 1858,
+    "contentLeft": 260,
+    "overflow": false,
+    "page": "perfil",
+    "theme": "light",
+    "width": 1896
+  }
+]

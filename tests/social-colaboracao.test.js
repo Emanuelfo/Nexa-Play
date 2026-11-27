@@ -37,7 +37,7 @@ test('busca permite apenas área, rejeita área inválida e parametriza habilida
   await profile.buscarUsuarios({ usuario: { id: '1' }, query: { q: '', area: 'Multimídia' } }, res);
   assert.equal(res.code, 200);
   assert.equal(queries[0].options.replacements.area, 'Multimídia');
-  assert.match(queries[0].sql, /array_to_string\(u.habilidades/);
+  assert.match(queries[0].sql, /jsonb_array_elements_text/);
   assert.match(queries[0].sql, /u\.mostrar_biografia AND u\.biografia ILIKE/);
   assert.match(queries[0].sql, /u\.perfil_publico OR a\.status = 'aceita'/);
   res = response();
