@@ -116,7 +116,7 @@
         <section class="contact" id="contato" aria-labelledby="contato-titulo">
           <h3 id="contato-titulo">Fale com a equipe</h3>
           <p>Tem uma ideia para melhorar o Nexa Quest? Conte para a gente.</p>
-          <form id="form-contato" novalidate>
+          <form id="form-contato" method="post" action="/api/mensagens" novalidate>
             <div class="field"><label for="c-nome">Seu nome</label><input class="input" id="c-nome" name="nome"
                 autocomplete="name" required><span class="err" id="c-nome-err"></span></div>
             <div class="field"><label for="c-email">E-mail</label><input class="input" id="c-email" name="email"
@@ -127,6 +127,7 @@
                 required></textarea><span class="err" id="c-msg-err"></span></div>
             <button class="pq-btn" type="submit">Enviar mensagem</button>
             <p class="status" id="contato-status" role="status"></p>
+            <noscript><p class="status bad">O envio do formulário precisa de JavaScript. Ative-o no navegador ou escreva para a equipe por outro canal.</p></noscript>
           </form>
         </section>
       </div>

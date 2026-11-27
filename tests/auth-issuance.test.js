@@ -28,25 +28,11 @@ stub('../src/models/Usuario', {
   async findByPk(id) { return users.find(user => String(user.id) === String(id)) || null; },
   async create(values) { const user = { id: String(users.length + 1), ...values }; users.push(user); return user; },
 });
-class InvalidGoogleToken extends Error {}
-stub('../src/services/googleAuth', {
-  async verificarIdToken(credential) {
-    if (credential !== 'verified-google-fixture') throw new InvalidGoogleToken();
-    return { sub: 'google-fixture', email: 'google@example.invalid', nome: 'Google fixture' };
-  },
-  googleConfigurado: () => true,
-  clientId: () => 'fixture.apps.googleusercontent.com',
-  gerarTokenVinculo: () => 'temporary-link-fixture',
-  lerTokenVinculo: () => null,
-  GoogleTokenInvalidoError: InvalidGoogleToken,
-  GoogleEmailNaoVerificadoError: class extends Error {},
-  GoogleIndisponivelError: class extends Error {},
-});
 stub('../src/middlewares/rateLimit', { createRateLimiter: () => (req, res, next) => next() });
 const controller = require('../src/controllers/usuarioController');
 const auth = require('../src/middlewares/auth');
 
-test('password, registration and Google issue the same session; refresh and server logout use that session', async () => {
+test('password and registration issue the same session; refresh and server logout use that session', async () => {
   const app = express();
   app.use(express.json());
   app.post('/api/usuarios', controller.cadastrar);
@@ -68,6 +54,12 @@ test('password, registration and Google issue the same session; refresh and serv
     assert(!result.headers.get('set-cookie').includes('Max-Age'));
     assert.notEqual(users[0].senha, 'valid-test-password');
     assert.match(users[0].senha, /^\$2[aby]\$/);
+    // A14: o cadastro nunca abre sessão persistente, nem quando um cliente antigo envia lembrar: true
+    result = await post('/usuarios', { nome_completo: 'Remember', nome_usuario: 'remember_fixture', email: 'remember@example.invalid', senha: 'valid-test-password', lembrar: true });
+    assert.equal(result.status, 201);
+    assert(!result.headers.get('set-cookie').includes('Max-Age'));
+    assert(!result.headers.get('set-cookie').includes('Expires'));
+    users.pop();
     result = await post('/usuarios', { nome_completo: 'Duplicate', nome_usuario: 'different_fixture', email: ' FIXTURE@EXAMPLE.INVALID ', senha: 'valid-test-password' });
     assert.equal(result.status, 409);
     assert.equal((await result.json()).campo, 'email');
@@ -97,18 +89,20 @@ test('password, registration and Google issue the same session; refresh and serv
     assert.equal(result.status, 204);
     result = await fetch(base + '/me', { headers: { Cookie: cookie } });
     assert.equal(result.status, 401);
-    result = await post('/auth/google', { credential: 'verified-google-fixture', lembrar: true });
+    // Login sem "Lembrar de mim": cookie de sessão (sem Max-Age) e a sessão continua válida entre páginas
+    result = await post('/login', { id_login: 'fixture@example.invalid', senha: 'valid-test-password', lembrar: false });
     assert.equal(result.status, 200);
-    assert.equal((await result.json()).token, undefined);
-    assert.match(result.headers.get('set-cookie'), /HttpOnly/);
-    assert.match(result.headers.get('set-cookie'), /Max-Age=/);
-    const googleCookie = result.headers.get('set-cookie').split(';')[0];
-    result = await fetch(base + '/me', { headers: { Cookie: googleCookie } });
+    assert(!result.headers.get('set-cookie').includes('Max-Age'));
+    const sessionCookie = result.headers.get('set-cookie').split(';')[0];
+    result = await fetch(base + '/me', { headers: { Cookie: sessionCookie } });
     assert.equal(result.status, 200);
-    result = await post('/logout', {}, googleCookie);
+    result = await post('/logout', {}, sessionCookie);
     assert.equal(result.status, 204);
-    result = await fetch(base + '/me', { headers: { Cookie: googleCookie } });
-    assert.equal(result.status, 401);
+    // O login com Google foi removido: as rotas não existem mais
+    for (const path of ['/auth/google', '/auth/google/config']) {
+      result = await post(path, { credential: 'qualquer' });
+      assert.equal(result.status, 404);
+    }
   } finally {
     await new Promise(resolve => server.close(resolve));
   }

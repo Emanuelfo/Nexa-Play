@@ -144,6 +144,7 @@
   border-radius: 2px;
   aspect-ratio: 1300 / 629;
   background: #0b2a5c url("../assets/imagens/jogo-educa-tech.png") center / 100% 100% no-repeat;
+  background-image: image-set(url("../assets/imagens/jogo-educa-tech.webp") type("image/webp"), url("../assets/imagens/jogo-educa-tech.png") type("image/png"));
   box-shadow: 0 0 0 1px currentColor;
 }
 

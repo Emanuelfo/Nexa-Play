@@ -6,7 +6,7 @@ const vm = require('node:vm');
 function formClient(kind) {
   const source = fs.readFileSync('public/js/main.js', 'utf8');
   const start = source.indexOf('function initRegister()');
-  const end = source.indexOf('/* Login com Google', start);
+  const end = source.indexOf('function initHome()', start);
   const field = value => ({ value, addEventListener() {} });
   const form = {
     nome_completo: field('Test Person'), nome_usuario: field('test_person'),
@@ -21,7 +21,6 @@ function formClient(kind) {
   const context = {
     TextEncoder,
     location: { replace: path => navigation.push(path) },
-    initGoogleLogin() {},
     $: selector => selector === '#form-' + (kind === 'register' ? 'cadastro' : 'login') ? form : selector === 'button[type=submit]' ? button : {},
     NP: {
       isEmail: email => email.includes('@'),

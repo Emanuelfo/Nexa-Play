@@ -22,18 +22,34 @@ const NP = {
   toISODate: v => v.trim().split('/').reverse().join('-'), // dd/mm/aaaa -> aaaa-mm-dd
   maskDate(el) { el.addEventListener('input', () => { const n = el.value.replace(/\D/g, '').slice(0, 8); el.value = n.replace(/(\d{2})(\d)/, '$1/$2').replace(/(\d{2}\/\d{2})(\d)/, '$1/$2'); }); },
   setErr(input, msg) {
-    const e = document.getElementById(input.id + '-err'); if (e) e.textContent = msg || '';
+    const e = document.getElementById(input.id + '-err');
+    if (e) {
+      e.textContent = msg || '';
+      e.setAttribute('aria-live', 'polite');
+      // o erro fica associado ao campo, e o texto (não só a cor) descreve o problema
+      const ids = new Set((input.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean));
+      ids.add(e.id);
+      input.setAttribute('aria-describedby', [...ids].join(' '));
+    }
     input.setAttribute('aria-invalid', msg ? 'true' : 'false'); return !msg;
+  },
+  /* Depois de uma tentativa de envio, leva o foco ao primeiro campo inválido do formulário. */
+  focusFirstInvalid(form) {
+    const first = form.querySelector('[aria-invalid="true"]');
+    if (first) { first.focus(); return true; }
+    return false;
   },
   status(el, msg, ok) { if (el) { el.textContent = msg; el.className = 'status ' + (ok ? 'ok' : 'bad'); } },
   /* JWT enviado exclusivamente pelo cookie HttpOnly. */
-  async api(path, { method = 'GET', body, legacyToken } = {}) {
+  async api(path, { method = 'GET', body, legacyToken, signal } = {}) {
     const requestVersion = NP._authVersion;
     const headers = { 'X-Nexa-Request': '1' };
     if (legacyToken) headers.Authorization = 'Bearer ' + legacyToken;
     if (body) headers['Content-Type'] = 'application/json';
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30000);
+    // signal opcional do chamador: permite cancelar buscas e filtros substituídos por uma consulta mais nova
+    if (signal) { if (signal.aborted) controller.abort(); else signal.addEventListener('abort', () => controller.abort(), { once: true }); }
     try {
       const r = await fetch(`${API_BASE_URL}/api${path}`, {
         method,
@@ -56,7 +72,7 @@ const NP = {
         } };
       }
       if (!r.ok && !data.mensagem) data.mensagem = `Falha na API (HTTP ${r.status}).`;
-      if (r.status === 401 && requestVersion === NP._authVersion && !['/me', '/login', '/auth/google', '/auth/session'].includes(path)) {
+      if (r.status === 401 && requestVersion === NP._authVersion && !['/me', '/login', '/auth/session'].includes(path)) {
         NP.clearLocalAuth();
         if (document.body.dataset.protected) {
           NP.hidePrivatePage();
@@ -68,6 +84,7 @@ const NP = {
       return {
         ok: false,
         status: 0,
+        aborted: !!signal?.aborted,
         data: {
           mensagem: controller.signal.aborted
             ? 'A solicitação demorou demais para responder. Tente novamente.'
@@ -197,3 +214,11 @@ addEventListener('pageshow', async event => {
     NP.toast('Não foi possível verificar sua sessão. Atualize a página para tentar novamente.');
   }
 });
+
+// Validações do formulário rodam de forma síncrona no próprio submit; um tick depois, o foco vai ao 1º campo inválido.
+if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
+  document.addEventListener('submit', event => {
+    const form = event.target;
+    if (typeof HTMLFormElement !== 'undefined' && form instanceof HTMLFormElement) setTimeout(() => NP.focusFirstInvalid(form), 0);
+  }, true);
+}

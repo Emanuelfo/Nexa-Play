@@ -2,6 +2,7 @@ const { QueryTypes } = require("sequelize");
 const sequelize = require("../config/database");
 const Usuario = require("../models/Usuario");
 const logErro = require("../utils/logErro");
+const { REABERTURA_HORAS, aplicarAcesso, condicaoMeusProjetos } = require("../services/projetoAcesso");
 
 const LIMITE_PADRAO = 12;
 const LIMITE_MAXIMO = 30;
@@ -90,20 +91,6 @@ function validarProjeto(body) {
   }
 }
 
-function condicaoVisibilidade(alias = "p") {
-  return `(
-    ${alias}.visibilidade = 'publico'
-    OR ${alias}.proprietario_id = :usuarioId
-    OR EXISTS (
-      SELECT 1
-      FROM projeto_participantes acesso
-      WHERE acesso.projeto_id = ${alias}.id
-        AND acesso.usuario_id = :usuarioId
-        AND acesso.status = 'aceito'
-    )
-  )`;
-}
-
 const BASE_PROJETO = `
   SELECT p.id::text, p.titulo, p.descricao, p.imagem_url, p.categoria,
     p.link_externo, p.visibilidade, p.tipo, p.criado_em, p.atualizado_em,
@@ -122,7 +109,8 @@ const BASE_PROJETO = `
     (
       SELECT json_build_object(
         'status', participacao.status,
-        'origem', participacao.origem
+        'origem', participacao.origem,
+        'disponivel_em', participacao.atualizado_em + interval '${REABERTURA_HORAS} hours'
       )
       FROM projeto_participantes participacao
       WHERE participacao.projeto_id = p.id AND participacao.usuario_id = :usuarioId
@@ -182,15 +170,7 @@ async function meusProjetos(req, res) {
   try {
     const registros = await sequelize.query(`
       ${BASE_PROJETO}
-      WHERE (
-        p.proprietario_id = :usuarioId
-        OR EXISTS (
-          SELECT 1 FROM projeto_participantes membro
-          WHERE membro.projeto_id = p.id
-            AND membro.usuario_id = :usuarioId
-            AND membro.status IN ('aceito','pendente')
-        )
-      )
+      WHERE ${condicaoMeusProjetos("p")}
         AND (:cursor IS NULL OR p.id < :cursor)
       ORDER BY p.id DESC
       LIMIT :limite
@@ -199,10 +179,12 @@ async function meusProjetos(req, res) {
       type: QueryTypes.SELECT,
     });
     const temMais = registros.length > page.limite;
-    const projetos = temMais ? registros.slice(0, page.limite) : registros;
+    const pagina = temMais ? registros.slice(0, page.limite) : registros;
+    // O cursor vem da página bruta; a visão enviada ao navegador passa sempre pela regra central.
+    const projetos = pagina.map(projeto => aplicarAcesso(projeto, req.usuario.id)).filter(Boolean);
     return res.json({
       projetos,
-      proximoCursor: temMais ? String(projetos[projetos.length - 1].id) : null,
+      proximoCursor: temMais ? String(pagina[pagina.length - 1].id) : null,
     });
   } catch (erro) {
     logErro("user_projects_error", req, erro);
@@ -245,11 +227,11 @@ async function criar(req, res) {
   }
 }
 
-async function carregarProjeto(id, usuarioId, { lockOwner = false } = {}) {
+// Carrega o projeto sem decidir quem o vê: use aplicarAcesso() para obter a visão permitida.
+async function carregarProjeto(id, usuarioId) {
   const [projeto] = await sequelize.query(`
     ${BASE_PROJETO}
     WHERE p.id = :projetoId
-      ${lockOwner ? "" : `AND ${condicaoVisibilidade("p")}`}
   `, {
     replacements: { projetoId: id, usuarioId },
     type: QueryTypes.SELECT,
@@ -262,8 +244,13 @@ async function obter(req, res) {
     return res.status(400).json({ mensagem: "Identificador de projeto inválido." });
   }
   try {
-    const projeto = await carregarProjeto(req.params.id, req.usuario.id);
+    const completo = await carregarProjeto(req.params.id, req.usuario.id);
+    const projeto = aplicarAcesso(completo, req.usuario.id);
     if (!projeto) return res.status(404).json({ mensagem: "Projeto não encontrado." });
+    if (projeto.acesso === "convite") {
+      // Convite para projeto privado: só o necessário para aceitar ou recusar.
+      return res.json({ projeto: { ...projeto, sou_proprietario: false, pode_atualizar: false } });
+    }
 
     const participantes = await sequelize.query(`
       SELECT u.id::text, u.nome_usuario, u.nome_exibicao,
@@ -295,11 +282,11 @@ async function obter(req, res) {
       type: QueryTypes.SELECT,
     });
 
-    const souDono = String(projeto.proprietario_id) === String(req.usuario.id);
+    const souDono = projeto.acesso === "proprietario";
     const resultado = {
       ...projeto,
       sou_proprietario: souDono,
-      pode_atualizar: souDono || projeto.participacao?.status === "aceito",
+      pode_atualizar: souDono || projeto.acesso === "participante",
       participantes: [projeto.proprietario, ...participantes],
       atualizacoes,
     };
@@ -358,34 +345,93 @@ async function atualizar(req, res) {
         });
       }
     }
-    const [projeto] = await sequelize.query(`
-      UPDATE projetos
-      SET titulo = :titulo, descricao = :descricao, imagem_url = :imagemUrl,
-        categoria = :categoria, link_externo = :linkExterno,
-        visibilidade = :visibilidade, tipo = :tipo
-      WHERE id = :projetoId AND proprietario_id = :usuarioId
-      RETURNING id::text, titulo, descricao, imagem_url, categoria,
-        link_externo, visibilidade, tipo, criado_em, atualizado_em
-    `, {
-      replacements: {
-        projetoId: req.params.id,
-        usuarioId: req.usuario.id,
-        titulo: validacao.dados.titulo,
-        descricao: validacao.dados.descricao,
-        imagemUrl: validacao.dados.imagem_url,
-        categoria: validacao.dados.categoria,
-        linkExterno: validacao.dados.link_externo,
-        visibilidade: validacao.dados.visibilidade,
-        tipo: validacao.dados.tipo,
-      },
-      type: QueryTypes.SELECT,
+    const replacements = {
+      projetoId: req.params.id,
+      usuarioId: req.usuario.id,
+      titulo: validacao.dados.titulo,
+      descricao: validacao.dados.descricao,
+      imagemUrl: validacao.dados.imagem_url,
+      categoria: validacao.dados.categoria,
+      linkExterno: validacao.dados.link_externo,
+      visibilidade: validacao.dados.visibilidade,
+      tipo: validacao.dados.tipo,
+    };
+    // Política ao tornar um projeto público em privado (A01):
+    //  - participantes aceitos e convites pendentes do proprietário continuam valendo;
+    //  - solicitações pendentes de quem não faz parte da equipe são encerradas (privados não recebem
+    //    solicitações), o que também as tira da listagem e dos detalhes de quem pediu.
+    const resultado = await sequelize.transaction(async transaction => {
+      const [atual] = await sequelize.query(
+        "SELECT visibilidade FROM projetos WHERE id = :projetoId AND proprietario_id = :usuarioId FOR UPDATE",
+        { replacements, type: QueryTypes.SELECT, transaction },
+      );
+      if (!atual) return null;
+      const [projeto] = await sequelize.query(`
+        UPDATE projetos
+        SET titulo = :titulo, descricao = :descricao, imagem_url = :imagemUrl,
+          categoria = :categoria, link_externo = :linkExterno,
+          visibilidade = :visibilidade, tipo = :tipo
+        WHERE id = :projetoId AND proprietario_id = :usuarioId
+        RETURNING id::text, titulo, descricao, imagem_url, categoria,
+          link_externo, visibilidade, tipo, criado_em, atualizado_em
+      `, { replacements, type: QueryTypes.SELECT, transaction });
+      let encerradas = 0;
+      if (atual.visibilidade === "publico" && validacao.dados.visibilidade === "privado") {
+        const removidas = await sequelize.query(`
+          DELETE FROM projeto_participantes
+          WHERE projeto_id = :projetoId AND origem = 'solicitacao' AND status = 'pendente'
+          RETURNING usuario_id::text
+        `, { replacements, type: QueryTypes.SELECT, transaction });
+        encerradas = removidas.length;
+      }
+      return { projeto, encerradas };
     });
-    if (!projeto) return res.status(404).json({ mensagem: "Projeto não encontrado ou você não é o proprietário." });
-    return res.json({ projeto, mensagem: "Projeto atualizado." });
+    if (!resultado) return res.status(404).json({ mensagem: "Projeto não encontrado ou você não é o proprietário." });
+    return res.json({
+      projeto: resultado.projeto,
+      solicitacoes_encerradas: resultado.encerradas,
+      mensagem: resultado.encerradas
+        ? "Projeto atualizado. As solicitações de participação pendentes foram encerradas porque o projeto agora é privado."
+        : "Projeto atualizado.",
+    });
   } catch (erro) {
     logErro("project_update_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível atualizar o projeto." });
   }
+}
+
+// Política de novas solicitações/convites (A11): só é possível reabrir uma participação RECUSADA, e apenas
+// depois de REABERTURA_HORAS desde a recusa. Pendente e aceita continuam sem duplicar. Responde com o motivo exato.
+async function responderParticipacaoBloqueada(res, projetoId, usuarioId, tipo) {
+  const [atual] = await sequelize.query(`
+    SELECT status, origem, atualizado_em,
+      atualizado_em + make_interval(hours => :reaberturaHoras) AS disponivel_em
+    FROM projeto_participantes
+    WHERE projeto_id = :projetoId AND usuario_id = :usuarioId
+  `, {
+    replacements: { projetoId, usuarioId, reaberturaHoras: REABERTURA_HORAS },
+    type: QueryTypes.SELECT,
+  });
+  const sujeito = tipo === "convite" ? "este usuário" : "você";
+  if (atual?.status === "aceito") {
+    return res.status(409).json({ codigo: "ja_participa", mensagem: tipo === "convite" ? "Este usuário já participa do projeto." : "Você já participa deste projeto." });
+  }
+  if (atual?.status === "pendente") {
+    return res.status(409).json({
+      codigo: "participacao_pendente",
+      mensagem: atual.origem === "convite"
+        ? (tipo === "convite" ? "Já existe um convite pendente para este usuário." : "Você já recebeu um convite para este projeto. Responda em Meus projetos.")
+        : (tipo === "convite" ? "Este usuário já pediu para participar. Responda à solicitação na página do projeto." : "Você já enviou uma solicitação para este projeto."),
+    });
+  }
+  if (atual?.status === "recusado") {
+    return res.status(409).json({
+      codigo: "reabertura_indisponivel",
+      disponivel_em: atual.disponivel_em,
+      mensagem: `Uma nova tentativa só poderá ser feita ${REABERTURA_HORAS} horas após a recusa. Tente novamente mais tarde.`,
+    });
+  }
+  return res.status(409).json({ codigo: "participacao_indisponivel", mensagem: `Não foi possível registrar a participação de ${sujeito}.` });
 }
 
 async function convidar(req, res) {
@@ -399,7 +445,7 @@ async function convidar(req, res) {
     return res.status(400).json({ mensagem: "Informe um nome de usuário válido." });
   }
   try {
-    const projeto = await carregarProjeto(req.params.id, req.usuario.id, { lockOwner: true });
+    const projeto = await carregarProjeto(req.params.id, req.usuario.id);
     if (!projeto || String(projeto.proprietario_id) !== String(req.usuario.id)) {
       return res.status(404).json({ mensagem: "Projeto não encontrado ou você não é o proprietário." });
     }
@@ -420,12 +466,13 @@ async function convidar(req, res) {
       ON CONFLICT (projeto_id, usuario_id)
       DO UPDATE SET origem = 'convite', status = 'pendente', atualizado_em = now()
       WHERE projeto_participantes.status = 'recusado'
+        AND projeto_participantes.atualizado_em <= now() - make_interval(hours => :reaberturaHoras)
       RETURNING usuario_id::text, origem, status, criado_em
     `, {
-      replacements: { projetoId: req.params.id, usuarioId: usuario.id },
+      replacements: { projetoId: req.params.id, usuarioId: usuario.id, reaberturaHoras: REABERTURA_HORAS },
       type: QueryTypes.SELECT,
     });
-    if (!convite) return res.status(409).json({ mensagem: "Já existe um convite, solicitação ou participação para este usuário." });
+    if (!convite) return responderParticipacaoBloqueada(res, req.params.id, usuario.id, "convite");
     return res.status(201).json({ convite });
   } catch (erro) {
     logErro("project_invitation_error", req, erro);
@@ -455,12 +502,13 @@ async function solicitarParticipacao(req, res) {
       ON CONFLICT (projeto_id, usuario_id)
       DO UPDATE SET origem = 'solicitacao', status = 'pendente', atualizado_em = now()
       WHERE projeto_participantes.status = 'recusado'
+        AND projeto_participantes.atualizado_em <= now() - make_interval(hours => :reaberturaHoras)
       RETURNING usuario_id::text, origem, status, criado_em
     `, {
-      replacements: { projetoId: req.params.id, usuarioId: req.usuario.id },
+      replacements: { projetoId: req.params.id, usuarioId: req.usuario.id, reaberturaHoras: REABERTURA_HORAS },
       type: QueryTypes.SELECT,
     });
-    if (!solicitacao) return res.status(409).json({ mensagem: "Já existe uma solicitação, convite ou participação para este projeto." });
+    if (!solicitacao) return responderParticipacaoBloqueada(res, req.params.id, req.usuario.id, "solicitacao");
     return res.status(201).json({ solicitacao });
   } catch (erro) {
     logErro("project_join_request_error", req, erro);

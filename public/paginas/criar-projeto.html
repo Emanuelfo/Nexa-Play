@@ -40,7 +40,7 @@
         </fieldset>
         <fieldset class="form-group">
           <legend>Organização</legend>
-          <div class="project-form-row">
+          <div class="project-form-row project-form-row--3">
             <label>Categoria
               <select name="categoria" required>
                 <option value="">Selecione</option>
@@ -58,13 +58,13 @@
                 <option value="equipe">Em equipe</option>
               </select>
             </label>
+            <label>Visibilidade
+              <select name="visibilidade" required>
+                <option value="publico">Público: aparece em Explorar</option>
+                <option value="privado">Privado: só a equipe</option>
+              </select>
+            </label>
           </div>
-          <label>Visibilidade
-            <select name="visibilidade" required>
-              <option value="publico">Público: aparece em Explorar</option>
-              <option value="privado">Privado: só equipe e proprietário</option>
-            </select>
-          </label>
         </fieldset>
         <fieldset class="form-group">
           <legend>Divulgação <span class="form-optional">opcional</span></legend>

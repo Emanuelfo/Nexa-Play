@@ -6,11 +6,7 @@ const Usuario = sequelize.define("Usuario", {
   nome_usuario: { type: DataTypes.STRING, allowNull: false },
   nome_exibicao: { type: DataTypes.STRING, allowNull: false },
   email: { type: DataTypes.STRING, allowNull: false, unique: true },
-  // NULL em contas criadas só pelo Google (sem senha local)
-  senha: { type: DataTypes.STRING, allowNull: true },
-  // Identificador externo ("sub") da conta Google vinculada
-  google_sub: { type: DataTypes.STRING(255), allowNull: true, unique: true },
-  google_vinculado_em: { type: DataTypes.DATE, allowNull: true },
+  senha: { type: DataTypes.STRING, allowNull: false },
   pontos: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
   biografia: { type: DataTypes.TEXT, allowNull: false, defaultValue: "" },
   avatar_url: { type: DataTypes.TEXT, allowNull: true },

@@ -43,12 +43,12 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "https://accounts.google.com/gsi/client"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://accounts.google.com/gsi/style"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "https:", "data:", "blob:"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-      connectSrc: ["'self'", "https://nexa-play.onrender.com", "https://accounts.google.com/gsi/"],
-      frameSrc: ["'self'", "https://www.youtube.com", "https://www.youtube-nocookie.com", "https://accounts.google.com/gsi/", "https://itch.io"],
+      fontSrc: ["'self'", "data:"],
+      connectSrc: ["'self'", "https://nexa-play.onrender.com"],
+      frameSrc: ["'self'", "https://www.youtube.com", "https://www.youtube-nocookie.com", "https://itch.io"],
       mediaSrc: ["'self'", "https:", "blob:"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
@@ -58,8 +58,7 @@ app.use(helmet({
     },
   },
   crossOriginEmbedderPolicy: false,
-  // O popup do Google Identity Services precisa conversar com a página que o abriu
-  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+  crossOriginOpenerPolicy: { policy: "same-origin" },
   strictTransportSecurity: process.env.NODE_ENV === "production" ? undefined : false,
 }));
 

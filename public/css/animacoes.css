@@ -155,3 +155,9 @@
     animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important;
   }
 }
+
+/* Ordem de entrada de cada objeto da cena (antes: style="--i:n" inline, incompatível com CSP estrita). */
+.nq-obj--sistemas, .nq-obj--livro { --i: 0; }
+.nq-obj--design, .nq-obj--alvo { --i: 1; }
+.nq-obj--multimidia, .nq-obj--bandeira { --i: 2; }
+.nq-obj--jogos { --i: 3; }

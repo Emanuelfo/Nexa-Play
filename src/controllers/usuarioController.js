@@ -25,14 +25,11 @@ function gerarToken(usuario, lembrar) {
 
 async function cadastrar(req, res) {
   try {
-    const { nome_completo, nome_usuario, email, senha, lembrar } = req.body;
+    const { nome_completo, nome_usuario, email, senha } = req.body;
 
     const nomeExibicao = typeof nome_completo === "string" ? nome_completo.trim() : "";
     const nomeUsuario = typeof nome_usuario === "string" ? nome_usuario.trim().toLowerCase() : "";
     const emailNorm = typeof email === "string" ? email.trim().toLowerCase() : "";
-    if (lembrar !== undefined && typeof lembrar !== "boolean") {
-      return res.status(400).json({ mensagem: "A opção de manter a sessão deve ser verdadeira ou falsa." });
-    }
     if (!nomeExibicao || nomeExibicao.length > 100) {
       return res.status(400).json({ mensagem: "Informe seu nome completo (até 100 caracteres)." });
     }
@@ -63,7 +60,9 @@ async function cadastrar(req, res) {
       senha: await bcrypt.hash(senha, 10),
     }, { returning: ["id", "nome_usuario", "email", "pontos"] });
 
-    setSession(req, res, gerarToken(usuario, !!lembrar), !!lembrar);
+    // O cadastro sempre abre uma sessão temporária (cookie de sessão, JWT de 8 h). Manter a sessão por
+    // 30 dias é uma escolha feita apenas na tela de login ("Lembrar de mim"), nunca implícita.
+    setSession(req, res, gerarToken(usuario, false), false);
     res.status(201).json({ usuario: dadosPublicos(usuario) });
   } catch (erro) {
     if (erro.name === "SequelizeUniqueConstraintError" || (erro.original?.code || erro.parent?.code || erro.code) === "23505") {

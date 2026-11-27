@@ -1,7 +1,7 @@
 # Nexa Play — site + API com banco de dados PostgreSQL
 
 Site em HTML5/CSS3/JavaScript puro com backend **Node.js + Express + Sequelize + PostgreSQL**:
-contas, login com JWT e mensagens de contato ficam no banco.
+contas (cadastro e login convencionais, com e-mail ou usuário e senha), sessões com JWT, projetos e mensagens de contato ficam no banco.
 
 ## Como rodar
 1. Configure `DATABASE_URL` e `JWT_SECRET` no arquivo `.env`.
@@ -20,10 +20,10 @@ O servidor Express serve os arquivos do site e a API na mesma origem. As tabelas
 ```
 src/
   app.js                       Servidor Express (serve public/ e a API)
-  config/database.js           Conexão Sequelize/MySQL (lê o .env)
+  config/database.js           Conexão Sequelize/PostgreSQL (lê o .env)
   models/Usuario.js            Contas, identidade e preferências de privacidade
   models/Mensagem.js           Mensagens do formulário de contato (ligada ao usuário, se logado)
-  controllers/                 usuario (cadastro, /me, redefinir senha), auth (login), mensagem
+  controllers/                 usuario (cadastro, /me), auth (login), projeto, mensagem
   middlewares/auth.js          Valida o JWT (+ versão opcional para visitantes)
   routes/                      Rotas da API
   utils/validacao.js           Validações no servidor
@@ -75,12 +75,12 @@ O feed usa as tabelas `publicacoes`, `comentarios` e `curtidas`; o perfil usa `a
 - O e-mail nunca é disponibilizado no perfil público. Cada usuário pode ocultar biografia, pontuação, quantidade de amigos, conquistas e progresso individualmente.
 
 ### Segurança da API
-- Helmet aplica cabeçalhos HTTP e uma CSP compatível com os scripts locais, fontes Google, imagens HTTPS e o vídeo do YouTube. Os limites de requisição são compartilhados entre instâncias por `api_rate_limit_windows` no PostgreSQL; o servidor cria a tabela de forma idempotente e limpa janelas expiradas.
+- Helmet aplica cabeçalhos HTTP e uma CSP compatível com os scripts e fontes locais, imagens HTTPS, o vídeo do YouTube e o jogo no itch.io. Os limites de requisição são compartilhados entre instâncias por `api_rate_limit_windows` no PostgreSQL; o servidor cria a tabela de forma idempotente e limpa janelas expiradas.
 - Limites atuais: API 1.200 req/min/IP; login 10 req/15 min/IP e 20 por identificador; cadastro 5/h/IP; mensagens 5/h/IP; publicações 10/h/usuário; comentários 30/min/usuário; curtidas 60/min/usuário; solicitações de amizade 20/h/usuário. Escritas de perfil e projetos também têm limites próprios e retornam HTTP 429 com `Retry-After`.
 - Configure `JWT_SECRET` com pelo menos 32 bytes aleatórios, `CORS_ORIGINS` para domínios adicionais e `DATABASE_SSL_CA` com o certificado raiz PEM do projeto Supabase (substitua quebras de linha por `\n` se necessário). A CA ativa a validação do certificado TLS; sem ela, a conexão mantém criptografia mas não valida o certificado e o backend em produção emite um alerta. O Render deve ser o único proxy confiável à frente do Express; os logs JSON registram IDs de requisição e eventos de abuso sem gravar tokens, senhas, corpos ou IPs em texto claro.
 - A API valida JWT HS256, expiração e revogação, usa consultas parametrizadas e exige autorização no servidor. Cookies SameSite=Lax, origens autorizadas e cabeçalho de escrita protegem as requisições do navegador contra CSRF.
 - O backend conecta ao PostgreSQL/Supabase pelo `DATABASE_URL` de servidor e, conforme o schema atual, essa role pode ignorar RLS. As tabelas seguem com RLS habilitado e sem policies para acesso público, mas RLS não substitui as verificações de identidade/autoria da API quando a role do backend tem bypass. Aplicar RLS por usuário exigiria migrar a autenticação customizada para Supabase Auth e criar policies; esta implementação não altera as policies/tabelas sociais.
-- A CSP aplicada pelo Helmet vale para páginas servidas diretamente pelo Express. Como produção publica o frontend no Netlify, configure também os headers CSP no Netlify para obter a mesma proteção nos documentos hospedados lá.
+- A CSP aplicada pelo Helmet vale para páginas servidas diretamente pelo Express. O frontend de produção é publicado na Vercel: os cabeçalhos dos documentos HTML (CSP estrita sem `unsafe-inline`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, COOP, HSTS) ficam em `vercel.json` (e em `public/vercel.json`, que deve ser mantido igual se o Root Directory da Vercel for `public`).
 
 ### Dados do Nexa Quest e integração Unity
 - O repositório não contém scripts/projeto Unity nem um endpoint de recebimento de resultados do jogo. Portanto, não é possível confirmar como o cliente Unity salva ou envia progresso, e nenhuma integração de escrita com o jogo foi inventada.
@@ -111,15 +111,14 @@ Antes de implementar a experiência, o desenho de backend/schema foi documentado
 
 ## O que mudou no front-end
 - `js/functions.js`: `NP.api()` envia o cookie HttpOnly para a API da própria origem. JWTs antigos no armazenamento do navegador são migrados para cookie.
-- `js/main.js`: cadastro, login, redefinição de senha e contato agora chamam a API. Ao abrir cada página,
+- `js/main.js`: cadastro, login e contato chamam a API. Ao abrir cada página,
   o usuário é confirmado no servidor (`NP.loadUser()`).
-- `paginas/login.html`: o modal "Redefinir senha" ganhou o campo de data de nascimento.
 
 ## Pendências
-- **Redefinição de senha**: confirma a identidade por contato + data de nascimento por não haver envio de e-mail/SMS.
-  Antes de produção, troque por link/código enviado ao usuário.
-- Considere limitar tentativas de login (ex.: `express-rate-limit`) e usar HTTPS em produção.
-- Login com Google e redes sociais seguem como antes. O jogo agora é incorporado em `paginas/jogo.html` (ver seção acima).
+- **Recuperação de senha: não existe, por decisão de projeto.** Não há "Esqueci minha senha" nesta versão. Quem perder a senha não tem como recuperar a conta sozinho.
+- **Login com Google: removido** (backend, frontend e dependência `google-auth-library`). As colunas `google_sub` e `google_vinculado_em` seguem no banco, sem uso. Veja `db/verificacoes/contas-google.sql`.
+- O jogo é incorporado em `paginas/jogo.html` (ver seção acima).
+- Ver também *Pendências futuras*, no fim deste arquivo.
 
 ## Redesign visual
 - `public/css/style.css`: estilos compartilhados (no fim do arquivo estão as seções do redesign: palco escuro, faixa em movimento, manifesto, páginas internas, autenticação, rodapé).
@@ -136,8 +135,7 @@ framework **Other**, sem comando de build, com saída `public`. Se o projeto usa
 **Root Directory = public**, a configuração equivalente em `public/vercel.json`
 encaminha a API e a saída deve ser a própria pasta (`.`). Publique também
 o backend atualizado no Render, com `NODE_ENV=production`, `JWT_SECRET` existente,
-`DATABASE_URL` existente. O login tradicional usa essas variáveis. A integração
-Google preexistente possui configuração independente e ficou fora desta revisão.
+`DATABASE_URL` existente. O login convencional usa essas variáveis.
 `CORS_ORIGINS` recebe origens adicionais exatas, separadas por vírgula.
 A origem Vercel de produção e a origem Render já são permitidas.
 
@@ -149,11 +147,10 @@ são independentes por domínio. Use o frontend Vercel para entrar e acessar
 pela landing Vercel. Abrir HTML por `file://` não suporta esse fluxo.
 
 Os prazos permanecem 8 horas e 30 dias com **Lembrar de mim**. Somente a opção
-persistente emite Max-Age. Senha, cadastro e Google usam o mesmo mecanismo.
+persistente emite Max-Age. O **cadastro sempre abre sessão temporária** (cookie de sessão, JWT de 8 h): a persistência de 30 dias só é escolhida no login, com **Lembrar de mim**.
 Tokens antigos são trocados por cookie sem renovar a validade e removidos de
 localStorage/sessionStorage após a troca. Novos JWTs não são retornados no JSON
-nem gravados no armazenamento JavaScript. O token temporário de vínculo Google
-continua limitado à confirmação já existente.
+nem gravados no armazenamento JavaScript.
 
 O logout revoga o hash SHA-256 do JWT até sua expiração e só depois limpa o cookie.
 No startup, o servidor cria de forma idempotente a tabela técnica
@@ -170,16 +167,13 @@ O middleware mantém leitura Bearer para migração e compatibilidade.
 
 Execute `node --test tests/session.test.js tests/session-client.test.js tests/auth-issuance.test.js tests/traditional-forms.test.js` para os
 testes isolados de JWT, cookie, revogação, migração e encaminhamento do cliente.
-Fechar/reabrir navegador, GIS com conta real e o proxy publicado exigem verificação
-após o deploy, com os domínios autorizados também no Google Cloud Console.
+Fechar/reabrir navegador e o proxy publicado exigem verificação após o deploy.
 
 Para o teste integrado local com PostgreSQL, inicie `npm start` e execute
 `node tests/session-live.cjs`. O teste cria e remove uma conta temporária própria.
-A migração existente `db/migrations/20261114_login_google.sql` deve estar aplicada
-em cada banco antes de publicar o backend. Ela foi necessária no banco deste
-ambiente, onde faltavam google_sub e google_vinculado_em, e foi aplicada durante
-esta implementação. O login Google real ainda precisa de uma conta Google e
-Client ID com as origens autorizadas para validação após publicação.
+A migração histórica `db/migrations/20261114_login_google.sql` não é mais necessária
+para o funcionamento da aplicação (o login com Google foi removido). Se ela já foi
+aplicada, as colunas permanecem sem uso; não remova nada sem uma migração planejada e autorizada.
 
 
 ## Revisão da autenticação tradicional
@@ -226,3 +220,51 @@ As contas temporárias foram removidas. O teste integrado simula um cliente de p
 com IP reservado por execução para usar sua própria cota de rate limiting.
 Fechar e reabrir o processo do navegador e a configuração após deploy de ambos
 os serviços continuam sendo verificações manuais.
+
+## Variáveis de ambiente
+Nunca versione o `.env`. Use `.env.example` como modelo.
+
+| Variável | Onde | Obrigatória | Descrição |
+|---|---|---|---|
+| `DATABASE_URL` | Render / local | sim | Conexão PostgreSQL (Supabase). |
+| `DATABASE_SSL_CA` | Render | recomendada em produção | Certificado raiz PEM do projeto Supabase; ativa a verificação do certificado TLS (use `\n` no lugar das quebras de linha). Sem ela a conexão é criptografada, mas o certificado não é verificado, e o backend registra um alerta. Não use `rejectUnauthorized: false` como solução. |
+| `JWT_SECRET` | Render / local | sim | Segredo aleatório com 32 bytes ou mais. |
+| `NODE_ENV` | Render | sim | `production` em produção. |
+| `CORS_ORIGINS` | Render | não | Origens extras, separadas por vírgula. |
+| `GAME_EMBED_URL`, `GAME_VIEWPORT_MODE`, `GAME_WIDTH`, `GAME_HEIGHT` | Render | não | Jogo no itch.io (ver *Jogo NEXA QUEST incorporado*). |
+
+## Execução local
+1. `npm install`
+2. Copie `.env.example` para `.env` e preencha `DATABASE_URL` e `JWT_SECRET` com um banco **de desenvolvimento** (não use o de produção).
+3. Aplique `db/schema.sql` nesse banco e rode `npm start` (http://localhost:3000).
+
+## Testes
+- `npm test`: testes automatizados de backend e do cliente (`tests/*.test.js`), sem banco real: o Sequelize é substituído por stubs. Cobrem emissão e revogação de sessão, cadastro e login, formulários, privacidade de projetos (`projetos-acesso.test.js`) e regras de solicitação/convite. O SQL em si não é executado nesses testes.
+- `npm run test:e2e`: testes de navegador (Chromium) contra uma **API simulada com dados sintéticos** (`tests/e2e/mock-server.mjs`), que aplica os cabeçalhos do `vercel.json`. Requer `npm i -D playwright-core` e `npx playwright-core install chromium` (ou um Chromium instalado). Cobrem CSP, formulário de contato, filtros e buscas simultâneos, estados de erro e o jogo.
+- `tests/session-live.cjs` usa o banco configurado no `.env`: **não rode contra produção**.
+- Esses testes usam emulação de navegador; não substituem verificação em aparelhos reais (Android, iPhone).
+
+## Regras de projetos (privacidade e participação)
+- Projeto privado só é visível ao proprietário e a participantes **aceitos**. Solicitação pendente, recusada ou removida não dá acesso. Quem tem **convite pendente** vê apenas título, categoria, formato e proprietário, para aceitar ou recusar.
+- Ao tornar um projeto público em privado, as solicitações pendentes são encerradas (removidas); equipe aceita e convites pendentes continuam valendo.
+- Depois de uma recusa (do proprietário ou do convidado), uma nova solicitação ou convite só é aceita 24 horas depois (`REABERTURA_HORAS` em `src/services/projetoAcesso.js`). O backend responde com o código `reabertura_indisponivel` e o horário de liberação.
+
+## Limitações atuais do jogo
+- O jogo é um build Unity WebGL hospedado no itch.io e incorporado por iframe de outra origem: a plataforma não consegue ler nem alterar o canvas, os botões ou o conteúdo interno.
+- A plataforma garante a caixa 16:9 e o botão único de tela cheia. Cortes dentro do canvas dependem de como o build foi exportado e das *Embed options* do itch.io (ver *Configurações externas*).
+- Não há sincronização de XP, níveis ou conquistas entre o jogo, o backend e o perfil. As páginas públicas descrevem esses recursos como parte do jogo.
+
+## Configurações externas
+- **Vercel**: Root Directory na raiz do repositório (usa `vercel.json`) ou `public` (usa `public/vercel.json`); os dois arquivos devem permanecer iguais. Confira, após o deploy, os cabeçalhos dos documentos HTML (por exemplo com `curl -I`) e se o jogo carrega (`frame-src https://itch.io`).
+- **Render**: defina `NODE_ENV`, `DATABASE_URL`, `JWT_SECRET` e `DATABASE_SSL_CA`. Se ainda existir `GOOGLE_CLIENT_ID`, pode ser removida. No log de inicialização não deve aparecer o aviso de TLS sem verificação.
+- **Supabase**: baixe o certificado raiz em *Project Settings → Database → SSL Configuration* para usar em `DATABASE_SSL_CA`. Rode `db/verificacoes/contas-google.sql` (somente leitura) para conhecer as contas criadas só pelo Google.
+- **itch.io**: em *Embed options*, use o mesmo tamanho configurado em `GAME_WIDTH`/`GAME_HEIGHT` e, se quiser esconder o botão de tela cheia do itch.io, desmarque *Fullscreen button*.
+- **Unity** (projeto original, fora deste repositório): veja *Pendências futuras*.
+
+## Pendências futuras
+- Sincronização de XP, níveis e conquistas entre Unity, backend e banco.
+- Otimização do build Unity (os arquivos principais somam cerca de 64,6 MB): compressão Brotli/Gzip com os cabeçalhos corretos, remover assets, shaders e cenas não usados, texturas comprimidas, reduzir o tamanho do código com *Managed Stripping* e usar um template WebGL responsivo sem botão de tela cheia próprio.
+- Refatoração e modularização do `main.js` e consolidação das camadas históricas de CSS e JS.
+- Sistema de denúncias, bloqueios e moderação.
+- Mudanças estruturais de grande porte no banco (por exemplo, remover as colunas do Google em uma migração planejada).
+- Imagens possivelmente sem uso, a confirmar antes de remover: `estudante.png`, `parceiros.png`, `parceiros-orbita.png/.webp` (não são referenciadas por HTML, CSS ou JS).

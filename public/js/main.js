@@ -89,6 +89,7 @@ function initSearchSuggest(form, root) {
   if (!input || !box) return;
   let timer = null;
   let sequence = 0;
+  let suggestController = null;
   let active = -1;
   const rows = () => [...box.querySelectorAll('[role="option"]')];
   const close = () => {
@@ -148,10 +149,12 @@ function initSearchSuggest(form, root) {
   input.addEventListener('input', () => {
     clearTimeout(timer);
     const term = input.value.trim().replace(/^@/, '');
-    if (term.length < 2) { sequence += 1; close(); return; }
+    if (term.length < 2) { sequence += 1; suggestController?.abort(); close(); return; }
     timer = setTimeout(async () => {
       const current = ++sequence;
-      const response = await NP.api(`/usuarios/buscar?q=${encodeURIComponent(term)}`);
+      suggestController?.abort();
+      suggestController = new AbortController();
+      const response = await NP.api(`/usuarios/buscar?q=${encodeURIComponent(term)}`, { signal: suggestController.signal });
       if (current !== sequence || document.activeElement !== input) return;
       if (!response.ok || !Array.isArray(response.data.usuarios)) { close(); return; }
       show(response.data.usuarios, term);
@@ -415,7 +418,7 @@ function renderSocialShell(host, user) {
       <section class="nq-box nq-game" aria-labelledby="rail-game-title">
         <img class="nq-game-mascot" src="${root}assets/imagens/golfinho-fone.svg" alt="" width="120" height="76">
         <h2 id="rail-game-title">Continue sua jornada</h2>
-        <p>Novas missões e conquistas esperam por você no Nexa Quest.</p>
+        <p>Missões e desafios das trilhas esperam por você no Nexa Quest.</p>
         <a class="btn btn-sm" href="${root}${GAME_PAGE}" data-game>Acessar o jogo</a>
       </section>`;
     body.append(side);
@@ -554,20 +557,36 @@ function renderFooter() {
 </div>`;
 }
 
+/* Registrado ANTES de qualquer operação assíncrona (verificação de sessão): assim o envio nunca cai no
+   comportamento nativo do navegador (GET com nome, e-mail e mensagem na URL). Sem JavaScript, o formulário
+   usa method="post" e não expõe dados na URL. */
 function initContact() {
   const f = $('#form-contato'); if (!f) return;
-  const u = NP.currentUser(); if (u) { f.nome.value = u.nome_usuario; f.email.value = u.email; }
+  let sending = false;
+  addEventListener('sessionchecked', () => {
+    const u = NP.currentUser();
+    if (u && !f.nome.value && !f.email.value) { f.nome.value = u.nome_usuario; f.email.value = u.email; }
+  }, { once: true });
   f.addEventListener('submit', async e => {
     e.preventDefault();
+    if (sending) return;
     const ok = [NP.setErr(f.nome, f.nome.value.trim().length < 2 ? 'Informe seu nome.' : ''),
     NP.setErr(f.email, NP.isEmail(f.email.value.trim()) ? '' : 'Informe um e-mail válido.'),
     NP.setErr(f.assunto, f.assunto.value.trim().length < 3 ? 'Informe o assunto.' : ''),
     NP.setErr(f.msg, f.msg.value.trim().length < 10 ? 'Escreva ao menos 10 caracteres.' : '')].every(Boolean);
     if (!ok) return NP.status($('#contato-status'), 'Revise os campos destacados.', false);
-    const btn = $('button[type=submit]', f); btn.disabled = true;
-    const r = await NP.api('/mensagens', { method: 'POST', body: { nome: f.nome.value.trim(), email: f.email.value.trim(), assunto: f.assunto.value.trim(), msg: f.msg.value.trim() } });
-    btn.disabled = false;
-    if (!r.ok) return NP.status($('#contato-status'), r.data.mensagem || 'Não foi possível enviar a mensagem.', false);
+    const btn = $('button[type=submit]', f);
+    const label = btn.textContent;
+    sending = true; btn.disabled = true; btn.textContent = 'Enviando…'; f.setAttribute('aria-busy', 'true');
+    NP.status($('#contato-status'), 'Enviando sua mensagem…', true);
+    let r;
+    try {
+      r = await NP.api('/mensagens', { method: 'POST', body: { nome: f.nome.value.trim(), email: f.email.value.trim(), assunto: f.assunto.value.trim(), msg: f.msg.value.trim() } });
+    } catch { r = { ok: false, data: {} };
+    } finally {
+      sending = false; btn.disabled = false; btn.textContent = label; f.removeAttribute('aria-busy');
+    }
+    if (!r.ok) return NP.status($('#contato-status'), r.data?.mensagem || 'Não foi possível enviar a mensagem. Verifique sua conexão e tente novamente.', false);
     f.msg.value = f.assunto.value = '';
     NP.status($('#contato-status'), 'Mensagem enviada. Obrigado pelo contato!', true);
   });
@@ -605,7 +624,7 @@ function initRegister() {
     NP.status($('#cadastro-status'), 'Criando sua conta…', true);
     let completed = false;
     try {
-      const result = await NP.api('/usuarios', { method: 'POST', body: { nome_completo: nomeCompleto, nome_usuario: nomeUsuario, email, senha: f.senha.value, lembrar: true } });
+      const result = await NP.api('/usuarios', { method: 'POST', body: { nome_completo: nomeCompleto, nome_usuario: nomeUsuario, email, senha: f.senha.value } });
       if (!result.ok) {
         if (result.status === 409 && ['email', 'nome_usuario'].includes(result.data.campo)) {
           NP.setErr(f.elements.namedItem(result.data.campo), result.data.mensagem);
@@ -628,9 +647,6 @@ function initRegister() {
   });
 }
 
-// Token de vínculo (Google -> conta já existente com o mesmo e-mail); vive só na memória da página
-let googleVinculoPendente = null;
-
 function initLogin() {
   const f = $('#form-login'); if (!f) return;
   let submitting = false;
@@ -649,11 +665,8 @@ function initLogin() {
     NP.status($('#login-status'), 'Entrando…', true);
     let completed = false;
     try {
-      const body = { id_login: id, senha: f.senha.value, lembrar: f.lembrar.checked };
-      if (googleVinculoPendente) body.google_vinculo = googleVinculoPendente;
-      const result = await NP.api('/login', { method: 'POST', body });
+      const result = await NP.api('/login', { method: 'POST', body: { id_login: id, senha: f.senha.value, lembrar: f.lembrar.checked } });
       if (!result.ok) {
-        if (result.data.codigo) googleVinculoPendente = null;
         NP.status($('#login-status'), result.data.mensagem || 'Não foi possível entrar.', false);
         return;
       }
@@ -669,7 +682,6 @@ function initLogin() {
       }
     }
   });
-  initGoogleLogin(f);
 }
 
 const GAME_AFTER_LOGIN_KEY = 'nq_after_login';
@@ -684,107 +696,6 @@ function postLoginUrl() {
     sessionStorage.removeItem(GAME_AFTER_LOGIN_KEY);
   } catch { /* storage may be disabled */ }
   return next === 'jogo' ? 'jogo.html' : 'inicio.html';
-}
-
-/* Login com Google (Google Identity Services). O Client ID vem do backend (GOOGLE_CLIENT_ID) e o
-   servidor valida o ID Token; aqui só repassamos a credencial e reaproveitamos o mesmo JWT/sessão. */
-function initGoogleLogin(f) {
-  const fallback = $('#google-btn'), slot = $('#google-slot'), status = $('#login-status');
-  if (!fallback || !slot) return;
-  const state = { pronto: false, erro: '', ocupado: false, largura: 0 };
-  const aviso = (msg, ok = false) => NP.status(status, msg, ok);
-  const gsiPronto = () => !!(window.google && google.accounts && google.accounts.id);
-
-  const aguardarGsi = (limite = 10000) => new Promise(resolve => {
-    if (gsiPronto()) return resolve(true);
-    const inicio = Date.now();
-    const timer = setInterval(() => {
-      if (gsiPronto()) { clearInterval(timer); resolve(true); }
-      else if (Date.now() - inicio > limite) { clearInterval(timer); resolve(false); }
-    }, 100);
-  });
-
-  async function aoReceberCredencial(resposta) {
-    if (!resposta || !resposta.credential) return aviso('Não foi possível obter sua conta do Google. Tente novamente.');
-    if (state.ocupado) return;
-    state.ocupado = true;
-    aviso('Entrando com o Google…', true);
-    const lembrar = !!f.lembrar.checked;
-    const r = await NP.api('/auth/google', { method: 'POST', body: { credential: resposta.credential, lembrar } });
-    state.ocupado = false;
-    if (r.ok && r.data.usuario) {
-      try {
-        await NP.login();
-      } catch (error) {
-        return aviso(error.message);
-      }
-      aviso(r.data.novo_usuario ? 'Conta criada! Redirecionando…' : 'Entrando…', true);
-      location.href = postLoginUrl();
-      return;
-    }
-    if (r.status === 409 && r.data.codigo === 'conta_existente' && r.data.vinculo_token) {
-      // E-mail já cadastrado: nada é vinculado sem a senha da conta existente
-      googleVinculoPendente = r.data.vinculo_token;
-      if (r.data.email) f.id_login.value = r.data.email;
-      NP.setErr(f.id_login, ''); f.senha.value = ''; f.senha.focus();
-      return aviso(r.data.mensagem, true);
-    }
-    aviso(r.data.mensagem || 'Não foi possível entrar com o Google.');
-  }
-
-  function desenharBotao() {
-    const largura = Math.max(200, Math.min(400, Math.round(state.largura || f.clientWidth)));
-    slot.replaceChildren();
-    google.accounts.id.renderButton(slot, {
-      type: 'standard', theme: 'outline', size: 'large', text: 'continue_with',
-      shape: 'pill', logo_alignment: 'left', width: largura, locale: 'pt-BR',
-    });
-    slot.hidden = false; fallback.hidden = true;
-  }
-
-  async function iniciar() {
-    state.erro = '';
-    const cfg = await NP.api('/auth/google/config');
-    if (!cfg.ok || !cfg.data.client_id) {
-      state.erro = cfg.data.mensagem || 'O login com Google não está disponível no momento. Use e-mail e senha.';
-      return;
-    }
-    if (!await aguardarGsi()) {
-      state.erro = 'Não foi possível carregar o login do Google. Verifique sua conexão ou o bloqueador de conteúdo e tente novamente.';
-      return;
-    }
-    state.largura = fallback.getBoundingClientRect().width;
-    google.accounts.id.initialize({
-      client_id: cfg.data.client_id,
-      callback: aoReceberCredencial,
-      ux_mode: 'popup',
-      auto_select: false,
-      cancel_on_tap_outside: true,
-      itp_support: true,
-    });
-    desenharBotao();
-    state.pronto = true;
-    let ajuste;
-    window.addEventListener('resize', () => {
-      clearTimeout(ajuste);
-      ajuste = setTimeout(() => {
-        const nova = f.clientWidth;
-        if (nova && Math.abs(nova - state.largura) > 8) { state.largura = nova; desenharBotao(); }
-      }, 200);
-    });
-  }
-
-  let iniciando = null;
-  const garantir = () => (iniciando ||= iniciar().finally(() => { iniciando = null; }));
-  // Enquanto o Google não carrega (ex.: servidor "acordando"), o botão original continua no lugar
-  fallback.addEventListener('click', async () => {
-    if (state.pronto) return;
-    aviso('Conectando ao Google…', true);
-    await garantir();
-    if (!state.pronto) aviso(state.erro || 'Não foi possível carregar o login do Google. Tente novamente.');
-    else aviso('');
-  });
-  garantir();
 }
 
 function initHome() {
@@ -2534,8 +2445,11 @@ async function carregarSugestoesAmizade() {
   status.textContent = '';
 }
 
+let friendSearchController = null;
+let friendSearchId = 0;
 async function pesquisarAmigos(term) {
   const value = term.trim().replace(/^@/, '');
+  friendSearchController?.abort();
   const results = $('#friend-search-results');
   const status = $('#friends-search-status');
   friendSearchHasResults = value.length >= 2;
@@ -2548,10 +2462,15 @@ async function pesquisarAmigos(term) {
   }
   results.setAttribute('aria-busy', 'true');
   status.textContent = 'Pesquisando pessoas…';
-  const response = await NP.api(`/usuarios/buscar?q=${encodeURIComponent(value)}`);
+  // A7: só a pesquisa mais recente pode escrever na tela; as anteriores são canceladas
+  const id = ++friendSearchId;
+  friendSearchController = new AbortController();
+  const response = await NP.api(`/usuarios/buscar?q=${encodeURIComponent(value)}`, { signal: friendSearchController.signal });
+  if (id !== friendSearchId) return;
   results.setAttribute('aria-busy', 'false');
   if (!response.ok || !Array.isArray(response.data.usuarios)) {
-    status.textContent = response.data.mensagem || 'Não foi possível pesquisar usuários.';
+    results.replaceChildren();
+    status.textContent = response.data.mensagem || 'Não foi possível pesquisar usuários. Tente novamente.';
     return;
   }
   renderFriendList(results, response.data.usuarios, 'Nenhuma pessoa encontrada. Tente outro nome ou nome de usuário.');
@@ -2583,38 +2502,59 @@ function initProjectExplorer() {
   const more = $('#projects-load-more');
   const status = $('#projects-status');
   let cursor = null;
-  let loading = false;
+  let controller = null;
+  let requestId = 0;
+  const retryButton = () => {
+    const wrap = document.createElement('div');
+    wrap.className = 'project-empty';
+    const text = document.createElement('p');
+    text.textContent = 'Não foi possível carregar os projetos agora.';
+    const retry = document.createElement('button');
+    retry.type = 'button';
+    retry.className = 'btn btn-soft';
+    retry.textContent = 'Tentar novamente';
+    retry.addEventListener('click', () => load(true));
+    wrap.append(text, retry);
+    return wrap;
+  };
+  /* A6: cada consulta nova cancela a anterior e só a mais recente atualiza a tela. A categoria e a busca
+     são lidas no momento da chamada e guardadas junto com o pedido, então resultado e filtro nunca divergem. */
   const load = async (reset = false) => {
-    if (loading) return;
-    loading = true;
-    list.setAttribute('aria-busy', 'true');
-    more.disabled = true;
-    status.textContent = reset ? 'Carregando projetos públicos…' : 'Carregando mais projetos…';
-    if (reset) {
-      cursor = null;
-      list.replaceChildren();
-    }
+    if (!reset && controller) return; // "Carregar mais" não empilha pedidos
+    controller?.abort();
+    const id = ++requestId;
+    controller = new AbortController();
     const query = new URLSearchParams({ limite: '12' });
-    const busca = $('#project-search')?.value.trim();
-    const categoria = $('#project-category')?.value;
+    const busca = $('#project-search')?.value.trim() || '';
+    const categoria = $('#project-category')?.value || '';
     const proprietarioId = new URLSearchParams(location.search).get('usuario');
     if (busca) query.set('q', busca);
     if (categoria) query.set('categoria', categoria);
     if (proprietarioId) query.set('usuario', proprietarioId);
+    if (reset) { cursor = null; list.replaceChildren(); more.hidden = true; }
     if (cursor) query.set('cursor', cursor);
-    const response = await NP.api(`/projetos?${query}`);
-    loading = false;
+    list.setAttribute('aria-busy', 'true');
+    more.disabled = true;
+    status.textContent = reset ? 'Carregando projetos…' : 'Carregando mais projetos…';
+    const response = await NP.api(`/projetos?${query}`, { signal: controller.signal });
+    if (id !== requestId) return; // resposta antiga: descartada
+    controller = null;
     list.setAttribute('aria-busy', 'false');
     more.disabled = false;
     if (!response.ok || !Array.isArray(response.data.projetos)) {
       status.textContent = response.data.mensagem || 'Não foi possível carregar os projetos.';
+      if (reset) list.replaceChildren(retryButton());
       return;
     }
     response.data.projetos.forEach(project => list.append(projectCard(project)));
     cursor = response.data.proximoCursor || null;
     more.hidden = !cursor;
     status.textContent = '';
-    if (reset && response.data.projetos.length === 0) {
+    if (response.data.projetos.length || !reset) return;
+    if (busca || categoria) {
+      const partes = [categoria && `na categoria ${categoria}`, busca && `para “${busca}”`].filter(Boolean).join(' ');
+      list.append(projectEmpty('Nenhum projeto encontrado', `Não há projetos públicos ${partes}. Tente outro termo ou outra categoria.`));
+    } else {
       list.append(projectEmpty('Ainda não há projetos públicos.', 'Quando a comunidade publicar projetos, eles aparecerão aqui.', 'Criar um projeto', `${NP.root()}paginas/criar-projeto.html`));
     }
   };
@@ -2751,9 +2691,59 @@ function projectFormFields(form, project, editing) {
   }
 }
 
-function renderProjectDetails(project) {
+/* Convite para projeto privado: o servidor envia só o necessário para decidir (sem descrição, equipe ou
+   atualizações). Aqui o usuário aceita ou recusa; ao aceitar, a página recarrega com a visão completa. */
+function renderProjectInvite(project) {
   const root = $('#project-detail');
   root.setAttribute('aria-busy', 'false');
+  $('[data-project-title]').textContent = project.titulo;
+  $('[data-project-category]').textContent = project.categoria;
+  $('[data-project-visibility]').textContent = 'Privado';
+  $('[data-project-type]').textContent = project.tipo === 'equipe' ? 'Projeto em equipe' : 'Projeto individual';
+  const owner = $('[data-project-owner]');
+  owner.href = profileHref(project.proprietario);
+  owner.textContent = project.proprietario?.nome_exibicao || `@${project.proprietario?.nome_usuario || 'jogador'}`;
+  $('[data-project-description]').textContent = 'Este é um projeto privado. Aceite o convite para ver a descrição, a equipe e as atualizações.';
+  $('[data-project-cover]').hidden = true;
+  for (const selector of ['[data-project-external]', '[data-project-join]', '[data-project-cancel]', '[data-project-edit-toggle]', '#project-edit-panel', '.project-detail-grid']) {
+    const element = $(selector);
+    if (element) element.hidden = true;
+  }
+  const actions = $('.project-detail-actions');
+  actions.querySelector('[data-project-invite-answer]')?.remove();
+  const box = document.createElement('div');
+  box.className = 'project-detail-invite';
+  box.dataset.projectInviteAnswer = '';
+  const accept = document.createElement('button');
+  accept.type = 'button';
+  accept.className = 'btn';
+  accept.textContent = 'Aceitar convite';
+  const decline = document.createElement('button');
+  decline.type = 'button';
+  decline.className = 'btn-soft';
+  decline.textContent = 'Recusar';
+  const answer = async acao => {
+    accept.disabled = decline.disabled = true;
+    const response = await NP.api(`/projetos/${encodeURIComponent(project.id)}/participantes/${encodeURIComponent(NP.currentUser().id)}`, { method: 'PUT', body: { acao } });
+    if (!response.ok) {
+      accept.disabled = decline.disabled = false;
+      return NP.status($('#project-detail-status'), response.data.mensagem || 'Não foi possível responder ao convite.', false);
+    }
+    if (acao === 'aceitar') return carregarDetalheProjeto();
+    location.href = 'meus-projetos.html';
+  };
+  accept.addEventListener('click', () => answer('aceitar'));
+  decline.addEventListener('click', () => answer('recusar'));
+  box.append(accept, decline);
+  actions.append(box);
+}
+
+function renderProjectDetails(project) {
+  if (project.acesso === 'convite') return renderProjectInvite(project);
+  const root = $('#project-detail');
+  root.setAttribute('aria-busy', 'false');
+  root.querySelector('[data-project-invite-answer]')?.remove();
+  for (const selector of ['.project-detail-grid']) { const element = $(selector); if (element) element.hidden = false; }
   $('[data-project-title]').textContent = project.titulo;
   $('[data-project-description]').textContent = project.descricao;
   $('[data-project-category]').textContent = project.categoria;
@@ -2775,8 +2765,20 @@ function renderProjectDetails(project) {
   const join = $('[data-project-join]');
   const cancel = $('[data-project-cancel]');
   const state = project.participacao?.status;
-  const canRequest = !project.sou_proprietario && project.tipo === 'equipe' && project.visibilidade === 'publico' && !state;
+  // A11: depois de uma recusa é possível pedir de novo; o servidor define quando (intervalo mínimo)
+  const reopensAt = state === 'recusado' && project.participacao?.disponivel_em ? new Date(project.participacao.disponivel_em) : null;
+  const waiting = reopensAt && reopensAt.getTime() > Date.now();
+  const canRequest = !project.sou_proprietario && project.tipo === 'equipe' && project.visibilidade === 'publico' && (!state || state === 'recusado');
   join.hidden = !canRequest;
+  join.disabled = !!waiting;
+  if (canRequest && state === 'recusado') {
+    const hint = document.createElement('p');
+    hint.className = 'feed-status project-join-hint';
+    hint.textContent = waiting
+      ? `Sua última solicitação foi recusada. Você poderá pedir novamente em ${reopensAt.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}.`
+      : 'Sua última solicitação foi recusada. Você pode enviar uma nova.';
+    join.closest('.project-detail-actions').after(hint);
+  }
   cancel.hidden = !(!project.sou_proprietario && state === 'pendente' && project.participacao.origem === 'solicitacao');
   join.onclick = async () => {
     join.disabled = true;
@@ -2957,20 +2959,53 @@ async function responderParticipacaoProjeto(project, userId, acao) {
   );
 }
 
+/* A16: o título provisório "Carregando projeto…" nunca fica na tela depois de uma falha. */
+function renderProjectError(kind, message, retry) {
+  const root = $('#project-detail');
+  root.setAttribute('aria-busy', 'false');
+  $('[data-project-title]').textContent = kind === 'indisponivel' ? 'Projeto indisponível' : 'Não foi possível carregar o projeto';
+  for (const selector of ['[data-project-category]', '[data-project-visibility]', '[data-project-type]', '[data-project-cover]', '[data-project-external]', '[data-project-join]', '[data-project-cancel]', '[data-project-edit-toggle]', '#project-edit-panel', '.project-detail-grid']) {
+    const element = $(selector);
+    if (element) element.hidden = true;
+  }
+  $('[data-project-description]').textContent = message;
+  const actions = $('.project-detail-actions');
+  actions?.querySelector('[data-project-error-actions]')?.remove();
+  const box = document.createElement('div');
+  box.dataset.projectErrorActions = '';
+  if (retry) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'btn';
+    button.textContent = 'Tentar novamente';
+    button.addEventListener('click', retry);
+    box.append(button);
+  }
+  const back = document.createElement('a');
+  back.className = 'btn-soft';
+  back.href = 'explorar-projetos.html';
+  back.textContent = 'Ver projetos públicos';
+  box.append(back);
+  actions?.append(box);
+}
+
 async function carregarDetalheProjeto() {
   const id = new URLSearchParams(location.search).get('id');
   const root = $('#project-detail');
   const status = $('#project-detail-status');
   if (!id || !/^\d{1,18}$/.test(id) || BigInt(id) < 1n) {
-    root.setAttribute('aria-busy', 'false');
-    return NP.status(status, 'O identificador do projeto não é válido.', false);
+    return renderProjectError('indisponivel', 'O endereço deste projeto não é válido. Volte à lista de projetos e abra-o novamente.');
   }
   root.setAttribute('aria-busy', 'true');
+  $('[data-project-error-actions]')?.remove();
   const response = await NP.api(`/projetos/${encodeURIComponent(id)}`);
   if (!response.ok || !response.data.projeto) {
-    root.setAttribute('aria-busy', 'false');
-    return NP.status(status, response.data.mensagem || 'Não foi possível carregar este projeto.', false);
+    if (response.status === 404) {
+      return renderProjectError('indisponivel', 'Este projeto não existe, foi removido ou é privado e você não tem acesso a ele.');
+    }
+    return renderProjectError('erro', response.data.mensagem || 'Verifique sua conexão e tente novamente.', carregarDetalheProjeto);
   }
+  for (const selector of ['[data-project-category]', '[data-project-visibility]', '[data-project-type]']) { const element = $(selector); if (element) element.hidden = false; }
   $('.project-join-hint')?.remove();
   status.textContent = '';
   renderProjectDetails(response.data.projeto);
@@ -3274,6 +3309,7 @@ function initGameLinks() {
 document.addEventListener('DOMContentLoaded', async () => {
   initRegister();
   initLogin();
+  initContact();
   const user = await NP.loadUser();
   if ($('#form-login') && user) {
     location.replace(postLoginUrl());
@@ -3314,5 +3350,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     initHomeProjects();
     initFeed();
   }
-  initPlaceholders(); initContact(); initGameLinks();
+  initPlaceholders(); initGameLinks();
 });

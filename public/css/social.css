@@ -34,6 +34,7 @@
   --nq-nav-w: 256px;
   --nq-top: 64px;
   --nq-tab: 60px;
+  --nq-form-w: 880px;
 }
 
 *,
@@ -2989,9 +2990,23 @@ label {
 }
 
 /* ---------- Formulários ---------- */
+/* Criar projeto: o <main> é a coluna única da página. O texto introdutório e o cartão são filhos
+   dela e compartilham o mesmo eixo; a coluna se centraliza sozinha na área útil (à direita do menu
+   lateral) e encolhe com ela, sem margens fixas. O painel de edição em projeto.html reaproveita
+   .project-form-card, por isso o limite de 760px continua na regra base e só é liberado aqui. */
+body[data-page="projeto-criar"] .social-main {
+  width: 100%;
+  max-width: var(--nq-form-w);
+  justify-self: center;
+}
+
+body[data-page="projeto-criar"] .project-form-card {
+  max-width: none;
+}
+
 .project-form-card {
   max-width: 760px;
-  padding: 28px;
+  padding: 24px 28px;
   background: var(--nq-surface);
   border: 1px solid var(--nq-border);
   border-radius: var(--nq-r-lg);
@@ -3011,24 +3026,26 @@ label {
   gap: 1.25rem;
 }
 
+/* Ritmo: 20px de cada lado do divisor (o gap do formulário já dá os 20px de baixo),
+   16px entre campos e 12px da legenda ao primeiro campo. */
 .form-group {
   display: grid;
   gap: 1rem;
   min-width: 0;
   margin: 0;
-  padding: 0 0 1.5rem;
+  padding: 0 0 1.25rem;
   border: 0;
   border-bottom: 1px solid var(--nq-border);
 }
 
 .form-group:last-of-type {
-  padding-bottom: .25rem;
+  padding-bottom: 0;
   border-bottom: 0;
 }
 
 .form-group legend {
   padding: 0;
-  margin-bottom: 1rem;
+  margin-bottom: .75rem;
   font-family: var(--nq-display);
   font-size: 16px;
   font-weight: 600;
@@ -3099,6 +3116,18 @@ label {
   gap: 1rem;
 }
 
+/* Se um rótulo quebrar em duas linhas, os campos continuam na mesma linha de base. */
+.project-form-row {
+  align-items: end;
+}
+
+/* Categoria, formato e visibilidade lado a lado quando a coluna comporta; abaixo disso, 2 e depois 1 coluna. */
+@media (min-width: 761px) {
+  .project-form-row--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 .profile-form-wide {
   grid-column: 1 / -1;
 }
@@ -3109,6 +3138,17 @@ label {
   align-items: center;
   justify-content: flex-end;
   gap: .6rem;
+}
+
+/* Os botões nunca encolhem abaixo do rótulo: se faltar espaço (celular estreito, fonte ampliada),
+   a linha quebra em vez de cortar o texto. Ambos com a mesma altura, no mínimo de 44px de toque. */
+.project-form-actions {
+  flex-wrap: wrap;
+}
+
+.project-form-actions :is(.btn, .btn-soft) {
+  min-height: 44px;
+  min-width: max-content;
 }
 
 .profile-form-actions {
@@ -3613,6 +3653,12 @@ body[data-page="amigos"] .nq-search { display: none; }
     flex: 1;
   }
 
+  /* Foco, validação nativa e rolagem para um campo param acima da barra inferior fixa,
+     não debaixo dela. */
+  .project-form :is(input, select, textarea, button, .btn-soft) {
+    scroll-margin-bottom: calc(var(--nq-tab) + env(safe-area-inset-bottom, 0px) + 16px);
+  }
+
   .feed-action {
     min-height: 44px;
     min-width: 44px;
@@ -3892,4 +3938,42 @@ html.game-immersive body {
   .game-rotate {
     display: block;
   }
+}
+
+/* Painel de edição do projeto (antes: style="margin-top:1rem" inline, incompatível com CSP estrita) */
+#project-edit-panel { margin-top: 1rem; }
+
+/* ---------- Estatísticas do jogo: distribuição (A: indicadores agrupados, sem cartões isolados) ---------- */
+.game-stats-page { max-width: 1100px; }
+
+.game-stat-grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+.game-stat-grid .player-stat { width: auto; min-width: 0; }
+.game-completion-stat { order: 10; }
+
+/* Gráfico: poucas barras ficam juntas, no início do eixo, em vez de espalhadas pela largura toda. */
+.game-evolution-chart { justify-content: flex-start; }
+.game-chart-column { flex: 0 1 88px; }
+
+/* Aviso de recurso ainda indisponível: discreto, sem peso de cartão. */
+.game-level-panel {
+  padding: .75rem 1.25rem;
+  background: transparent;
+  border-style: dashed;
+}
+.game-level-panel .game-stats-section-heading { margin-bottom: .35rem; }
+
+@media (min-width: 1100px) {
+  .game-stats-page { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .game-stats-page > * { grid-column: 1 / -1; }
+  .game-stats-page > [data-game-evolution-section],
+  .game-stats-page > [data-game-achievements-section] { grid-column: span 1; }
+  .game-stats-page:has([data-game-achievements-section][hidden]) > [data-game-evolution-section],
+  .game-stats-page:has([data-game-evolution-section][hidden]) > [data-game-achievements-section] { grid-column: 1 / -1; }
+}
+
+/* Placeholders com contraste WCAG 2.2 AA nos dois temas (antes: cor padrão do navegador, 3,5:1 no escuro).
+   opacity: 1 evita que o Firefox clareie o texto de novo. */
+body[data-protected] :is(input, textarea)::placeholder {
+  color: var(--nq-placeholder, #5b6a84);
+  opacity: 1;
 }

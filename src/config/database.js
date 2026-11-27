@@ -8,6 +8,15 @@ const databaseSsl = {
   ...(databaseCa ? { ca: databaseCa } : {}),
 };
 
+// Sem a CA, a conexão continua criptografada, mas o certificado do servidor NÃO é verificado (risco de MITM).
+// Com a CA, rejectUnauthorized fica ativo. Nunca force rejectUnauthorized: false como solução permanente.
+if (databaseCa && !/-----BEGIN CERTIFICATE-----[\s\S]+-----END CERTIFICATE-----/.test(databaseCa)) {
+  console.error(JSON.stringify({
+    event: "database_ssl_ca_invalid_format",
+    remediation: "DATABASE_SSL_CA deve conter o certificado PEM completo (BEGIN/END CERTIFICATE); use \\n no lugar das quebras de linha.",
+  }));
+}
+
 if (process.env.NODE_ENV === "production" && !databaseCa) {
   console.warn(JSON.stringify({
     event: "database_tls_verification_disabled",

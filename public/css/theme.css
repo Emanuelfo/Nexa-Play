@@ -7,6 +7,7 @@ html[data-social-theme] {
   --nq-cyan: #50c9f5;
   --nq-ink: #142252;
   --nq-muted: #586781;
+  --nq-placeholder: #5b6a84; /* >= 4.5:1 sobre os campos claros */
   --nq-canvas: #f4f6fa;
   --nq-surface: #fff;
   --nq-soft: #eef2fb;
@@ -40,6 +41,7 @@ html[data-social-theme][data-theme="dark"] {
   --nq-cyan: #70dcff;
   --nq-ink: #e6edf8;
   --nq-muted: #a7b3c8;
+  --nq-placeholder: #a7b3c8; /* >= 4.5:1 sobre os campos escuros */
   --nq-canvas: #101722;
   --nq-surface: #182230;
   --nq-soft: #222e3e;
