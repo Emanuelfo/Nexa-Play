@@ -3,7 +3,6 @@
    Fredoka nos títulos e botões, Inter no texto.
    Princípios: menu lateral azul, fundo cinza muito claro, cards brancos com borda de 1px,
    raios de 12–16px, sem gradientes nem sombras decorativas, azul só para ação e navegação. */
-@import url('fontes.css');
 
 :root {
   --nq-navy: #091e5b;

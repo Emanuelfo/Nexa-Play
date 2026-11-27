@@ -1,0 +1,3 @@
+/* Carregada só dentro de <noscript>: sem JavaScript não há quem remova o preloader. */
+html.np-loading .np-preloader { display: none; }
+html.np-loading { background: none; }

@@ -1,0 +1,92 @@
+/* Tela de carregamento (preloader) do Nexa Quest.
+   Primeira folha do <head>: pequena, sem dependências e sem @import, para ser pintada antes das demais
+   (as folhas pesadas ficam no início do <body>, depois do preloader, e não atrasam este primeiro paint).
+   Identidade: navy sólido #091e5b, golfinho original e um anel discreto em âmbar. Sem degradê nem brilho.
+   O estado "carregando" vive em html.np-loading; sem a classe (ou sem a folha) nada é escondido.
+   Rede de segurança só em CSS: se o JavaScript falhar, o preloader some sozinho em 14 s. */
+
+html.np-loading { background: #091e5b; }
+
+.np-preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  background: #091e5b;
+  color: #fff;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  touch-action: none;
+  transition: opacity .24s ease-out, visibility 0s linear .24s;
+}
+
+html.np-loading .np-preloader {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: none;
+  animation: np-failsafe .01s linear 14s forwards;
+}
+
+.np-preloader__mark {
+  display: block;
+  width: clamp(88px, 24vmin, 132px);
+  height: auto;
+  aspect-ratio: 241 / 152;
+}
+
+.np-preloader__spinner {
+  width: 26px;
+  height: 26px;
+  box-sizing: border-box;
+  border: 3px solid rgb(255 255 255 / .2);
+  border-top-color: #ffc233;
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.np-preloader__hint {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+  margin: 0;
+  text-align: center;
+  font: 500 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: rgb(255 255 255 / .78);
+  opacity: 0;
+}
+
+.np-preloader__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@keyframes np-failsafe { to { opacity: 0; visibility: hidden; pointer-events: none; } }
+@keyframes np-show { to { opacity: 1; } }
+@keyframes np-spin { to { transform: rotate(360deg); } }
+
+/* O anel só aparece se a espera passar de ~250 ms (evita piscar em cargas rápidas); o aviso, após 6 s. */
+@media (prefers-reduced-motion: no-preference) {
+  html.np-loading .np-preloader__spinner {
+    animation: np-show .2s ease-out .25s forwards, np-spin .9s linear infinite;
+  }
+  html.np-loading .np-preloader__hint { animation: np-show .3s ease-out 6s forwards; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .np-preloader { transition-duration: .01s, 0s; transition-delay: 0s, .01s; }
+  html.np-loading .np-preloader__spinner { opacity: 1; }
+  html.np-loading .np-preloader__hint { animation: np-show .01s linear 6s forwards; }
+}

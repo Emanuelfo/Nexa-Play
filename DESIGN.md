@@ -170,6 +170,26 @@ O SVG do mascote nunca é editado.
 **Proibido.** Fade-up em texto, títulos, parágrafos, listas, botões e seções; *typing*, letras separadas,
 contadores, *blur-in*; parallax, *scroll-jacking*, cursor customizado; cards que levantam, brilham ou
 inclinam (hover só em botões, links e itens de área); glow, brilho pulsante, degradê giratório, partículas,
-orbes; botões ou ícones que pulsam ou balançam em loop; preloader, transição de página, confete; interações
+orbes; botões ou ícones que pulsam ou balançam em loop; transição de página, confete; interações
 acima de 700ms; animar `width`, `height`, `top/left`, `box-shadow`, `filter` ou `clip-path`;
 `will-change` amplo; `!important` fora do bloco de movimento reduzido.
+
+## Tela de carregamento (preloader)
+
+Única exceção ao catálogo de movimento, aprovada de forma explícita: serve a **todas** as páginas (públicas, login/cadastro e área logada) e existe só para que ninguém veja a interface incompleta.
+
+**Visual.** Fundo sólido navy `#091e5b`, o golfinho original `golfinho-fone.svg` centralizado e um anel de 26px em âmbar (`--sun`) girando em 0,9s. Sem degradê, brilho ou texto de marca. O anel só aparece após ~250ms (não pisca em cargas rápidas) e, depois de 6s, surge o aviso "Isso está demorando mais que o normal…". Com `prefers-reduced-motion: reduce` o anel fica parado e o fade vira troca imediata. Revelação por opacidade (240ms), sem atraso artificial.
+
+**Contrato por página.**
+1. `<html class="np-loading">`.
+2. `css/preloader.css` é a **única** folha no `<head>` (e `preloader-off.css` dentro de `<noscript>`). As demais folhas ficam no início do `<body>`, **depois** do `#np-preloader`: assim o preloader é pintado antes delas (um `<link>` no `<head>` bloqueia o primeiro paint).
+3. O `#np-preloader` é o primeiro filho do `<body>`.
+4. `js/preloader.js` é o primeiro script `defer`; `js/session-boot.js` (área logada e login) vem entre `functions.js` e `main.js`.
+Não há `<style>`, `<script>` ou `style=""` inline: a CSP `script-src 'self'; style-src 'self'` continua intacta.
+
+**Quando revela** (`NPLoader`, em `preloader.js`): boot do `main.js` concluído (sessão verificada e shell/rodapé montados; páginas públicas **não** esperam a sessão) + folhas carregadas + fontes e imagens essenciais do 1º viewport (nada com `loading="lazy"`; espera limitada a 2,5s e 3s) + perfil próprio (limitado a 1,5s). Listas e feeds **não** seguram o preloader: têm *skeleton* próprio. Interações pequenas nunca o exibem novamente.
+
+**Segurança contra travamento.** Revela após 12s no máximo; revela na hora se um script/folha falhar; e, se o JavaScript não rodar, o próprio CSS o remove em 14s. Com redirecionamento em curso (login com sessão, 401), o preloader permanece até a troca de página para não vazar a tela errada.
+
+**Ao criar uma página nova**, copie o cabeçalho e o início do `<body>` de uma página existente da mesma família; `tests/preloader.test.js` valida o contrato.
+

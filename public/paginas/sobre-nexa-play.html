@@ -1,19 +1,18 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html class="np-loading" lang="pt-BR">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="../css/preloader.css">
+  <noscript><link rel="stylesheet" href="../css/preloader-off.css"></noscript>
   <title>Sobre | Nexa Quest</title>
   <meta name="description"
     content="Conheça a equipe de estudantes que desenvolve o Nexa Quest e o propósito do projeto.">
   <link rel="icon" href="../assets/icones/favicon.svg">
   <link rel="preload" href="../assets/fontes/fredoka-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="../assets/fontes/nunito-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="../css/fontes.css">
-  <link rel="stylesheet" href="../css/publico.css">
-  <link rel="stylesheet" href="../css/public-header.css">
-  <link rel="stylesheet" href="../css/animacoes.css">
+  <script src="../js/preloader.js" defer></script>
   <script src="../js/functions.js" defer></script>
   <script src="../js/main.js" defer></script>
   <script src="../js/public-header.js" defer></script>
@@ -22,6 +21,16 @@
 </head>
 
 <body class="pub nx-public-page" data-page="sobre" data-root="../">
+  <div class="np-preloader" id="np-preloader" role="status" aria-live="polite">
+    <img class="np-preloader__mark" src="../assets/imagens/golfinho-fone.svg" alt="" width="241" height="152" decoding="async" fetchpriority="high">
+    <span class="np-preloader__spinner" aria-hidden="true"></span>
+    <span class="np-preloader__sr">Carregando…</span>
+    <p class="np-preloader__hint" aria-hidden="true">Isso está demorando mais que o normal…</p>
+  </div>
+  <link rel="stylesheet" href="../css/fontes.css">
+  <link rel="stylesheet" href="../css/publico.css">
+  <link rel="stylesheet" href="../css/public-header.css">
+  <link rel="stylesheet" href="../css/animacoes.css">
   <a class="sr-only" href="#conteudo">Ir para o conteúdo</a>
   <header class="nx-header" data-public-header></header>
 

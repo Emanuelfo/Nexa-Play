@@ -446,7 +446,7 @@ function renderSocialShell(host, user) {
     if (input) { event.preventDefault(); input.scrollIntoView({ block: 'center' }); input.focus(); }
   }));
 
-  loadOwnProfile().then(own => {
+  const ownProfileTask = loadOwnProfile().then(own => {
     if (!own) return;
     accountButton.replaceChildren(avatarEl(own, 34));
     $('[data-menu-name]').textContent = own.nome_exibicao || own.nome_usuario;
@@ -469,6 +469,8 @@ function renderSocialShell(host, user) {
       stats.hidden = !stats.childElementCount;
     }
   });
+  // Saudação, avatar e resumo fazem parte da 1ª renderização: o preloader os aguarda por até 1,5 s (nunca além).
+  window.NPLoader?.track(ownProfileTask, 1500);
 }
 
 /* Início: projetos mais recentes da comunidade (mesmo endpoint e mesmo card do Explorar). */
@@ -3307,48 +3309,61 @@ function initGameLinks() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  initRegister();
-  initLogin();
-  initContact();
-  const user = await NP.loadUser();
-  if ($('#form-login') && user) {
-    location.replace(postLoginUrl());
-    return;
-  }
-  document.documentElement.style.visibility = '';
-  dispatchEvent(new Event('sessionchecked'));
-  if (document.body.dataset.protected && !user) {
-    if (NP._sessionStatus === 401) {
-      if (document.body.dataset.page === 'jogo') rememberGameDestination();
-      location.replace(NP.root() + 'paginas/login.html');
+  const loader = window.NPLoader; // preloader: ausente se a página não o usar ou se ele falhar ao carregar
+  const isProtected = !!document.body.dataset.protected;
+  let keepLoader = false; // true quando a página vai navegar: o preloader fica até o navegador trocar de página
+  try {
+    initRegister();
+    initLogin();
+    initContact();
+    // Páginas públicas não dependem da sessão para a 1ª renderização: o rodapé nasce no estado "visitante"
+    // e é refeito se houver sessão. Assim a revelação não espera a API (que pode estar acordando no Render).
+    if (!isProtected && !$('#form-login')) { renderFooter(); loader?.release('app'); }
+    const user = await (NP._boot || NP.loadUser());
+    NP._boot = null;
+    if ($('#form-login') && user) {
+      keepLoader = true;
+      location.replace(postLoginUrl());
+      return;
     }
+    document.documentElement.style.visibility = '';
+    dispatchEvent(new Event('sessionchecked'));
+    if (isProtected && !user) {
+      if (NP._sessionStatus === 401) {
+        keepLoader = true;
+        if (document.body.dataset.page === 'jogo') rememberGameDestination();
+        location.replace(NP.root() + 'paginas/login.html');
+      }
+      else {
+        const message = document.createElement('p');
+        message.setAttribute('role', 'status');
+        message.textContent = 'Não foi possível verificar sua sessão. ';
+        const retry = document.createElement('button');
+        retry.textContent = 'Tentar novamente';
+        retry.addEventListener('click', () => location.reload());
+        message.append(retry);
+        document.querySelector('main').replaceChildren(message);
+      }
+      return;
+    }
+    renderHeader(); renderFooter();
+    const page = document.body.dataset.page;
+    if (page === 'jogo') initGame();
+    else if (page === 'estatisticas-jogo') initGameStats();
+    else if (page === 'amigos') initFriendsPage();
+    else if ($('#project-detail')) initProjectDetail();
+    else if (page === 'projeto-criar') initCreateProject();
+    else if (page === 'projetos-explorar') initProjectExplorer();
+    else if (page === 'meus-projetos') initMyProjects();
+    else if ($('#public-profile')) initPublicProfile();
+    else if ($('#perfil')) initProfile();
     else {
-      const message = document.createElement('p');
-      message.setAttribute('role', 'status');
-      message.textContent = 'Não foi possível verificar sua sessão. ';
-      const retry = document.createElement('button');
-      retry.textContent = 'Tentar novamente';
-      retry.addEventListener('click', () => location.reload());
-      message.append(retry);
-      document.querySelector('main').replaceChildren(message);
+      initHome();
+      initHomeProjects();
+      initFeed();
     }
-    return;
+    initPlaceholders(); initGameLinks();
+  } finally {
+    if (!keepLoader) loader?.release('app'); // sempre libera, mesmo se algo acima lançar erro
   }
-  renderHeader(); renderFooter();
-  const page = document.body.dataset.page;
-  if (page === 'jogo') initGame();
-  else if (page === 'estatisticas-jogo') initGameStats();
-  else if (page === 'amigos') initFriendsPage();
-  else if ($('#project-detail')) initProjectDetail();
-  else if (page === 'projeto-criar') initCreateProject();
-  else if (page === 'projetos-explorar') initProjectExplorer();
-  else if (page === 'meus-projetos') initMyProjects();
-  else if ($('#public-profile')) initPublicProfile();
-  else if ($('#perfil')) initProfile();
-  else {
-    initHome();
-    initHomeProjects();
-    initFeed();
-  }
-  initPlaceholders(); initGameLinks();
 });

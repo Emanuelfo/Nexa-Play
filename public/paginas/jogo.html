@@ -1,20 +1,33 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-social-theme data-theme="light">
+<html class="np-loading" lang="pt-BR" data-social-theme data-theme="light">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <link rel="stylesheet" href="../css/preloader.css">
+  <noscript><link rel="stylesheet" href="../css/preloader-off.css"></noscript>
+  <link rel="preload" href="../assets/fontes/fredoka-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../assets/fontes/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <script src="../js/theme.js"></script>
   <title>Jogo | Nexa Quest</title>
   <meta name="description" content="Jogue o NEXA QUEST diretamente na plataforma.">
   <link rel="icon" href="../assets/icones/favicon.svg">
-  <link rel="stylesheet" href="../css/social.css">
-  <link rel="stylesheet" href="../css/theme.css">
+  <script src="../js/preloader.js" defer></script>
   <script src="../js/functions.js" defer></script>
+  <script src="../js/session-boot.js" defer></script>
   <script src="../js/main.js" defer></script>
 </head>
 
 <body data-page="jogo" data-root="../" data-protected="1">
+  <div class="np-preloader" id="np-preloader" role="status" aria-live="polite">
+    <img class="np-preloader__mark" src="../assets/imagens/golfinho-fone.svg" alt="" width="241" height="152" decoding="async" fetchpriority="high">
+    <span class="np-preloader__spinner" aria-hidden="true"></span>
+    <span class="np-preloader__sr">Carregando…</span>
+    <p class="np-preloader__hint" aria-hidden="true">Isso está demorando mais que o normal…</p>
+  </div>
+  <link rel="stylesheet" href="../css/fontes.css">
+  <link rel="stylesheet" href="../css/social.css">
+  <link rel="stylesheet" href="../css/theme.css">
   <a class="sr-only" href="#conteudo">Ir para o conteúdo</a>
   <header data-component="header"></header>
   <main id="conteudo">
