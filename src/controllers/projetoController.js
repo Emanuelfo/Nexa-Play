@@ -6,14 +6,8 @@ const { REABERTURA_HORAS, aplicarAcesso, condicaoMeusProjetos } = require("../se
 
 const LIMITE_PADRAO = 12;
 const LIMITE_MAXIMO = 30;
-const CATEGORIAS = new Set([
-  "Jogos",
-  "Arte e design",
-  "Programação",
-  "Educação",
-  "Música",
-  "Outros",
-]);
+const { AREAS, CATEGORIAS_LEGADAS, ETAPAS } = require("../utils/socialMetadata");
+const CATEGORIAS = new Set([...AREAS, ...CATEGORIAS_LEGADAS]);
 
 function validarId(value) {
   return typeof value === "string" && /^\d{1,18}$/.test(value) && BigInt(value) > 0n;
@@ -60,25 +54,34 @@ function validarProjeto(body) {
   const visibilidade = body?.visibilidade;
   const tipo = body?.tipo;
   if (!titulo || titulo.length > 120) {
-    return { erro: "O título deve ter entre 1 e 120 caracteres." };
+    return { erro: "O título deve ter entre 1 e 120 caracteres.", campo: "titulo" };
   }
   if (!descricao || descricao.length > 5000) {
-    return { erro: "A descrição deve ter entre 1 e 5000 caracteres." };
+    return { erro: "A descrição deve ter entre 1 e 5000 caracteres.", campo: "descricao" };
   }
   if (!CATEGORIAS.has(categoria)) {
-    return { erro: "Selecione uma categoria válida." };
+    return { erro: "Selecione uma categoria válida.", campo: "categoria" };
   }
   if (!["publico", "privado"].includes(visibilidade)) {
-    return { erro: "Selecione se o projeto será público ou privado." };
+    return { erro: "Selecione se o projeto será público ou privado.", campo: "visibilidade" };
   }
   if (!["individual", "equipe"].includes(tipo)) {
-    return { erro: "Selecione se o projeto é individual ou de equipe." };
+    return { erro: "Selecione se o projeto é individual ou de equipe.", campo: "tipo" };
   }
+  const comoContribuir = body.como_contribuir == null ? null : body.como_contribuir;
+  const etapa = body.etapa || null;
+  const resumo = body.resumo == null ? null : body.resumo;
+  if (comoContribuir !== null && (typeof comoContribuir !== 'string' || comoContribuir.length > 1500)) return { erro: 'Descreva como contribuir em até 1.500 caracteres.', campo: 'como_contribuir' };
+  if (resumo !== null && (typeof resumo !== 'string' || resumo.length > 240)) return { erro: 'Escreva um resumo em até 240 caracteres.', campo: 'resumo' };
+  if (etapa && !ETAPAS.includes(etapa)) return { erro: 'Selecione uma etapa válida.', campo: 'etapa' };
   try {
     return {
       dados: {
         titulo,
         descricao,
+        como_contribuir: comoContribuir?.trim() || null,
+        resumo: resumo?.trim() || null,
+        etapa,
         categoria,
         visibilidade,
         tipo,
@@ -87,13 +90,13 @@ function validarProjeto(body) {
       },
     };
   } catch (erro) {
-    return { erro: erro.message };
+    return { erro: erro.message, campo: erro.message.includes("imagem") ? "imagem_url" : "link_externo" };
   }
 }
 
 const BASE_PROJETO = `
   SELECT p.id::text, p.titulo, p.descricao, p.imagem_url, p.categoria,
-    p.link_externo, p.visibilidade, p.tipo, p.criado_em, p.atualizado_em,
+    p.como_contribuir, p.etapa, p.resumo, p.link_externo, p.visibilidade, p.tipo, p.criado_em, p.atualizado_em,
     p.proprietario_id::text,
     json_build_object(
       'id', dono.id::text,
@@ -135,7 +138,11 @@ async function explorar(req, res) {
       ${BASE_PROJETO}
       WHERE p.visibilidade = 'publico'
         AND (:cursor IS NULL OR p.id < :cursor)
-        AND (:categoria IS NULL OR p.categoria = :categoria)
+        AND (:categoria IS NULL OR p.categoria = :categoria
+          OR (:categoria = 'Desenvolvimento de Sistemas' AND p.categoria = 'Programação')
+          OR (:categoria = 'Design' AND p.categoria = 'Arte e design')
+          OR (:categoria = 'Multimídia' AND p.categoria = 'Música')
+          OR (:categoria = 'Jogos Digitais' AND p.categoria = 'Jogos'))
         AND (:proprietarioId IS NULL OR p.proprietario_id = :proprietarioId)
         AND (:busca = '' OR p.titulo ILIKE :termo OR p.descricao ILIKE :termo)
       ORDER BY p.id DESC
@@ -194,19 +201,19 @@ async function meusProjetos(req, res) {
 
 async function criar(req, res) {
   const validacao = validarProjeto(req.body);
-  if (validacao.erro) return res.status(400).json({ mensagem: validacao.erro });
+  if (validacao.erro) return res.status(400).json({ mensagem: validacao.erro, campo: validacao.campo });
   try {
     const [projeto] = await sequelize.query(`
       INSERT INTO projetos (
         proprietario_id, titulo, descricao, imagem_url, categoria,
-        link_externo, visibilidade, tipo
+        link_externo, visibilidade, tipo, como_contribuir, etapa, resumo
       )
       VALUES (
         :usuarioId, :titulo, :descricao, :imagemUrl, :categoria,
-        :linkExterno, :visibilidade, :tipo
+        :linkExterno, :visibilidade, :tipo, :comoContribuir, :etapa, :resumo
       )
       RETURNING id::text, titulo, descricao, imagem_url, categoria,
-        link_externo, visibilidade, tipo, criado_em, atualizado_em
+        link_externo, visibilidade, tipo, como_contribuir, etapa, resumo, criado_em, atualizado_em
     `, {
       replacements: {
         usuarioId: req.usuario.id,
@@ -217,6 +224,9 @@ async function criar(req, res) {
         linkExterno: validacao.dados.link_externo,
         visibilidade: validacao.dados.visibilidade,
         tipo: validacao.dados.tipo,
+        comoContribuir: validacao.dados.como_contribuir,
+        etapa: validacao.dados.etapa,
+        resumo: validacao.dados.resumo,
       },
       type: QueryTypes.SELECT,
     });
@@ -320,7 +330,7 @@ async function atualizar(req, res) {
     return res.status(400).json({ mensagem: "Identificador de projeto inválido." });
   }
   const validacao = validarProjeto(req.body);
-  if (validacao.erro) return res.status(400).json({ mensagem: validacao.erro });
+  if (validacao.erro) return res.status(400).json({ mensagem: validacao.erro, campo: validacao.campo });
   try {
     if (validacao.dados.tipo === "individual") {
       const [integrantes] = await sequelize.query(`
@@ -355,6 +365,12 @@ async function atualizar(req, res) {
       linkExterno: validacao.dados.link_externo,
       visibilidade: validacao.dados.visibilidade,
       tipo: validacao.dados.tipo,
+      comoContribuir: validacao.dados.como_contribuir,
+      etapa: validacao.dados.etapa,
+      resumo: validacao.dados.resumo,
+      temContribuicao: Object.hasOwn(req.body, 'como_contribuir'),
+      temEtapa: Object.hasOwn(req.body, 'etapa'),
+      temResumo: Object.hasOwn(req.body, 'resumo'),
     };
     // Política ao tornar um projeto público em privado (A01):
     //  - participantes aceitos e convites pendentes do proprietário continuam valendo;
@@ -370,10 +386,13 @@ async function atualizar(req, res) {
         UPDATE projetos
         SET titulo = :titulo, descricao = :descricao, imagem_url = :imagemUrl,
           categoria = :categoria, link_externo = :linkExterno,
-          visibilidade = :visibilidade, tipo = :tipo
+          visibilidade = :visibilidade, tipo = :tipo,
+          como_contribuir = CASE WHEN :temContribuicao THEN :comoContribuir ELSE como_contribuir END,
+          etapa = CASE WHEN :temEtapa THEN :etapa ELSE etapa END,
+          resumo = CASE WHEN :temResumo THEN :resumo ELSE resumo END
         WHERE id = :projetoId AND proprietario_id = :usuarioId
         RETURNING id::text, titulo, descricao, imagem_url, categoria,
-          link_externo, visibilidade, tipo, criado_em, atualizado_em
+          link_externo, visibilidade, tipo, como_contribuir, etapa, resumo, criado_em, atualizado_em
       `, { replacements, type: QueryTypes.SELECT, transaction });
       let encerradas = 0;
       if (atual.visibilidade === "publico" && validacao.dados.visibilidade === "privado") {

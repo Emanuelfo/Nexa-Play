@@ -1,0 +1,24 @@
+✔ nivelAcesso diferencia proprietário, participante, convite, solicitação e estranho (0.9787ms)
+✔ projeto público é visível a qualquer usuário, mesmo com solicitação pendente ou recusada (0.1486ms)
+✔ convite para projeto privado recebe visão mínima, sem dados privados (0.1988ms)
+✔ GET /projetos/:id aplica a mesma regra para cada tipo de usuário em projeto privado (104.8835ms)
+✔ GET /me/projetos não entrega dados privados a quem só tem convite ou solicitação (8.8501ms)
+✔ tornar um projeto público em privado encerra solicitações pendentes e preserva equipe e convites (22.5635ms)
+✔ manter o projeto privado, ou torná-lo público, não apaga solicitações (9.6371ms)
+✔ quem não é proprietário não consegue editar nem alterar a visibilidade (5.2177ms)
+✔ solicitar participação: novo pedido, duplicados e reabertura após recusa (A11) (54.9019ms)
+✔ reconvidar usuário que recusou respeita o mesmo intervalo mínimo (6.4755ms)
+✔ habilidades são opcionais, limitadas e deduplicadas sem perder a grafia (1.5612ms)
+✔ busca permite apenas área, rejeita área inválida e parametriza habilidade (0.4778ms)
+✔ perfil salva habilidades, área e portfólio e preserva metadados omitidos por clientes antigos (1.1439ms)
+✔ perfil rejeita habilidades e links inválidos antes de gravar (0.2675ms)
+✔ criação aceita as quatro áreas e categorias antigas, persistindo as necessidades e a etapa (0.55ms)
+✔ projetos antigos funcionam sem novos campos e conteúdo inválido não é gravado (0.2483ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 748.0437

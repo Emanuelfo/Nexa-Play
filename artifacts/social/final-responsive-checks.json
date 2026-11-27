@@ -1,0 +1,291 @@
+[
+  {
+    "active": [
+      "Início"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "inicio",
+    "width": 360
+  },
+  {
+    "active": [
+      "Pessoas1"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "amigos",
+    "width": 360
+  },
+  {
+    "active": [
+      "Projetos"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "projetos-explorar",
+    "width": 360
+  },
+  {
+    "active": [
+      "Projetos"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "meus-projetos",
+    "width": 360
+  },
+  {
+    "active": [
+      "Perfil"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "perfil",
+    "width": 360
+  },
+  {
+    "active": [
+      "Pessoas1"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "perfil-publico",
+    "width": 360
+  },
+  {
+    "active": [
+      "Projetos"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "projeto-detalhe",
+    "width": 360
+  },
+  {
+    "active": [
+      "Projetos"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "projeto-criar",
+    "width": 360
+  },
+  {
+    "active": [
+      "Início"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "inicio",
+    "width": 390
+  },
+  {
+    "active": [
+      "Pessoas1"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "amigos",
+    "width": 390
+  },
+  {
+    "active": [
+      "Projetos"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "projetos-explorar",
+    "width": 390
+  },
+  {
+    "active": [
+      "Projetos"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "meus-projetos",
+    "width": 390
+  },
+  {
+    "active": [
+      "Perfil"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "perfil",
+    "width": 390
+  },
+  {
+    "active": [
+      "Pessoas1"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "perfil-publico",
+    "width": 390
+  },
+  {
+    "active": [
+      "Projetos"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "projeto-detalhe",
+    "width": 390
+  },
+  {
+    "active": [
+      "Projetos"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "projeto-criar",
+    "width": 390
+  },
+  {
+    "active": [
+      "Início"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "inicio",
+    "width": 430
+  },
+  {
+    "active": [
+      "Pessoas1"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "amigos",
+    "width": 430
+  },
+  {
+    "active": [
+      "Projetos"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "projetos-explorar",
+    "width": 430
+  },
+  {
+    "active": [
+      "Projetos"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "meus-projetos",
+    "width": 430
+  },
+  {
+    "active": [
+      "Perfil"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "perfil",
+    "width": 430
+  },
+  {
+    "active": [
+      "Pessoas1"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "perfil-publico",
+    "width": 430
+  },
+  {
+    "active": [
+      "Projetos"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "projeto-detalhe",
+    "width": 430
+  },
+  {
+    "active": [
+      "Projetos"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "projeto-criar",
+    "width": 430
+  },
+  {
+    "active": [
+      "Início"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "inicio",
+    "width": 1366
+  },
+  {
+    "active": [
+      "Pessoas1"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "amigos",
+    "width": 1366
+  },
+  {
+    "active": [
+      "Projetos"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "projetos-explorar",
+    "width": 1366
+  },
+  {
+    "active": [
+      "Meus projetos"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "meus-projetos",
+    "width": 1366
+  },
+  {
+    "active": [
+      "Meu perfil"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "perfil",
+    "width": 1366
+  },
+  {
+    "active": [
+      "Pessoas1"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "perfil-publico",
+    "width": 1366
+  },
+  {
+    "active": [
+      "Projetos"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "projeto-detalhe",
+    "width": 1366
+  },
+  {
+    "active": [
+      "Criar projeto",
+      "Projetos"
+    ],
+    "busy": 0,
+    "overflow": false,
+    "page": "projeto-criar",
+    "width": 1366
+  }
+]

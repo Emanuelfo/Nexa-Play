@@ -39,14 +39,18 @@
     </div>
     <p id="friends-page-status" class="feed-status" role="status" aria-live="polite"></p>
     <form id="friends-search-form" class="friends-search" role="search">
-      <label class="sr-only" for="friends-search-input">Buscar por nome ou nome de usuário</label>
-      <input id="friends-search-input" type="search" minlength="2" maxlength="100"
-        placeholder="Buscar por nome ou @usuário" autocomplete="off" required>
+      <label for="friends-search-input">Nome, @usuário ou habilidade
+        <input id="friends-search-input" type="search" maxlength="100" placeholder="Python, Godot, pixel art…" autocomplete="off">
+      </label>
+      <label for="friends-area">Área
+        <select id="friends-area"><option value="">Todas as áreas</option></select>
+      </label>
       <button class="btn" type="submit">Buscar</button>
+      <button class="btn-soft" type="button" id="friends-clear">Limpar filtros</button>
     </form>
+    <p id="friends-search-status" class="friends-status" role="status" aria-live="polite"></p>
     <section class="friends-block" id="friends-search-block" hidden>
       <h2>Resultados da busca</h2>
-      <p id="friends-search-status" class="friends-status" role="status" aria-live="polite"></p>
       <div id="friend-search-results" class="friends-list" aria-live="polite" hidden></div>
     </section>
 

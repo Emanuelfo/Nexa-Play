@@ -3,6 +3,8 @@ const sequelize = require("../config/database");
 const Usuario = require("../models/Usuario");
 const logErro = require("../utils/logErro");
 
+const { AREAS, validarCompetencias } = require("../utils/socialMetadata");
+
 const CAMPOS_PRIVACIDADE = [
   "mostrar_biografia",
   "mostrar_pontos",
@@ -52,7 +54,7 @@ async function obterAmizade(usuarioId, outroId) {
 
 async function lerPerfil(usuarioId, viewerId, proprio) {
   const [usuario] = await sequelize.query(`
-    SELECT id, nome_usuario, nome_exibicao, biografia, avatar_url, capa_url,
+    SELECT id, nome_usuario, nome_exibicao, biografia, avatar_url, capa_url, area, habilidades, portfolio_url,
       email, pontos, criado_em, perfil_publico, mostrar_biografia,
       mostrar_pontos, mostrar_amigos, mostrar_conquistas, mostrar_progresso
     FROM usuarios
@@ -183,6 +185,9 @@ async function lerPerfil(usuarioId, viewerId, proprio) {
 
   const mostrar = campo => proprio || usuario[campo];
   if (proprio) perfil.email = usuario.email;
+  perfil.area = usuario.area || null;
+  perfil.habilidades = usuario.habilidades || [];
+  perfil.portfolio_url = usuario.portfolio_url || null;
   perfil.biografia = mostrar("mostrar_biografia") ? usuario.biografia : null;
   perfil.privacidade = proprio
     ? {
@@ -248,13 +253,13 @@ async function atualizarMeuPerfil(req, res) {
   const biografia = typeof corpo.biografia === "string" ? corpo.biografia.trim() : null;
 
   if (nomeExibicao.length < 1 || nomeExibicao.length > 100) {
-    return res.status(400).json({ mensagem: "O nome deve ter entre 1 e 100 caracteres." });
+    return res.status(400).json({ mensagem: "O nome deve ter entre 1 e 100 caracteres.", campo: "nome_exibicao" });
   }
   if (!/^[a-z0-9_]{3,30}$/.test(nomeUsuario)) {
-    return res.status(400).json({ mensagem: "O nome de usuário deve ter de 3 a 30 caracteres: letras, números ou _." });
+    return res.status(400).json({ mensagem: "O nome de usuário deve ter de 3 a 30 caracteres: letras, números ou _.", campo: "nome_usuario" });
   }
   if (biografia === null || biografia.length > 500) {
-    return res.status(400).json({ mensagem: "A biografia deve ter até 500 caracteres." });
+    return res.status(400).json({ mensagem: "A biografia deve ter até 500 caracteres.", campo: "biografia" });
   }
 
   const privacidade = corpo.privacidade;
@@ -264,13 +269,24 @@ async function atualizarMeuPerfil(req, res) {
     return res.status(400).json({ mensagem: "Selecione as opções de privacidade do perfil." });
   }
 
+  let habilidades;
+  let portfolioUrl;
+  const area = corpo.area === undefined ? undefined : (corpo.area || null);
+  if (area && !AREAS.includes(area)) return res.status(400).json({ mensagem: "Selecione uma das quatro áreas.", campo: "area" });
+  try {
+    habilidades = validarCompetencias(corpo.habilidades);
+    portfolioUrl = corpo.portfolio_url === undefined ? undefined : validarUrlImagem(corpo.portfolio_url, "O portfólio");
+  } catch (erro) {
+    return res.status(400).json({ mensagem: erro.message, campo: /habilidades/.test(erro.message) ? "habilidades" : "portfolio_url" });
+  }
+
   let avatarUrl;
   let capaUrl;
   try {
     avatarUrl = validarUrlImagem(corpo.avatar_url, "A foto de perfil");
     capaUrl = validarUrlImagem(corpo.capa_url, "A imagem de capa");
   } catch (erro) {
-    return res.status(400).json({ mensagem: erro.message });
+    return res.status(400).json({ mensagem: erro.message, campo: erro.message.includes("foto") ? "avatar_url" : "capa_url" });
   }
 
   try {
@@ -278,7 +294,7 @@ async function atualizarMeuPerfil(req, res) {
       where: sequelize.where(sequelize.fn("lower", sequelize.col("nome_usuario")), nomeUsuario),
     });
     if (duplicado && String(duplicado.id) !== String(req.usuario.id)) {
-      return res.status(409).json({ mensagem: "Esse nome de usuário já está em uso." });
+      return res.status(409).json({ mensagem: "Esse nome de usuário já está em uso.", campo: "nome_usuario" });
     }
 
     const usuario = await Usuario.findByPk(req.usuario.id);
@@ -287,6 +303,9 @@ async function atualizarMeuPerfil(req, res) {
       nome_exibicao: nomeExibicao,
       nome_usuario: nomeUsuario,
       biografia,
+      ...(area !== undefined ? { area } : {}),
+      ...(habilidades !== undefined ? { habilidades } : {}),
+      ...(portfolioUrl !== undefined ? { portfolio_url: portfolioUrl } : {}),
       avatar_url: avatarUrl,
       capa_url: capaUrl,
       perfil_publico: privacidade.perfil_publico,
@@ -297,7 +316,7 @@ async function atualizarMeuPerfil(req, res) {
     return res.json({ usuario: perfil, mensagem: "Perfil atualizado." });
   } catch (erro) {
     if (erro.name === "SequelizeUniqueConstraintError" || erro.code === "23505") {
-      return res.status(409).json({ mensagem: "Esse nome de usuário já está em uso." });
+      return res.status(409).json({ mensagem: "Esse nome de usuário já está em uso.", campo: "nome_usuario" });
     }
     logErro("profile_update_error", req, erro);
     return res.status(500).json({ mensagem: "Não foi possível salvar o perfil." });
@@ -411,6 +430,8 @@ async function listarAmizades(req, res) {
         u.nome_usuario,
         u.nome_exibicao,
         CASE WHEN u.perfil_publico OR a.status = 'aceita' THEN u.avatar_url ELSE NULL END AS avatar_url,
+        CASE WHEN u.perfil_publico OR a.status = 'aceita' THEN u.area ELSE NULL END AS area,
+        CASE WHEN u.perfil_publico OR a.status = 'aceita' THEN u.habilidades ELSE ARRAY[]::text[] END AS habilidades,
         a.status AS status_relacao,
         CASE
           WHEN a.status = 'aceita' THEN 'amigos'
@@ -443,7 +464,9 @@ async function listarAmizades(req, res) {
 
 async function buscarUsuarios(req, res) {
   const termo = typeof req.query.q === "string" ? req.query.q.trim().slice(0, 100) : "";
-  if (termo.length < 2) {
+  const area = typeof req.query.area === "string" ? req.query.area : "";
+  if (area && !AREAS.includes(area)) return res.status(400).json({ mensagem: "Selecione uma das quatro áreas." });
+  if (termo.length < 2 && !area) {
     return res.status(400).json({ mensagem: "Digite pelo menos 2 caracteres para pesquisar." });
   }
   try {
@@ -453,6 +476,8 @@ async function buscarUsuarios(req, res) {
         u.nome_usuario,
         u.nome_exibicao,
         CASE WHEN u.perfil_publico OR a.status = 'aceita' THEN u.avatar_url ELSE NULL END AS avatar_url,
+        CASE WHEN u.perfil_publico OR a.status = 'aceita' THEN u.area ELSE NULL END AS area,
+        CASE WHEN u.perfil_publico OR a.status = 'aceita' THEN u.habilidades ELSE ARRAY[]::text[] END AS habilidades,
         CASE
           WHEN a.status = 'aceita' THEN 'amigos'
           WHEN a.status = 'pendente' AND a.solicitante_id = :usuarioId THEN 'enviada'
@@ -464,16 +489,22 @@ async function buscarUsuarios(req, res) {
         ON LEAST(a.solicitante_id, a.destinatario_id) = LEAST(CAST(:usuarioId AS bigint), u.id)
        AND GREATEST(a.solicitante_id, a.destinatario_id) = GREATEST(CAST(:usuarioId AS bigint), u.id)
       WHERE u.id <> :usuarioId
-        AND (
+        AND (:area = '' OR ((u.perfil_publico OR a.status = 'aceita') AND u.area = :area))
+        AND (:busca = '' OR (
           u.nome_usuario ILIKE :termo
           OR u.nome_exibicao ILIKE :termo
-        )
+          OR ((u.perfil_publico OR a.status = 'aceita') AND (
+            u.area ILIKE :termo
+            OR array_to_string(u.habilidades, ' ') ILIKE :termo
+            OR (u.mostrar_biografia AND u.biografia ILIKE :termo)
+          ))
+        ))
       ORDER BY
         CASE WHEN a.status = 'aceita' THEN 0 WHEN a.status = 'pendente' THEN 1 ELSE 2 END,
         lower(u.nome_usuario)
       LIMIT 30
     `, {
-      replacements: { usuarioId: req.usuario.id, termo: `%${termo}%` },
+      replacements: { usuarioId: req.usuario.id, busca: termo, termo: `%${termo}%`, area },
       type: QueryTypes.SELECT,
     });
     return res.json({ usuarios });
@@ -486,7 +517,7 @@ async function buscarUsuarios(req, res) {
 async function sugerirUsuarios(req, res) {
   try {
     const usuarios = await sequelize.query(`
-      SELECT u.id::text, u.nome_usuario, u.nome_exibicao, u.avatar_url,
+      SELECT u.id::text, u.nome_usuario, u.nome_exibicao, u.avatar_url, u.area, u.habilidades,
         'desconhecido' AS relacao
       FROM usuarios u
       WHERE u.id <> :usuarioId

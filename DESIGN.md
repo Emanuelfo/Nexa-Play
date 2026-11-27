@@ -1,7 +1,7 @@
 ---
 version: alpha
 name: Nexa Quest
-description: Uma plataforma educacional de criação prática e colaborativa, com identidade própria: ilustração autoral, cor sólida e botões "adesivo".
+description: 'Uma plataforma educacional de criação prática e colaborativa, com identidade própria: ilustração autoral, cor sólida e botões adesivo.'
 colors:
   primary: "#1f5eff"
   ink: "#091e5b"
@@ -110,14 +110,40 @@ Mantêm estrutura e composição. `auth-refino.css` apenas alinha os botões à 
 
 Aplica-se às páginas autenticadas (`data-protected`): início, explorar, meus projetos, criar/detalhe de projeto, perfil, pessoas e atividade no jogo. Estilos em `public/css/social.css` e `theme.css`; estrutura montada por `renderSocialShell` em `public/js/main.js`.
 
-- **Estrutura:** menu lateral azul (`#2457eb`, 256px; 76px só com ícones no tablet; barra inferior no celular), cabeçalho branco de 64px (título da página, busca de pessoas, tema, conta) e área principal cinza `#f4f6fa` com cards brancos.
+- **Estrutura:** menu lateral azul (`#2457eb`, 232px; 76px só com ícones no tablet; barra inferior no celular), cabeçalho branco de 64px (título da página, busca de pessoas, tema, conta) e área principal cinza `#f4f6fa` com cards brancos.
 - **Identidade herdada da landing:** azul `#2457eb`, azul pressionado `#1644bf`, tinta `#091e5b`, Fredoka em títulos e botões, Inter no texto (fontes hospedadas via `fontes.css`), botão primário com "base" de 3px, logo branco no menu e golfinho original.
 - **Raios e sombras:** 12px em controles e cards comuns, 16px em cards grandes; sem gradientes, glow ou sombras decorativas (só o menu da conta e a busca têm sombra leve).
 - **Cards diferenciados por função:** projeto (área, título, resumo, autoria), publicação (lista com divisores), equipe (lista), atualizações (linha do tempo), estatística (tile) e solicitações pendentes (bloco em tom suave).
 - **Botões:** primário (`.btn`), secundário (`.btn-soft`), discreto (`.profile-text-button`), `:disabled` e carregando (`.is-loading`, via `setBusy()` em `main.js`).
 - **Tokens de tema:** `--nq-heading` (títulos), `--nq-nav-*` (menu). Em modo escuro o menu usa `#1a3a82`.
-- **Ação principal:** "Criar projeto" fica no topo do menu lateral. No celular a barra inferior tem 5 itens (Início, Explorar, **Jogo** em destaque no centro, Pessoas, Perfil) e a ação aparece no cabeçalho de Explorar e Meus projetos, na Início, no Perfil e no menu da conta. Publicar uma postagem continua no campo da Início.
-- **Sem dados novos:** não há notificações, áreas de interesse, habilidades, nível ou XP no backend; a interface não finge essas informações.
+- **Ação principal:** "Criar projeto" fica no topo do menu lateral. No celular, cinco destinos com a mesma largura: Início, Projetos, Jogo, Pessoas e Perfil. O destino ativo usa fundo, ícone e texto; a criação aparece na área de projetos. Publicar continua no campo da Início.
+- **Comunidade primeiro:** saudação de uma linha, compositor e feed no desktop. Coluna direita de 300px: projetos recentes (três itens), pessoas com habilidades, progresso compacto e acesso ao jogo com o SVG original inteiro. No celular não há saudação; os projetos entram depois de duas publicações (até dois itens), pessoas ficam em Pessoas e progresso no Perfil.
+- **Dados:** área, habilidades e portfólio são opcionais e respeitam a visibilidade do perfil. Projetos têm resumo, etapa e como contribuir opcionais. As quatro áreas são prioritárias; categorias antigas permanecem em um disclosure. Não há notificações, nível ou XP inventados.
+- **Proporção e leitura:** feed limitado a 720px, texto de 16px, ações de 44px; rótulos de compartilhamento podem ser omitidos a 360px, mantendo nome acessível. Sem malha de pontos ou elevação dos cartões. Cartões de apoio usam divisores e fundo transparente.
+- **Perfil:** identidade, biografia, área, habilidades e portfólio no topo; publicações e projetos nas primeiras abas. Pontos e jornada ficam em Atividade. Conquistas mantêm a aba existente.
+
+### Fonte e mapeamento de tokens sociais
+
+O modelo de propriedade é runtime canônico: `public/css/social.css :root` define cores, tipografia, raios e dimensões; `theme.css` adapta os papéis semânticos aos temas. Este documento registra a intenção. A landing continua com `publico.css`.
+
+| Papel | Token / proprietário | Consumidores |
+|---|---|---|
+| Marca e ação | `--nq-blue`, `--nq-blue-dark` / social.css + theme.css | `.btn`, links e estado ativo |
+| Texto / apoio | `--nq-ink`, `--nq-heading`, `--nq-muted` | feed, projetos, pessoas, formulários |
+| Superfícies | `--nq-surface`, `--nq-soft`, `--nq-canvas`, `--nq-border` | shell, listas e divisores |
+| Estado | `--nq-ok`, `--nq-bad`, `--nq-like` | disponibilidade, erros e curtida |
+| Tipografia | `--nq-font` Inter, `--nq-display` Fredoka | corpo / títulos e controles |
+| Geometria | `--nq-nav-w` 232px, `--nq-r` 12px, `--nq-r-lg` 16px | shell e componentes compartilhados |
+
+Comportamentos canônicos e evidências: [UX-CONTRACT.md](UX-CONTRACT.md).
+
+### Reconciliação desta alteração
+
+| Regra | Evidência anterior | Resolução |
+|---|---|---|
+| Sem sombras decorativas | theme.css acrescentava sombras, pontos e elevação no hover | Removido o bloco decorativo, mantidos foco e sombras dos menus |
+| Criação global e comunidade em destaque | CTA repetido e projetos antes do compositor | Reorganizado conforme o fluxo da comunidade |
+| Apenas dados disponíveis | Habilidades e contribuição inexistentes | Migração aditiva; campos opcionais, sem preencher perfis antigos |
 
 
 ## Motion

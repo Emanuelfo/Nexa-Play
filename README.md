@@ -268,3 +268,16 @@ Nunca versione o `.env`. Use `.env.example` como modelo.
 - Sistema de denúncias, bloqueios e moderação.
 - Mudanças estruturais de grande porte no banco (por exemplo, remover as colunas do Google em uma migração planejada).
 - Imagens possivelmente sem uso, a confirmar antes de remover: `estudante.png`, `parceiros.png`, `parceiros-orbita.png/.webp` (não são referenciadas por HTML, CSS ou JS).
+
+
+## Comunidade e colaboração (27/11/2026)
+
+A área logada usa o shell, feed, cartões e formulários compartilhados de `public/js/main.js` e os tokens de `public/css/social.css` / `theme.css`. O contrato está em `UX-CONTRACT.md` e a direção visual em `DESIGN.md`.
+
+Antes de publicar este backend em outro banco, execute `db/migrations/20261127_colaboracao_social.sql` (ou o schema completo atualizado). A migração é aditiva e idempotente: adiciona `usuarios.area`, `usuarios.habilidades` (array de textos, vazio por padrão), `usuarios.portfolio_url`, `projetos.resumo`, `projetos.etapa` e `projetos.como_contribuir`, sem reescrever dados antigos. Ela foi aplicada ao banco conectado durante esta implementação; outros ambientes precisam recebê-la antes do backend.
+
+A edição do perfil aceita até 12 habilidades de 40 caracteres e portfólio HTTPS; campos públicos respeitam a privacidade global do perfil. `GET /api/usuarios/buscar?q=Godot&area=Jogos%20Digitais` considera nome, usuário, área, habilidades e biografia visível. Também aceita filtro por área sem termo. Informações ocultas não entram no resultado nem na busca. As quatro áreas são Desenvolvimento de Sistemas, Design, Multimídia e Jogos Digitais.
+
+Criação e edição de projetos aceitam resumo opcional (240 caracteres), como contribuir (1.500) e etapa opcional. Categorias antigas continuam válidas; filtros das novas áreas incluem Programação em Sistemas, Arte e design em Design, Música em Multimídia e Jogos em Jogos Digitais. Disponibilidade significa que um projeto público de equipe aceita solicitações, conforme o controle de participação existente.
+
+O servidor de QA pode usar dados inteiramente fictícios: `SOCIAL_FIXTURES=1` com `tests/e2e/mock-server.mjs`. O servidor de produção nunca importa essas fixtures. Testes específicos: `node --test tests/social-colaboracao.test.js tests/projetos-acesso.test.js`. Evidências de navegador: `artifacts/social/`.

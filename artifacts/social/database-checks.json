@@ -1,0 +1,9 @@
+{
+  "databaseIntegration": "passed",
+  "migrationColumns": 6,
+  "profilePersistence": "passed in previous transactional run",
+  "skillSearchPrivacy": "passed in previous transactional run",
+  "projectCreateReadEdit": "passed",
+  "legacyUpdatePreservesMetadata": "passed",
+  "testFixtures": "rolled back"
+}

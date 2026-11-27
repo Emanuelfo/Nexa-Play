@@ -2,6 +2,142 @@
 const GAME_PAGE = 'paginas/jogo.html'; // Jogo incorporado (URL entregue por GET /api/jogo somente a sessões válidas)
 const { $, $$ } = NP;
 
+// Shared vocabulary and controls for every authenticated social screen.
+const NQ_AREAS = ['Desenvolvimento de Sistemas', 'Design', 'Multimídia', 'Jogos Digitais'];
+const NQ_LEGACY_CATEGORIES = ['Jogos', 'Arte e design', 'Programação', 'Educação', 'Música', 'Outros'];
+const NQ_STAGES = ['Ideia', 'Em desenvolvimento', 'Em testes', 'Concluído'];
+const areaOptions = () => NQ_AREAS.map(area => `<option>${area}</option>`).join('');
+
+function skillList(person, limit = 12) {
+  const list = document.createElement('ul');
+  list.className = 'nq-skills';
+  list.setAttribute('aria-label', 'Habilidades');
+  (Array.isArray(person.habilidades) ? person.habilidades : []).slice(0, limit).forEach(skill => {
+    const item = document.createElement('li');
+    item.textContent = skill;
+    list.append(item);
+  });
+  list.hidden = !list.childElementCount;
+  return list;
+}
+
+function projectSummary(project) {
+  if (project.resumo) return project.resumo;
+  const firstParagraph = (project.descricao || '').split(/\n\s*\n/)[0];
+  // Retain a complete sentence for legacy records, never a CSS-clipped fragment.
+  return firstParagraph.match(/^.*?[.!?](?:\s|$)/)?.[0].trim() || firstParagraph;
+}
+
+function prepareSocialForm(form) {
+  form.noValidate = true;
+  [...form.elements].filter(field => field.matches('input:not([type=checkbox]), textarea, select')).forEach((field, index) => {
+    if (!field.id) field.id = `${form.id}-field-${index}`;
+    if (!document.getElementById(`${field.id}-err`)) {
+      const error = document.createElement('small');
+      error.id = `${field.id}-err`;
+      error.className = 'field-error';
+      field.after(error);
+    }
+    if (!field.dataset.validationReady) {
+      field.addEventListener('input', () => NP.setErr(field, ''));
+      field.dataset.validationReady = '1';
+    }
+  });
+}
+
+function validateSocialForm(form) {
+  let valid = true;
+  [...form.elements].filter(field => field.matches('input:not([type=checkbox]), textarea, select')).forEach(field => {
+    let message = '';
+    if (field.required && !field.value.trim()) message = 'Preencha este campo para continuar.';
+    else if (field.validity.patternMismatch || field.validity.tooShort) message = 'Confira o formato e a quantidade de caracteres indicados.';
+    else if (field.maxLength > 0 && field.value.length > field.maxLength) message = `Use até ${field.maxLength} caracteres.`;
+    else if (field.type === 'url' && field.value && !safeHttpsUrl(field.value)) message = 'Use um endereço completo com https://, sem usuário ou senha.';
+    if (field.name === 'habilidades') {
+      const skills = field.value.split(',').map(s => s.trim()).filter(Boolean);
+      if (skills.length > 12 || skills.some(s => s.length > 40)) message = 'Use até 12 habilidades de até 40 caracteres, separadas por vírgula.';
+    }
+    NP.setErr(field, message);
+    if (message) valid = false;
+  });
+  if (!valid) NP.focusFirstInvalid(form);
+  return valid;
+}
+
+function socialFormError(form, response, status) {
+  const message = response.data.mensagem || 'Não foi possível salvar. Confira sua conexão e tente novamente; seu texto foi mantido.';
+  NP.status(status, message, false);
+  const field = form.elements.namedItem(response.data.campo);
+  if (field) { NP.setErr(field, message); field.focus(); }
+}
+
+function mountSocialDialog(dialog) {
+  const origin = document.activeElement;
+  const previousScroll = window.scrollY;
+  dialog.className = 'nq-dialog';
+  document.body.append(dialog);
+  document.documentElement.classList.add('nq-modal-open');
+  dialog.addEventListener('close', () => {
+    dialog.remove();
+    document.documentElement.classList.remove('nq-modal-open');
+    origin?.focus({ preventScroll: true });
+    window.scrollTo({ top: previousScroll, behavior: 'instant' });
+  }, { once: true });
+  dialog.showModal();
+}
+
+function confirmSocialAction(message) {
+  return new Promise(resolve => {
+    const dialog = document.createElement('dialog');
+    dialog.setAttribute('aria-labelledby', 'social-confirm-title');
+    const title = document.createElement('h2'); title.id = 'social-confirm-title'; title.textContent = 'Confirmar alteração';
+    const text = document.createElement('p'); text.textContent = message;
+    const actions = document.createElement('div'); actions.className = 'project-form-actions';
+    const cancel = document.createElement('button'); cancel.className = 'btn-soft'; cancel.textContent = 'Cancelar'; cancel.autofocus = true;
+    const accept = document.createElement('button'); accept.className = 'btn'; accept.textContent = 'Confirmar';
+    actions.append(cancel, accept); dialog.append(title, text, actions);
+    dialog.addEventListener('close', () => resolve(dialog.returnValue === 'confirmar'), { once: true });
+    cancel.onclick = () => dialog.close(); accept.onclick = () => dialog.close('confirmar');
+    mountSocialDialog(dialog);
+  });
+}
+
+function shareSocialPost(data) {
+  const dialog = document.createElement('dialog');
+  dialog.setAttribute('aria-labelledby', 'social-share-title');
+  const title = document.createElement('h2'); title.id = 'social-share-title'; title.textContent = 'Compartilhar publicação';
+  const hint = document.createElement('p'); hint.textContent = 'Envie este link para quem tem uma conta Nexa Quest. As regras de privacidade da publicação continuam valendo.';
+  const label = document.createElement('label'); label.className = 'nq-share-label'; label.textContent = 'Link da publicação';
+  const input = document.createElement('input'); input.type = 'url'; input.readOnly = true; input.value = data.url; input.autofocus = true; label.append(input);
+  const status = document.createElement('p'); status.className = 'feed-status'; status.setAttribute('role', 'status');
+  const actions = document.createElement('div'); actions.className = 'project-form-actions';
+  const close = document.createElement('button'); close.type = 'button'; close.className = 'btn-soft'; close.textContent = 'Fechar'; close.onclick = () => dialog.close();
+  const copy = document.createElement('button'); copy.type = 'button'; copy.className = 'btn'; copy.textContent = 'Copiar link';
+  copy.onclick = async () => {
+    if (copy.disabled) return;
+    setBusy(copy, true);
+    try {
+      await navigator.clipboard.writeText(data.url);
+      status.textContent = 'Link da publicação copiado.';
+    } catch {
+      status.textContent = 'Selecione o link e use a opção Copiar do seu aparelho ou Ctrl + C.';
+      input.focus(); input.select();
+    } finally { setBusy(copy, false); }
+  };
+  actions.append(close, copy);
+  if (navigator.share) {
+    const native = document.createElement('button'); native.type = 'button'; native.className = 'btn-soft'; native.textContent = 'Compartilhar no aparelho';
+    native.onclick = async () => {
+      try { await navigator.share(data); }
+      catch (error) { if (error.name !== 'AbortError') status.textContent = 'Use o link acima para compartilhar esta publicação.'; }
+    };
+    actions.prepend(native);
+  }
+  dialog.append(title, hint, label, status, actions);
+  mountSocialDialog(dialog);
+  input.select();
+}
+
 /* ---------- Helpers visuais compartilhados da área social ---------- */
 const NQ_ICON = {
   home: '<path d="m3 10.5 9-7.5 9 7.5V20a1 1 0 0 1-1 1h-5v-6.5H9V21H4a1 1 0 0 1-1-1z"/>',
@@ -122,7 +258,7 @@ function initSearchSuggest(form, root) {
       const name = document.createElement('strong');
       name.textContent = person.nome_exibicao || person.nome_usuario;
       const handle = document.createElement('small');
-      handle.textContent = `@${person.nome_usuario}`;
+      handle.textContent = (person.habilidades || []).slice(0, 2).join(' · ') || person.area || `@${person.nome_usuario}`;
       text.append(name, handle);
       row.append(avatarEl(person, 32), text);
       box.append(row);
@@ -146,8 +282,12 @@ function initSearchSuggest(form, root) {
     input.setAttribute('aria-expanded', 'true');
     active = -1;
   };
-  input.addEventListener('input', () => {
+  input.addEventListener('input', event => {
     clearTimeout(timer);
+    sequence += 1;
+    suggestController?.abort();
+    close();
+    if (event.isComposing) return;
     const term = input.value.trim().replace(/^@/, '');
     if (term.length < 2) { sequence += 1; suggestController?.abort(); close(); return; }
     timer = setTimeout(async () => {
@@ -160,7 +300,9 @@ function initSearchSuggest(form, root) {
       show(response.data.usuarios, term);
     }, 250);
   });
+  input.addEventListener('compositionend', () => input.dispatchEvent(new Event('input')));
   input.addEventListener('keydown', event => {
+    if (event.isComposing) return;
     const list = rows();
     if (event.key === 'Escape' && !box.hidden) { event.preventDefault(); close(); return; }
     if (box.hidden || !list.length) return;
@@ -254,7 +396,13 @@ function renderRailSuggestions(box) {
   const list = $('[data-rail-people]', box);
   NP.api('/usuarios/sugestoes').then(response => {
     const users = response.ok && Array.isArray(response.data.usuarios) ? response.data.usuarios.slice(0, 4) : [];
-    if (!users.length) { box.hidden = true; return; }
+    if (!users.length) {
+      const empty = document.createElement('li');
+      empty.className = 'nq-support-empty';
+      empty.textContent = response.ok ? 'Busque por uma habilidade para encontrar colaboradores.' : 'Não foi possível carregar as sugestões. Tente pela seção Pessoas.';
+      list.replaceChildren(empty);
+      return;
+    }
     users.forEach(person => {
       const row = document.createElement('li');
       row.className = 'nq-person';
@@ -263,7 +411,7 @@ function renderRailSuggestions(box) {
       const name = document.createElement('strong');
       name.textContent = person.nome_exibicao || person.nome_usuario;
       const handle = document.createElement('span');
-      handle.textContent = `@${person.nome_usuario}`;
+      handle.textContent = (person.habilidades || []).slice(0, 2).join(' · ') || person.area || `@${person.nome_usuario}`;
       link.append(name, handle);
       const add = document.createElement('button');
       add.type = 'button';
@@ -296,14 +444,14 @@ function renderSocialShell(host, user) {
   const navigation = [
     { key: 'inicio', label: 'Início', href: `${root}paginas/inicio.html`, path: NQ_ICON.home },
     { key: 'jogo', label: 'Jogo', href: `${root}${GAME_PAGE}`, path: NQ_ICON.game },
-    { key: 'projetos-explorar', label: 'Explorar projetos', short: 'Explorar', href: `${root}paginas/explorar-projetos.html`, path: NQ_ICON.explore },
+    { key: 'projetos-explorar', label: 'Projetos', short: 'Projetos', href: `${root}paginas/explorar-projetos.html`, path: NQ_ICON.explore },
     { key: 'amigos', label: 'Pessoas', href: `${root}paginas/amigos.html`, path: NQ_ICON.people },
     { key: 'meus-projetos', label: 'Meus projetos', href: `${root}paginas/meus-projetos.html`, path: NQ_ICON.projects },
     { key: 'perfil', label: 'Meu perfil', short: 'Perfil', href: profile, path: NQ_ICON.user },
   ];
-  const activeMap = { 'perfil-publico': null, 'estatisticas-jogo': 'estatisticas-jogo', 'projeto-detalhe': 'projetos-explorar', 'projeto-criar': 'projeto-criar' };
+  const activeMap = { 'perfil-publico': String(new URLSearchParams(location.search).get('id')) === String(user.id) ? 'perfil' : 'amigos', 'estatisticas-jogo': 'estatisticas-jogo', 'projeto-detalhe': 'projetos-explorar', 'projeto-criar': 'projetos-explorar' };
   const activeKey = page in activeMap ? activeMap[page] : page;
-  const link = (item, extra = '', short = false) => `<a href="${item.href}" title="${item.label}"${activeKey === item.key ? ' aria-current="page"' : ''}${extra}>${nqSvg(item.path)}<span>${short ? (item.short || item.label) : item.label}</span>${item.key === 'amigos' ? '<b class="nq-badge" data-friends-badge hidden aria-hidden="true"></b>' : ''}</a>`;
+  const link = (item, extra = '', short = false) => `<a href="${item.href}" title="${item.label}"${(activeKey === item.key || (short && page === 'meus-projetos' && item.key === 'projetos-explorar')) ? ' aria-current="page"' : ''}${extra}>${nqSvg(item.path)}<span>${short ? (item.short || item.label) : item.label}</span>${item.key === 'amigos' ? '<b class="nq-badge" data-friends-badge hidden aria-hidden="true"></b>' : ''}</a>`;
   const createHref = `${root}paginas/criar-projeto.html`;
   const statsItem = { key: 'estatisticas-jogo', label: 'Atividade no jogo', href: `${root}paginas/estatisticas.html`, path: NQ_ICON.trophy };
 
@@ -313,8 +461,8 @@ function renderSocialShell(host, user) {
     <p class="nq-top-title" data-top-title>${NQ_PAGE_TITLE[page] || ''}</p>
     <form class="nq-search" role="search" action="${root}paginas/amigos.html">
       ${nqSvg(NQ_ICON.search)}
-      <label class="sr-only" for="nq-search-input">Buscar pessoas</label>
-      <input id="nq-search-input" name="q" type="search" minlength="2" maxlength="100" placeholder="Buscar pessoas" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="nq-suggest">
+      <label class="sr-only" for="nq-search-input">Buscar pessoas ou habilidades</label>
+      <input id="nq-search-input" name="q" type="search" minlength="2" maxlength="100" placeholder="Buscar pessoas ou habilidades" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="nq-suggest">
       <div class="nq-suggest" id="nq-suggest" role="listbox" aria-label="Pessoas encontradas" hidden></div>
     </form>
     <div class="nq-top-actions">
@@ -329,7 +477,6 @@ function renderSocialShell(host, user) {
           <div class="menu-id"><strong data-menu-name></strong><span>@${user.nome_usuario}</span></div>
           <a href="${profile}">Meu perfil</a>
           <a href="${root}paginas/meus-projetos.html">Meus projetos</a>
-          <a class="nq-menu-create" href="${createHref}"${page === 'projeto-criar' ? ' aria-current="page"' : ''}>Criar projeto</a>
           <a href="${root}paginas/estatisticas.html">Atividade no jogo</a>
           <a href="${root}${GAME_PAGE}" data-game>Acessar o jogo</a>
           <button type="button" id="logout">Sair da conta</button>
@@ -345,10 +492,15 @@ function renderSocialShell(host, user) {
     searchToggle.setAttribute('aria-expanded', String(open));
     if (open) $('#nq-search-input').focus();
   });
+  topbar.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && topbar.classList.contains('is-searching')) {
+      topbar.classList.remove('is-searching'); searchToggle.setAttribute('aria-expanded', 'false'); searchToggle.focus();
+    }
+  });
   document.dispatchEvent(new Event('np:social-theme-controls-ready'));
   const accountButton = $('#user-btn');
   const accountMenu = $('#user-menu');
-  accountButton.append(avatarEl({ nome_usuario: user.nome_usuario }, 34));
+  accountButton.append(avatarEl(user, 34));
   $('[data-menu-name]').textContent = user.nome_usuario;
   accountButton.addEventListener('click', () => {
     const open = accountMenu.classList.toggle('open');
@@ -382,8 +534,7 @@ function renderSocialShell(host, user) {
   const tabbar = document.createElement('nav');
   tabbar.className = 'nq-tabbar';
   tabbar.setAttribute('aria-label', 'Navegação principal');
-  // Cinco itens, sempre em número ímpar: o do meio (Jogo) é o botão em destaque e fica no centro exato da barra.
-  // "Criar projeto" saiu daqui e continua acessível no cabeçalho de Explorar/Meus projetos, na Início, no Perfil e no menu da conta.
+  // Cinco destinos com a mesma largura; criação fica na área de projetos.
   const byKey = key => navigation.find(item => item.key === key);
   tabbar.innerHTML = ['inicio', 'projetos-explorar', 'jogo', 'amigos', 'perfil']
     .map(key => link(byKey(key), key === 'jogo' ? ' class="is-game"' : '', true))
@@ -405,26 +556,56 @@ function renderSocialShell(host, user) {
     const side = document.createElement('aside');
     side.className = 'nq-side';
     side.setAttribute('aria-label', 'Resumo e sugestões');
-    side.innerHTML = `<section class="nq-box nq-progress" aria-labelledby="rail-progress-title">
-        <h2 id="rail-progress-title">Seu progresso</h2>
-        <div class="nq-mini-stats" data-rail-stats hidden></div>
-        <a class="nq-more" href="${profile}">Ver meu perfil</a>
-      </section>
-      <section class="nq-box" aria-labelledby="rail-people-title">
-        <h2 id="rail-people-title">Pessoas para conhecer</h2>
+    side.innerHTML = `<section class="nq-box" aria-labelledby="rail-people-title">
+        <div class="home-section-head"><h2 id="rail-people-title">Pessoas para conhecer</h2></div>
         <ul class="nq-people" data-rail-people></ul>
         <a class="nq-more" href="${root}paginas/amigos.html">Ver mais pessoas</a>
       </section>
+      <section class="nq-box nq-progress" aria-labelledby="rail-progress-title">
+        <h2 id="rail-progress-title">Seu progresso</h2>
+        <div class="nq-mini-stats" data-rail-stats hidden></div>
+        <a class="nq-more" href="${profile}">Ver atividade no perfil</a>
+      </section>
       <section class="nq-box nq-game" aria-labelledby="rail-game-title">
         <img class="nq-game-mascot" src="${root}assets/imagens/golfinho-fone.svg" alt="" width="120" height="76">
-        <h2 id="rail-game-title">Continue sua jornada</h2>
-        <p>Missões e desafios das trilhas esperam por você no Nexa Quest.</p>
+        <h2 id="rail-game-title">Acessar o jogo</h2>
+        <p>Continue suas missões no Nexa Quest.</p>
         <a class="btn btn-sm" href="${root}${GAME_PAGE}" data-game>Acessar o jogo</a>
       </section>`;
+    const recent = $('.home-recent');
+    const placeRecent = () => {
+      if (matchMedia('(min-width: 1100px)').matches) side.prepend(recent);
+      else {
+        const posts = $$('#feed-list > .feed-post');
+        if (posts.length >= 2) { if (posts[1].nextElementSibling !== recent) posts[1].after(recent); }
+        else if ($('#publicacoes').nextElementSibling !== recent) $('#publicacoes').after(recent);
+      }
+    };
+    if (recent) {
+      const feed = $('#feed-list');
+      new MutationObserver(() => { if (!side.contains(recent)) placeRecent(); }).observe(feed, { childList: true });
+      matchMedia('(min-width: 1100px)').addEventListener('change', placeRecent);
+      placeRecent();
+    }
     body.append(side);
     renderRailSuggestions($('[data-rail-people]', side).closest('.nq-box'));
   }
   document.body.append(tabbar);
+  // VisualViewport covers keyboards that overlay the layout viewport (notably iOS).
+  // Hide the fixed navigation while typing; the document remains the scroll owner.
+  if (window.visualViewport) {
+    let fullHeight = window.visualViewport.height;
+    const fitKeyboard = () => {
+      const viewport = window.visualViewport;
+      const typing = document.activeElement?.matches('input, textarea, select');
+      if (!typing) fullHeight = viewport.height;
+      const open = typing && (innerHeight - viewport.height > 140 || fullHeight - viewport.height > 140);
+      document.body.classList.toggle('nq-keyboard-open', !!open);
+      if (open) document.activeElement.scrollIntoView({ block: 'nearest' });
+    };
+    window.visualViewport.addEventListener('resize', fitKeyboard);
+    document.addEventListener('focusout', () => requestAnimationFrame(fitKeyboard));
+  }
 
   // Aviso de solicitações de amizade pendentes na navegação.
   NP.api('/me/amizades').then(response => {
@@ -484,7 +665,25 @@ function initHomeProjects() {
       list.append(projectEmpty('Não foi possível carregar os projetos.', 'Tente novamente em instantes.'));
       return;
     }
-    response.data.projetos.forEach(project => list.append(projectCard(project)));
+    response.data.projetos.slice(0, 3).forEach(project => {
+      const row = document.createElement('article');
+      row.className = 'home-project';
+      const category = document.createElement('small');
+      category.textContent = project.categoria;
+      const title = document.createElement('a');
+      title.href = projectLink(project);
+      title.textContent = project.titulo;
+      const summary = document.createElement('p');
+      summary.textContent = projectSummary(project);
+      row.append(category, title, summary);
+      if (project.tipo === 'equipe' && project.visibilidade === 'publico') {
+        const available = document.createElement('span');
+        available.className = 'nq-availability';
+        available.textContent = 'Aceita solicitações de participação';
+        row.append(available);
+      }
+      list.append(row);
+    });
     if (!response.data.projetos.length) {
       list.append(projectEmpty('Ainda não há projetos públicos.', 'Quando a comunidade publicar projetos, eles aparecerão aqui.', 'Criar um projeto', `${NP.root()}paginas/criar-projeto.html`));
     }
@@ -812,7 +1011,7 @@ function feedActionButton(iconPath, count) {
   if (count !== null) {
     const number = document.createElement('span');
     number.className = 'feed-action-count';
-    number.textContent = count > 0 ? String(count) : '';
+    number.textContent = String(count);
     button.append(number);
   }
   return button;
@@ -918,23 +1117,35 @@ function renderFeedPost(post) {
   let commentTotal = Number(post.quantidade_comentarios) || 0;
   const like = feedActionButton(FEED_ICON.like, likeCount);
   like.dataset.feedLike = '';
+  const likeLabel = document.createElement('span');
+  likeLabel.className = 'feed-action-label';
+  like.prepend(likeLabel);
   const likeNumber = like.querySelector('.feed-action-count');
   const paintLike = liked => {
+    likeLabel.textContent = liked ? 'Curtido' : 'Curtir';
     like.setAttribute('aria-pressed', String(liked));
     like.setAttribute('aria-label', `${liked ? 'Remover curtida' : 'Curtir publicação'} (${likeCount})`);
-    likeNumber.textContent = likeCount > 0 ? String(likeCount) : '';
+    likeNumber.textContent = String(likeCount);
   };
   paintLike(Boolean(post.curtida_pelo_usuario));
   const commentsButton = feedActionButton(FEED_ICON.comment, commentTotal);
+  const commentLabel = document.createElement('span');
+  commentLabel.className = 'feed-action-label';
+  commentLabel.textContent = 'Comentar';
+  commentsButton.append(commentLabel);
   commentsButton.dataset.feedCommentsToggle = '';
   commentsButton.setAttribute('aria-expanded', 'false');
   const commentsNumber = commentsButton.querySelector('.feed-action-count');
   const paintComments = () => {
-    commentsNumber.textContent = commentTotal > 0 ? String(commentTotal) : '';
+    commentsNumber.textContent = String(commentTotal);
     commentsButton.setAttribute('aria-label', `Comentários (${commentTotal})`);
   };
   paintComments();
   const share = feedActionButton(FEED_ICON.share, null);
+  const shareLabel = document.createElement('span');
+  shareLabel.className = 'feed-action-label';
+  shareLabel.textContent = 'Compartilhar';
+  share.append(shareLabel);
   share.dataset.feedShare = '';
   share.setAttribute('aria-label', 'Compartilhar publicação');
   actions.append(like, commentsButton, share);
@@ -942,6 +1153,15 @@ function renderFeedPost(post) {
   const comments = document.createElement('section');
   comments.className = 'feed-comments';
   comments.hidden = true;
+  comments.id = `comentarios-${post.id}`;
+  commentsButton.setAttribute('aria-controls', comments.id);
+  comments.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      comments.hidden = true;
+      commentsButton.setAttribute('aria-expanded', 'false');
+      commentsButton.focus({ preventScroll: true });
+    }
+  });
   comments.setAttribute('aria-label', 'Comentários da publicação');
   const commentList = document.createElement('div');
   commentList.className = 'feed-comment-list';
@@ -982,7 +1202,7 @@ function renderFeedPost(post) {
     autosizeField(commentInput, 160);
   });
   commentInput.addEventListener('keydown', event => {
-    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') commentForm.requestSubmit();
+    if (!event.isComposing && (event.ctrlKey || event.metaKey) && event.key === 'Enter') commentForm.requestSubmit();
   });
 
   let commentsCursor = null;
@@ -1030,13 +1250,13 @@ function renderFeedPost(post) {
     if (!texto || commentForm.dataset.busy) return;
     commentForm.dataset.busy = '1';
     commentSubmit.disabled = true;
-    commentSubmit.textContent = 'Enviando…';
+    setBusy(commentSubmit, true);
     const response = await NP.api(`/publicacoes/${encodeURIComponent(post.id)}/comentarios`, {
       method: 'POST',
       body: { texto },
     });
     delete commentForm.dataset.busy;
-    commentSubmit.textContent = 'Comentar';
+    setBusy(commentSubmit, false);
     if (!response.ok || !response.data.comentario) {
       commentSubmit.disabled = false;
       commentStatus.textContent = response.data.mensagem || 'Não foi possível publicar o comentário.';
@@ -1076,29 +1296,11 @@ function renderFeedPost(post) {
     likeCount = Number(response.data.curtidas) || 0;
     paintLike(response.data.curtida);
   });
-  share.addEventListener('click', async () => {
+  share.addEventListener('click', () => {
     const url = new URL(`${NP.root()}paginas/inicio.html`, location.href);
     url.searchParams.set('publicacao', post.id);
     url.hash = item.id;
-    const shareData = { title: `Publicação de ${post.autor.nome_exibicao || post.autor.nome_usuario}`, text: post.texto, url: url.href };
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-      } catch (erro) {
-        if (erro.name !== 'AbortError') NP.toast('Não foi possível compartilhar esta publicação.');
-      }
-      return;
-    }
-    if (!navigator.clipboard || !navigator.clipboard.writeText) {
-      NP.toast('Seu navegador não permite copiar o link de compartilhamento.');
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(url.href);
-      NP.toast('Link da publicação copiado.');
-    } catch {
-      NP.toast('Não foi possível copiar o link da publicação.');
-    }
+    shareSocialPost({ title: `Publicação de ${post.autor.nome_exibicao || post.autor.nome_usuario}`, text: post.texto, url: url.href });
   });
   return item;
 }
@@ -1254,7 +1456,7 @@ function initFeed() {
     input.addEventListener('focus', open);
     input.addEventListener('input', () => { open(); refresh(); });
     input.addEventListener('keydown', event => {
-      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') form.requestSubmit();
+      if (!event.isComposing && (event.ctrlKey || event.metaKey) && event.key === 'Enter') form.requestSubmit();
       if (event.key === 'Escape' && !input.value.trim()) input.blur();
     });
     form.addEventListener('focusout', event => {
@@ -1268,11 +1470,11 @@ function initFeed() {
       if (!texto || submit.dataset.busy) return;
       submit.dataset.busy = '1';
       setBusy(submit, true);
-      submit.textContent = 'Publicando…';
+
       NP.status(formStatus, '', true);
       const response = await NP.api('/publicacoes', { method: 'POST', body: { texto } });
       delete submit.dataset.busy;
-      submit.textContent = 'Publicar';
+
       setBusy(submit, false);
       if (!response.ok || !response.data.publicacao) {
         NP.status(formStatus, response.data.mensagem || 'Não foi possível publicar. Seu texto foi mantido.', false);
@@ -1462,10 +1664,10 @@ let profileTabs = null;
 function setupProfileTabs() {
   const list = $('#profile-tabs');
   if (!list || profileTabs) return;
+  const fromHash = location.hash.slice(1);
   profileTabs = initTabs(list, name => {
     try { history.replaceState(null, '', `#${name}`); } catch { /* ignora */ }
   });
-  const fromHash = location.hash.slice(1);
   if (fromHash && profileTabs.tabs.some(tab => tab.dataset.tab === fromHash)) profileTabs.select(fromHash);
 }
 
@@ -1490,10 +1692,35 @@ function renderProfileData(profile, ownProfile) {
   card.removeAttribute('data-profile-pending');
   card.setAttribute('aria-busy', 'false');
   $('[data-profile-name]', card).textContent = profile.nome_exibicao || profile.nome_usuario || 'Jogador';
+  document.title = `${profile.nome_exibicao || profile.nome_usuario || 'Perfil'} | Nexa Quest`;
   $('[data-profile-handle]', card).textContent = `@${profile.nome_usuario || ''}`;
   const bio = $('[data-profile-bio]', card);
   bio.textContent = profile.biografia || '';
   bio.hidden = !profile.biografia;
+  let skills = $('[data-profile-skills]', card);
+  if (!skills) {
+    skills = document.createElement('div'); skills.dataset.profileSkills = '';
+    bio.after(skills);
+  }
+  skills.replaceChildren();
+  if (!profile.privado) {
+    if (profile.area) { const area = document.createElement('p'); area.className = 'profile-area'; area.textContent = profile.area; skills.append(area); }
+    skills.append(skillList(profile));
+    const url = safeHttpsUrl(profile.portfolio_url);
+    if (url) {
+      const link = document.createElement('a'); link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+      link.className = 'profile-portfolio'; link.textContent = 'Abrir portfólio'; skills.append(link);
+    }
+  }
+  const activity = $('#jornada');
+  if (activity) {
+    let summary = $('[data-profile-activity-summary]', activity);
+    if (!summary) { summary = document.createElement('div'); summary.dataset.profileActivitySummary = ''; activity.prepend(summary); }
+    const stats = $('[data-profile-stats]') || $('[data-profile-stats]', summary);
+    const journey = $('[data-profile-journey]') || $('[data-profile-journey]', summary);
+    if (stats) summary.append(stats);
+    if (journey) summary.append(journey);
+  }
   const joined = $('[data-profile-joined]', card);
   const createdAt = new Date(profile.criado_em);
   joined.textContent = profile.criado_em && !Number.isNaN(createdAt.getTime())
@@ -1520,7 +1747,7 @@ function renderProfileData(profile, ownProfile) {
       initial.hidden = false;
     };
   }
-  const stats = $('[data-profile-stats]', card);
+  const stats = $('[data-profile-stats]');
   stats.replaceChildren();
   const values = profile.estatisticas;
   if (values) {
@@ -1530,7 +1757,7 @@ function renderProfileData(profile, ownProfile) {
   }
   stats.hidden = !stats.childElementCount;
 
-  const journey = $('[data-profile-journey]', card);
+  const journey = $('[data-profile-journey]');
   const progressData = profile.privado ? null : values?.progresso;
   if (journey) {
     journey.replaceChildren();
@@ -1554,7 +1781,7 @@ function renderProfileData(profile, ownProfile) {
   const progressSection = $('#jornada');
   const progress = $('[data-profile-progress]');
   if (progressSection && progress) {
-    progressSection.hidden = !progressData;
+    progressSection.hidden = !progressData && !Object.values(values || {}).some(value => value !== null && value !== undefined);
     progress.replaceChildren();
     progress.setAttribute('aria-busy', 'false');
     if (progressData) renderProfileActivity(progress, progressData);
@@ -1615,7 +1842,7 @@ function renderProfilePreview(user) {
     initial.textContent = name.charAt(0).toUpperCase();
     initial.hidden = false;
   }
-  const stats = $('[data-profile-stats]', card);
+  const stats = $('[data-profile-stats]');
   if (stats && user.pontos !== null && user.pontos !== undefined) {
     stats.replaceChildren();
     setProfileStat(stats, 'pontos', Number(user.pontos).toLocaleString('pt-BR'));
@@ -1642,7 +1869,7 @@ function openRelationshipActions(profile) {
   button.textContent = action.label;
   const status = $('#public-profile-status');
   button.addEventListener('click', async () => {
-    if (state === 'amigos' && !window.confirm('Deseja remover esta amizade?')) return;
+    if (state === 'amigos' && !(await confirmSocialAction('Deseja remover esta amizade? Você poderá enviar uma nova solicitação depois.'))) return;
     button.disabled = true;
     const response = await NP.api(`/usuarios/${encodeURIComponent(profile.id)}/amizade`, { method: action.method });
     if (!response.ok) {
@@ -1670,6 +1897,9 @@ function preencherEditor(profile) {
   form.elements.namedItem('biografia').value = profile.biografia || '';
   form.elements.namedItem('avatar_url').value = profile.avatar_url || '';
   form.elements.namedItem('capa_url').value = profile.capa_url || '';
+  form.elements.namedItem('area').value = profile.area || '';
+  form.elements.namedItem('habilidades').value = (profile.habilidades || []).join(', ');
+  form.elements.namedItem('portfolio_url').value = profile.portfolio_url || '';
   Object.entries(profile.privacidade || {}).forEach(([name, value]) => {
     const checkbox = form.elements.namedItem(name);
     if (checkbox) checkbox.checked = Boolean(value);
@@ -1682,16 +1912,21 @@ function initProfileEditor(profile) {
   const toggle = $('#profile-edit-toggle');
   const close = $('#profile-edit-close');
   if (!form || !editor || !toggle) return;
+  prepareSocialForm(form);
   preencherEditor(profile);
   const setOpen = open => {
     editor.hidden = !open;
     toggle.setAttribute('aria-expanded', String(open));
-    if (open) editor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (open) { editor.scrollIntoView({ block: 'start' }); form.elements.namedItem('nome_exibicao').focus({ preventScroll: true }); }
+    else toggle.focus({ preventScroll: true });
   };
   toggle.onclick = () => setOpen(editor.hidden);
   if (close) close.onclick = () => setOpen(false);
+  editor.addEventListener('keydown', event => { if (event.key === 'Escape') { event.preventDefault(); setOpen(false); } });
   form.onsubmit = async event => {
     event.preventDefault();
+    if (form.dataset.busy || !validateSocialForm(form)) return;
+    form.dataset.busy = '1';
     const status = $('#profile-edit-status');
     const submit = $('button[type="submit"]', form);
     const privacidade = Object.fromEntries(
@@ -1702,15 +1937,19 @@ function initProfileEditor(profile) {
       nome_exibicao: form.elements.namedItem('nome_exibicao').value,
       nome_usuario: form.elements.namedItem('nome_usuario').value,
       biografia: form.elements.namedItem('biografia').value,
+      area: form.elements.namedItem('area').value || null,
+      habilidades: form.elements.namedItem('habilidades').value.split(',').map(s => s.trim()).filter(Boolean),
+      portfolio_url: form.elements.namedItem('portfolio_url').value || null,
       avatar_url: form.elements.namedItem('avatar_url').value || null,
       capa_url: form.elements.namedItem('capa_url').value || null,
       privacidade,
     };
     setBusy(submit, true);
     const response = await NP.api('/me/perfil', { method: 'PUT', body });
+    delete form.dataset.busy;
     setBusy(submit, false);
     if (!response.ok || !response.data.usuario) {
-      NP.status(status, response.data.mensagem || 'Não foi possível salvar o perfil.', false);
+      socialFormError(form, response, status);
       return;
     }
     profile = response.data.usuario;
@@ -2094,7 +2333,7 @@ async function initGameStats(retry = false) {
   NP.status(status, '', true);
 }
 
-const PROJECT_CATEGORIES = ['Jogos', 'Arte e design', 'Programação', 'Educação', 'Música', 'Outros'];
+const PROJECT_CATEGORIES = [...NQ_AREAS, ...NQ_LEGACY_CATEGORIES];
 
 function projectLink(project) {
   return `${NP.root()}paginas/projeto.html?id=${encodeURIComponent(project.id)}`;
@@ -2178,7 +2417,7 @@ function projectCard(project, myProject = false) {
   title.append(titleLink);
   const description = document.createElement('p');
   description.className = 'project-card-description';
-  description.textContent = project.descricao || '';
+  description.textContent = projectSummary(project);
   const owner = document.createElement('div');
   owner.className = 'project-card-owner';
   const ownerLink = makeProfileAnchor(project.proprietario || {}, 'project-owner-link');
@@ -2188,7 +2427,14 @@ function projectCard(project, myProject = false) {
   const members = Number(project.total_participantes) || 0;
   meta.textContent = project.tipo === 'individual' ? 'Individual' : `${members} ${members === 1 ? 'integrante' : 'integrantes'}`;
   owner.append(meta);
-  body.append(tags, title, description, owner);
+  body.append(tags, title, description);
+  if (project.tipo === 'equipe' && project.visibilidade === 'publico') {
+    const availability = document.createElement('p');
+    availability.className = 'nq-availability';
+    availability.textContent = 'Aceita solicitações de participação';
+    body.append(availability);
+  }
+  body.append(owner);
   card.append(body);
 
   if (myProject) {
@@ -2251,7 +2497,10 @@ async function responderConvite(project, acao) {
 }
 
 async function removerParticipacao(project, userId) {
-  if (!window.confirm('Deseja sair deste projeto ou remover esta participação?')) return;
+  const self = String(userId) === String(NP.currentUser().id);
+  const pending = self && project.participacao?.status === 'pendente';
+  const message = pending ? 'Cancelar sua solicitação de participação neste projeto?' : self ? 'Sair desta equipe? O acesso a projetos privados será encerrado.' : 'Remover esta pessoa do projeto? O acesso dela a projetos privados será encerrado.';
+  if (!(await confirmSocialAction(message))) return;
   const response = await NP.api(`/projetos/${encodeURIComponent(project.id)}/participantes/${encodeURIComponent(userId)}`, {
     method: 'DELETE',
   });
@@ -2318,6 +2567,16 @@ function friendCard(user) {
   text.append(name, handle);
   identity.append(avatarLink, text);
   card.append(identity);
+  if (user.area) {
+    const area = document.createElement('p');
+    area.className = 'friend-area'; area.textContent = user.area; card.append(area);
+  }
+  card.append(skillList(user, 2));
+  const work = document.createElement('div');
+  work.className = 'friend-work-links';
+  const profile = document.createElement('a'); profile.href = profileHref(user); profile.textContent = 'Ver perfil';
+  const projects = document.createElement('a'); projects.href = `${NP.root()}paginas/perfil-publico.html?id=${encodeURIComponent(user.id)}#projetos`; projects.textContent = 'Ver projetos';
+  work.append(profile, projects); card.append(work);
 
   const actions = document.createElement('div');
   actions.className = 'friend-card-actions';
@@ -2330,6 +2589,10 @@ function friendCard(user) {
     state.textContent = 'Solicitação enviada';
     actions.append(state, friendActionButton('Cancelar', 'friend-action-link', () => executarAcaoAmizade(user, 'cancelar')));
   } else if (relation === 'recebida') {
+    const state = document.createElement('span');
+    state.className = 'friend-relation-state';
+    state.textContent = 'Solicitação recebida';
+    actions.append(state);
     actions.append(
       friendActionButton('Aceitar', 'btn btn-soft', () => executarAcaoAmizade(user, 'aceitar')),
       friendActionButton('Recusar', 'friend-action-link', () => executarAcaoAmizade(user, 'recusar')),
@@ -2372,7 +2635,7 @@ let friendSearchHasResults = false;
 
 async function executarAcaoAmizade(user, action) {
   if (friendActionInProgress) return;
-  if (action === 'remover' && !window.confirm(`Deseja remover ${user.nome_exibicao || user.nome_usuario} dos seus amigos?`)) return;
+  if (action === 'remover' && !(await confirmSocialAction(`Deseja remover ${user.nome_exibicao || user.nome_usuario} dos seus amigos?`))) return;
   friendActionInProgress = true;
   const status = $('#friends-page-status');
   const method = action === 'enviar' ? 'POST' : action === 'aceitar' ? 'PUT' : 'DELETE';
@@ -2452,22 +2715,30 @@ let friendSearchId = 0;
 async function pesquisarAmigos(term) {
   const value = term.trim().replace(/^@/, '');
   friendSearchController?.abort();
+  const id = ++friendSearchId;
+  const area = $('#friends-area')?.value || '';
+  const params = new URLSearchParams({ q: value });
+  if (area) params.set('area', area);
+  const route = new URL(location.href); route.search = params.toString(); history.replaceState(null, '', route);
   const results = $('#friend-search-results');
   const status = $('#friends-search-status');
-  friendSearchHasResults = value.length >= 2;
+  friendSearchHasResults = value.length >= 2 || !!area;
   results.hidden = !friendSearchHasResults;
   const searchBlock = $('#friends-search-block');
   if (searchBlock) searchBlock.hidden = !friendSearchHasResults;
   if (!friendSearchHasResults) {
-    status.textContent = 'Digite pelo menos 2 caracteres para pesquisar.';
+    status.textContent = value ? 'Digite pelo menos 2 caracteres ou escolha uma área.' : '';
+    $$('.pf-panel').forEach(panel => panel.hidden = false);
+    $('#friends-tabs').hidden = false;
     return;
   }
   results.setAttribute('aria-busy', 'true');
   status.textContent = 'Pesquisando pessoas…';
   // A7: só a pesquisa mais recente pode escrever na tela; as anteriores são canceladas
-  const id = ++friendSearchId;
+  $('#friends-tabs').hidden = true;
+  $$('.pf-panel').forEach(panel => panel.hidden = true);
   friendSearchController = new AbortController();
-  const response = await NP.api(`/usuarios/buscar?q=${encodeURIComponent(value)}`, { signal: friendSearchController.signal });
+  const response = await NP.api(`/usuarios/buscar?${params}`, { signal: friendSearchController.signal });
   if (id !== friendSearchId) return;
   results.setAttribute('aria-busy', 'false');
   if (!response.ok || !Array.isArray(response.data.usuarios)) {
@@ -2475,8 +2746,8 @@ async function pesquisarAmigos(term) {
     status.textContent = response.data.mensagem || 'Não foi possível pesquisar usuários. Tente novamente.';
     return;
   }
-  renderFriendList(results, response.data.usuarios, 'Nenhuma pessoa encontrada. Tente outro nome ou nome de usuário.');
-  status.textContent = '';
+  renderFriendList(results, response.data.usuarios, 'Nenhuma pessoa encontrada. Tente outra habilidade, ajuste a área ou limpe os filtros.');
+  status.textContent = `${response.data.usuarios.length} ${response.data.usuarios.length === 1 ? 'pessoa encontrada' : 'pessoas encontradas'}.`;
 }
 
 function initFriendsPage() {
@@ -2486,13 +2757,33 @@ function initFriendsPage() {
   friendsTabs = initTabs($('#friends-tabs'));
   form.addEventListener('submit', event => {
     event.preventDefault();
+    clearTimeout(timer);
     pesquisarAmigos($('#friends-search-input').value);
   });
-  const initialQuery = new URLSearchParams(location.search).get('q');
-  if (initialQuery) {
-    $('#friends-search-input').value = initialQuery;
-    pesquisarAmigos(initialQuery);
-  }
+  const input = $('#friends-search-input');
+  const area = $('#friends-area');
+  const clear = $('#friends-clear');
+  form.noValidate = true;
+  area.innerHTML = `<option value="">Todas as áreas</option>${areaOptions()}`;
+  const params = new URLSearchParams(location.search);
+  const initialQuery = params.get('q') || params.get('busca') || '';
+  input.value = initialQuery;
+  area.value = params.get('area') || '';
+  let timer;
+  input.addEventListener('input', event => {
+    clearTimeout(timer);
+    friendSearchController?.abort(); ++friendSearchId;
+    if (event.isComposing) return;
+    timer = setTimeout(() => pesquisarAmigos(input.value), 300);
+  });
+  input.addEventListener('compositionend', () => input.dispatchEvent(new Event('input')));
+  area.addEventListener('change', () => { clearTimeout(timer); pesquisarAmigos(input.value); });
+  clear.addEventListener('click', () => {
+    clearTimeout(timer); input.value = ''; area.value = '';
+    $$('.pf-panel').forEach(panel => panel.hidden = false);
+    pesquisarAmigos(''); input.focus();
+  });
+  if (initialQuery || area.value) pesquisarAmigos(initialQuery);
   carregarPainelAmizades();
   carregarSugestoesAmizade();
 }
@@ -2501,6 +2792,9 @@ function initProjectExplorer() {
   const list = $('#project-list');
   if (!list) return;
   const form = $('#project-search-form');
+  const initial = new URLSearchParams(location.search);
+  $('#project-search').value = initial.get('q') || '';
+  $('#project-category').value = PROJECT_CATEGORIES.includes(initial.get('categoria')) ? initial.get('categoria') : '';
   const more = $('#projects-load-more');
   const status = $('#projects-status');
   let cursor = null;
@@ -2533,6 +2827,8 @@ function initProjectExplorer() {
     if (busca) query.set('q', busca);
     if (categoria) query.set('categoria', categoria);
     if (proprietarioId) query.set('usuario', proprietarioId);
+    const stateQuery = new URLSearchParams(query); stateQuery.delete('limite');
+    history.replaceState(null, '', `${location.pathname}${stateQuery.size ? '?' + stateQuery : ''}`);
     if (reset) { cursor = null; list.replaceChildren(); more.hidden = true; }
     if (cursor) query.set('cursor', cursor);
     list.setAttribute('aria-busy', 'true');
@@ -2562,11 +2858,14 @@ function initProjectExplorer() {
   };
   form?.addEventListener('submit', event => { event.preventDefault(); load(true); });
   const chips = $$('#project-chips .chip');
+  chips.forEach(chip => chip.setAttribute('aria-pressed', String(chip.dataset.cat === $('#project-category').value)));
+  if ($('#project-category').value && NQ_LEGACY_CATEGORIES.includes($('#project-category').value)) $('#legacy-project-categories').open = true;
   chips.forEach(chip => chip.addEventListener('click', () => {
     chips.forEach(other => other.setAttribute('aria-pressed', String(other === chip)));
     $('#project-category').value = chip.dataset.cat;
     load(true);
   }));
+  $('#project-search-clear')?.addEventListener('click', () => { $('#project-search').value = ''; load(true); $('#project-search').focus(); });
   more.addEventListener('click', () => load());
   load(true);
 }
@@ -2613,11 +2912,23 @@ function initMyProjects() {
   carregarMeusProjetos();
 }
 
+function projectCreateOrigin() {
+  try {
+    const from = new URL(document.referrer);
+    const allowed = /\/paginas\/(explorar-projetos|meus-projetos|meu-perfil|inicio)\.html$/;
+    if (from.origin === location.origin && allowed.test(from.pathname)) return from.pathname + from.search + from.hash;
+  } catch { /* Direct entry returns to projects. */ }
+  return `${NP.root()}paginas/explorar-projetos.html`;
+}
+
 function initCreateProject() {
   const form = $('#project-form');
   if (!form) return;
+  projectFormFields(form, null, false);
   form.addEventListener('submit', async event => {
     event.preventDefault();
+    if (form.dataset.busy || !validateSocialForm(form)) return;
+    form.dataset.busy = '1';
     const fields = new FormData(form);
     const body = Object.fromEntries(fields.entries());
     const status = $('#project-form-status');
@@ -2625,9 +2936,10 @@ function initCreateProject() {
     setBusy(button, true);
     NP.status(status, 'Publicando projeto…', true);
     const response = await NP.api('/projetos', { method: 'POST', body });
+    delete form.dataset.busy;
     setBusy(button, false);
     if (!response.ok || !response.data.projeto) {
-      NP.status(status, response.data.mensagem || 'Não foi possível publicar o projeto.', false);
+      socialFormError(form, response, status);
       return;
     }
     location.href = projectLink(response.data.projeto);
@@ -2661,12 +2973,15 @@ function renderProjectUpdates(updates) {
 }
 
 function projectFormFields(form, project, editing) {
-  const categories = PROJECT_CATEGORIES.map(category => `<option value="${category}">${category}</option>`).join('');
+  const categories = NQ_AREAS.map(category => `<option>${category}</option>`).join('')
+    + `<optgroup label="Categorias anteriores">${NQ_LEGACY_CATEGORIES.map(category => `<option>${category}</option>`).join('')}</optgroup>`;
   form.innerHTML = `
     <fieldset class="form-group">
       <legend>Sobre o projeto</legend>
       <label>Título<input name="titulo" type="text" maxlength="120" required></label>
-      <label>Descrição<textarea name="descricao" rows="5" maxlength="5000" required></textarea><small>Até 5.000 caracteres.</small></label>
+      <label>Descrição<textarea name="descricao" rows="5" maxlength="5000" required placeholder="O que o projeto faz? Para quem ele é?"></textarea><small>Até 5.000 caracteres.</small></label>
+      <label>Resumo (opcional)<textarea name="resumo" rows="2" maxlength="240" placeholder="Apresente a ideia em uma ou duas frases completas."></textarea><small>Até 240 caracteres. Aparece nos cartões e nos projetos recentes.</small></label>
+      <label>Como contribuir (opcional)<textarea name="como_contribuir" rows="3" maxlength="1500" placeholder="Que ajuda você procura? Quais habilidades e tarefas são necessárias?"></textarea><small>Em equipes públicas, estas informações aparecem perto da solicitação de participação.</small></label>
     </fieldset>
     <fieldset class="form-group">
       <legend>Organização</legend>
@@ -2674,7 +2989,10 @@ function projectFormFields(form, project, editing) {
         <label>Categoria<select name="categoria" required><option value="">Selecione</option>${categories}</select></label>
         <label>Formato<select name="tipo" required><option value="individual">Individual</option><option value="equipe">Projeto em equipe</option></select></label>
       </div>
-      <label>Visibilidade<select name="visibilidade" required><option value="publico">Público</option><option value="privado">Privado</option></select></label>
+      <div class="project-form-row">
+        <label>Etapa (opcional)<select name="etapa"><option value="">Não informada</option>${NQ_STAGES.map(stage => `<option>${stage}</option>`).join('')}</select></label>
+        <label>Visibilidade<select name="visibilidade" required><option value="publico">Público</option><option value="privado">Privado</option></select><small data-visibility-help></small></label>
+      </div>
     </fieldset>
     <fieldset class="form-group">
       <legend>Divulgação <span class="form-optional">opcional</span></legend>
@@ -2683,14 +3001,28 @@ function projectFormFields(form, project, editing) {
         <label>Link externo · URL HTTPS<input name="link_externo" type="url" inputmode="url" placeholder="https://…"></label>
       </div>
     </fieldset>
-    <p class="feed-status" data-project-edit-status role="status" aria-live="polite"></p>
-    <div class="project-form-actions"><button class="btn" type="submit">${editing ? 'Salvar alterações' : 'Publicar projeto'}</button></div>`;
+    <p id="${editing ? 'project-edit-status' : 'project-form-status'}" class="feed-status" data-project-edit-status role="status" aria-live="polite"></p>
+    <div class="project-form-actions"><a class="btn-soft" data-project-form-cancel href="${editing ? '#project-detail' : projectCreateOrigin()}">Cancelar</a><button class="btn" type="submit">${editing ? 'Salvar alterações' : 'Publicar projeto'}</button></div>`;
   if (project) {
     for (const [name, value] of Object.entries(project)) {
       const field = form.elements.namedItem(name);
       if (field) field.value = value || '';
     }
   }
+  prepareSocialForm(form);
+  const visibility = form.elements.namedItem('visibilidade');
+  const help = $('[data-visibility-help]', form);
+  const describe = () => {
+    help.textContent = visibility.value === 'publico'
+      ? 'Qualquer pessoa com conta pode encontrar e acessar. Projetos em equipe aceitam solicitações de participação.'
+      : 'Somente você e integrantes aceitos acessam o conteúdo. Convites mostram apenas informações básicas até serem aceitos.';
+  };
+  visibility.addEventListener('change', describe); describe();
+  if (editing) $('[data-project-form-cancel]', form).onclick = event => {
+    event.preventDefault(); $('#project-edit-panel').hidden = true;
+    const toggle = $('[data-project-edit-toggle]'); toggle.setAttribute('aria-expanded', 'false'); toggle.focus();
+  };
+
 }
 
 /* Convite para projeto privado: o servidor envia só o necessário para decidir (sem descrição, equipe ou
@@ -2699,6 +3031,7 @@ function renderProjectInvite(project) {
   const root = $('#project-detail');
   root.setAttribute('aria-busy', 'false');
   $('[data-project-title]').textContent = project.titulo;
+  document.title = `${project.titulo} | Nexa Quest`;
   $('[data-project-category]').textContent = project.categoria;
   $('[data-project-visibility]').textContent = 'Privado';
   $('[data-project-type]').textContent = project.tipo === 'equipe' ? 'Projeto em equipe' : 'Projeto individual';
@@ -2744,10 +3077,21 @@ function renderProjectDetails(project) {
   if (project.acesso === 'convite') return renderProjectInvite(project);
   const root = $('#project-detail');
   root.setAttribute('aria-busy', 'false');
+  $$('.project-join-hint').forEach(hint => hint.remove());
   root.querySelector('[data-project-invite-answer]')?.remove();
   for (const selector of ['.project-detail-grid']) { const element = $(selector); if (element) element.hidden = false; }
   $('[data-project-title]').textContent = project.titulo;
+  document.title = `${project.titulo} | Nexa Quest`;
   $('[data-project-description]').textContent = project.descricao;
+  const contribute = $('[data-project-contribution]');
+  contribute.hidden = !project.como_contribuir;
+  $('[data-project-contribution-text]').textContent = project.como_contribuir || '';
+  const stage = $('[data-project-stage]');
+  stage.hidden = !project.etapa; stage.textContent = project.etapa || '';
+  const relation = $('[data-project-relation]');
+  relation.textContent = project.sou_proprietario ? 'Você é responsável por este projeto.'
+    : project.participacao?.status === 'aceito' ? 'Você participa desta equipe.'
+    : project.participacao?.status === 'pendente' ? (project.participacao.origem === 'convite' ? 'Você recebeu um convite para esta equipe.' : 'Solicitação enviada. Aguarde a resposta do responsável.') : '';
   $('[data-project-category]').textContent = project.categoria;
   $('[data-project-visibility]').textContent = project.visibilidade === 'publico' ? 'Público' : 'Privado';
   $('[data-project-type]').textContent = project.tipo === 'equipe' ? 'Projeto em equipe' : 'Projeto individual';
@@ -2791,6 +3135,22 @@ function renderProjectDetails(project) {
     NP.status($('#project-detail-status'), 'Solicitação enviada ao proprietário.', true);
   };
   cancel.onclick = () => removerParticipacao(project, NP.currentUser().id);
+  if (!project.sou_proprietario && state === 'pendente' && project.participacao.origem === 'convite') {
+    const actions = document.createElement('div'); actions.dataset.projectInviteAnswer = ''; actions.className = 'project-detail-invite';
+    ['aceitar', 'recusar'].forEach(action => {
+      const button = document.createElement('button'); button.type = 'button'; button.className = action === 'aceitar' ? 'btn' : 'btn-soft';
+      button.textContent = action === 'aceitar' ? 'Aceitar convite' : 'Recusar convite';
+      button.onclick = async () => {
+        actions.querySelectorAll('button').forEach(b => b.disabled = true);
+        const response = await NP.api(`/projetos/${encodeURIComponent(project.id)}/participantes/${NP.currentUser().id}`, { method: 'PUT', body: { acao: action } });
+        if (!response.ok) { actions.querySelectorAll('button').forEach(b => b.disabled = false); return NP.status($('#project-detail-status'), response.data.mensagem, false); }
+        await carregarDetalheProjeto();
+      };
+      actions.append(button);
+    });
+    join.closest('.project-detail-actions').append(actions);
+  }
+
 
   const editToggle = $('[data-project-edit-toggle]');
   const editPanel = $('#project-edit-panel');
@@ -2799,23 +3159,29 @@ function renderProjectDetails(project) {
     const open = editPanel.hidden;
     editPanel.hidden = !open;
     editToggle.setAttribute('aria-expanded', String(open));
-    if (open) editPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (open) { editPanel.scrollIntoView({ block: 'start' }); $('#project-edit-form [name=titulo]').focus({ preventScroll: true }); }
+    else editToggle.focus({ preventScroll: true });
   };
+  editPanel.onkeydown = event => { if (event.key === 'Escape') { editPanel.hidden = true; editToggle.setAttribute('aria-expanded', 'false'); editToggle.focus(); } };
   const editForm = $('#project-edit-form');
   if (project.sou_proprietario) {
     projectFormFields(editForm, project, true);
     editForm.onsubmit = async event => {
       event.preventDefault();
+      if (editForm.dataset.busy || !validateSocialForm(editForm)) return;
+      editForm.dataset.busy = '1';
       const body = Object.fromEntries(new FormData(editForm).entries());
       const submit = $('button[type="submit"]', editForm);
       setBusy(submit, true);
       const response = await NP.api(`/projetos/${encodeURIComponent(project.id)}`, { method: 'PUT', body });
+      delete editForm.dataset.busy;
       setBusy(submit, false);
       if (!response.ok) {
-        return NP.status($('[data-project-edit-status]'), response.data.mensagem || 'Não foi possível salvar as alterações.', false);
+        return socialFormError(editForm, response, $('[data-project-edit-status]'));
       }
       await carregarDetalheProjeto();
-      NP.status($('[data-project-edit-status]'), 'Projeto atualizado.', true);
+      editPanel.hidden = true; editToggle.setAttribute('aria-expanded', 'false'); editToggle.focus();
+      NP.status($('#project-detail-status'), 'Projeto atualizado.', true);
     };
   }
 
@@ -2868,14 +3234,19 @@ function renderProjectDetails(project) {
   const inviteSection = $('[data-project-invite-section]');
   inviteSection.hidden = !(project.sou_proprietario && project.tipo === 'equipe');
   const inviteForm = $('#project-invite-form');
+  prepareSocialForm(inviteForm);
   inviteForm.onsubmit = async event => {
     event.preventDefault();
+    if (!validateSocialForm(inviteForm) || inviteForm.dataset.busy) return;
+    inviteForm.dataset.busy = '1';
+    const inviteSubmit = $('button[type=submit]', inviteForm); setBusy(inviteSubmit, true);
     const status = $('#project-invite-status');
     const input = inviteForm.elements.namedItem('nome_usuario');
     const response = await NP.api(`/projetos/${encodeURIComponent(project.id)}/convites`, {
       method: 'POST',
       body: { nome_usuario: input.value },
     });
+    delete inviteForm.dataset.busy; setBusy(inviteSubmit, false);
     if (!response.ok) return NP.status(status, response.data.mensagem || 'Não foi possível convidar esse usuário.', false);
     input.value = '';
     NP.status(status, 'Convite enviado.', true);
@@ -2919,8 +3290,11 @@ function renderProjectDetails(project) {
 
   const updateForm = $('#project-update-form');
   updateForm.hidden = !project.pode_atualizar;
+  prepareSocialForm(updateForm);
   updateForm.onsubmit = async event => {
     event.preventDefault();
+    if (updateForm.dataset.busy || !validateSocialForm(updateForm)) return;
+    updateForm.dataset.busy = '1';
     const input = updateForm.elements.namedItem('texto');
     const status = $('#project-update-status');
     const submit = $('button[type="submit"]', updateForm);
@@ -2930,6 +3304,7 @@ function renderProjectDetails(project) {
       method: 'POST',
       body: { texto: input.value },
     });
+    delete updateForm.dataset.busy;
     setBusy(submit, false);
     if (!response.ok) return NP.status(status, response.data.mensagem || 'Não foi possível publicar a atualização.', false);
     input.value = '';

@@ -45,15 +45,19 @@
       <input id="project-search" name="q" type="search" maxlength="100" placeholder="Buscar por título ou descrição">
       <input id="project-category" name="categoria" type="hidden" value="">
       <button class="btn-soft btn" type="submit">Buscar</button>
+      <button class="btn-soft" id="project-search-clear" type="button">Limpar busca</button>
     </form>
-    <div class="chips" role="group" aria-label="Filtrar por categoria" id="project-chips"><button class="chip"
-        type="button" aria-pressed="true" data-cat="">Todos</button><button class="chip" type="button"
-        aria-pressed="false" data-cat="Jogos">Jogos</button><button class="chip" type="button" aria-pressed="false"
-        data-cat="Arte e design">Arte e design</button><button class="chip" type="button" aria-pressed="false"
-        data-cat="Programação">Programação</button><button class="chip" type="button" aria-pressed="false"
-        data-cat="Educação">Educação</button><button class="chip" type="button" aria-pressed="false"
-        data-cat="Música">Música</button><button class="chip" type="button" aria-pressed="false"
-        data-cat="Outros">Outros</button></div>
+    <div role="group" aria-label="Filtrar por categoria" id="project-chips">
+      <div class="chips"><button type="button" class="chip" data-cat="" aria-pressed="true">Todos</button>
+        <button type="button" class="chip" data-cat="Desenvolvimento de Sistemas" aria-pressed="false">Desenvolvimento de Sistemas</button>
+        <button type="button" class="chip" data-cat="Design" aria-pressed="false">Design</button>
+        <button type="button" class="chip" data-cat="Multimídia" aria-pressed="false">Multimídia</button>
+        <button type="button" class="chip" data-cat="Jogos Digitais" aria-pressed="false">Jogos Digitais</button>
+      </div>
+      <details class="legacy-categories" id="legacy-project-categories"><summary>Categorias anteriores</summary>
+        <div class="chips"><button type="button" class="chip" data-cat="Jogos" aria-pressed="false">Jogos</button><button type="button" class="chip" data-cat="Arte e design" aria-pressed="false">Arte e design</button><button type="button" class="chip" data-cat="Programação" aria-pressed="false">Programação</button><button type="button" class="chip" data-cat="Educação" aria-pressed="false">Educação</button><button type="button" class="chip" data-cat="Música" aria-pressed="false">Música</button><button type="button" class="chip" data-cat="Outros" aria-pressed="false">Outros</button></div>
+      </details>
+    </div>
     <p id="projects-status" class="feed-status" role="status" aria-live="polite"></p>
     <section class="project-grid" id="project-list" aria-label="Projetos públicos" aria-live="polite" aria-busy="true">
     </section>

@@ -2,6 +2,8 @@
 // Nunca aponta para produção. Usado apenas pelos testes de navegador (tests/e2e).
 import http from 'node:http'; import fs from 'node:fs'; import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createSocialFixtures } from './social-fixtures.mjs';
+const socialFixtures = process.env.SOCIAL_FIXTURES === '1' ? createSocialFixtures() : null;
 const ROOT = process.env.ROOT || path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const PUB = path.join(ROOT, 'public');
 const vercel = JSON.parse(fs.readFileSync(path.join(ROOT, 'vercel.json'), 'utf8'));
@@ -23,6 +25,7 @@ async function api(req, res, url) {
   if (p === '/login' && req.method === 'POST') { logged = true; return send(res, 200, { usuario: U }); }
   if (p === '/logout') { logged = false; return send(res, 204); }
   if (p === '/auth/session') return send(res, 204);
+  if (socialFixtures && await socialFixtures(req, res, url, send)) return;
   if (p === '/mensagens' && req.method === 'POST') { let b=''; for await (const c of req) b+=c; log.mensagens.push(JSON.parse(b)); await sleep(Number(q.get('d')||400)); return send(res, 201, { mensagem: 'ok' }); }
   if (p === '/projetos') {
     const cat = q.get('categoria'); const busca = (q.get('q')||'').toLowerCase();

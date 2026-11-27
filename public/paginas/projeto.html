@@ -42,11 +42,16 @@
         <div class="project-detail-badges">
           <span data-project-category></span>
           <span data-project-visibility></span>
-          <span data-project-type></span>
+          <span data-project-type></span><span data-project-stage hidden></span>
         </div>
         <h1 data-project-title>Carregando projeto…</h1>
         <p class="project-owner-line">Por <a data-project-owner href="#">—</a></p>
         <p class="project-description" data-project-description></p>
+        <section class="project-contribution" data-project-contribution hidden aria-labelledby="contribution-title">
+          <h2 id="contribution-title">Como contribuir</h2>
+          <p data-project-contribution-text></p>
+        </section>
+        <p class="project-relation" data-project-relation role="status"></p>
         <div class="project-detail-actions">
           <a class="btn" data-project-external href="#" target="_blank" rel="noopener noreferrer" hidden>Abrir
             projeto</a>

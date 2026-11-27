@@ -26,8 +26,9 @@ await fetch(base+'/api/__qa/logged?v=1');
 // ---- A06: troca de categoria durante carregamento
 { const page=await ctx.newPage();
   await page.goto(base+'/paginas/explorar-projetos.html',{waitUntil:'networkidle'});
-  const chip=t=>page.locator('#project-chips .chip',{hasText:t}).first();
+  const chip=t=>page.locator('#project-chips .chip').filter({hasText:new RegExp('^'+t+'$')}).first();
   const nomes=await page.locator('#project-chips .chip').allTextContents(); out.push('chips: '+nomes.join(' | '));
+  await page.locator('#legacy-project-categories summary').click();
   await chip('Jogos').click();     // categoria lenta (900 ms)
   await page.waitForTimeout(100);
   await chip('Arte e design').click();    // troca antes da resposta

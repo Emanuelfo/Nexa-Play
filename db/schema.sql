@@ -343,4 +343,11 @@ alter table projeto_participantes enable row level security;
 alter table projeto_atualizacoes enable row level security;
 alter table public.api_rate_limit_windows enable row level security;
 
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS area varchar(60);
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS habilidades text[] NOT NULL DEFAULT '{}';
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS portfolio_url text;
+ALTER TABLE projetos ADD COLUMN IF NOT EXISTS como_contribuir text;
+ALTER TABLE projetos ADD COLUMN IF NOT EXISTS etapa varchar(40);
+ALTER TABLE projetos ADD COLUMN IF NOT EXISTS resumo varchar(240);
+
 commit;

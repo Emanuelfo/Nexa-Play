@@ -1,0 +1,52 @@
+[
+  {
+    "theme": "light",
+    "values": [
+      {
+        "ratio": 15.21,
+        "selector": ".feed-post-author"
+      },
+      {
+        "ratio": 5.72,
+        "selector": ".feed-post-handle"
+      },
+      {
+        "ratio": 5.72,
+        "selector": ".feed-post-time"
+      },
+      {
+        "ratio": 5.72,
+        "selector": ".feed-action"
+      },
+      {
+        "ratio": 4.92,
+        "selector": ".nq-availability"
+      }
+    ]
+  },
+  {
+    "theme": "dark",
+    "values": [
+      {
+        "ratio": 13.61,
+        "selector": ".feed-post-author"
+      },
+      {
+        "ratio": 7.57,
+        "selector": ".feed-post-handle"
+      },
+      {
+        "ratio": 7.57,
+        "selector": ".feed-post-time"
+      },
+      {
+        "ratio": 7.57,
+        "selector": ".feed-action"
+      },
+      {
+        "ratio": 10.03,
+        "selector": ".nq-availability"
+      }
+    ]
+  }
+]

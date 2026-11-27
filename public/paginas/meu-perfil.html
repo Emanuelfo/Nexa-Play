@@ -73,15 +73,25 @@
               autocomplete="username">
             <small>3 a 30 caracteres: letras, números ou _.</small>
           </label>
-          <label class="profile-form-wide">Biografia
+          <label class="profile-form-wide">Biografia (opcional)
             <textarea name="biografia" rows="3" maxlength="500"
               placeholder="Fale sobre o que você cria e aprende."></textarea>
             <small>Até 500 caracteres.</small>
           </label>
-          <label>Foto de perfil (URL HTTPS)
+          <label>Área (opcional)
+            <select name="area"><option value="">Não informada</option><option>Desenvolvimento de Sistemas</option><option>Design</option><option>Multimídia</option><option>Jogos Digitais</option></select>
+          </label>
+          <label>Portfólio (opcional · URL HTTPS)
+            <input name="portfolio_url" type="url" inputmode="url" placeholder="https://…">
+          </label>
+          <label class="profile-form-wide">Habilidades (opcional)
+            <input name="habilidades" type="text" maxlength="502" placeholder="Python, Godot, pixel art">
+            <small>Separe por vírgulas. Até 12 habilidades, com até 40 caracteres cada. A visibilidade segue a do seu perfil.</small>
+          </label>
+          <label>Foto de perfil (opcional · URL HTTPS)
             <input name="avatar_url" type="url" inputmode="url" placeholder="https://…" autocomplete="url">
           </label>
-          <label>Imagem de capa (URL HTTPS)
+          <label>Imagem de capa (opcional · URL HTTPS)
             <input name="capa_url" type="url" inputmode="url" placeholder="https://…" autocomplete="url">
           </label>
         </div>
