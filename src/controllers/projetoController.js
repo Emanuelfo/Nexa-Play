@@ -96,7 +96,7 @@ function validarProjeto(body) {
 
 const BASE_PROJETO = `
   SELECT p.id::text, p.titulo, p.descricao, p.imagem_url, p.categoria,
-    p.como_contribuir, p.etapa, p.resumo, p.link_externo, p.visibilidade, p.tipo, p.criado_em, p.atualizado_em,
+    to_jsonb(p)->>'como_contribuir' AS como_contribuir, to_jsonb(p)->>'etapa' AS etapa, to_jsonb(p)->>'resumo' AS resumo, p.link_externo, p.visibilidade, p.tipo, p.criado_em, p.atualizado_em,
     p.proprietario_id::text,
     json_build_object(
       'id', dono.id::text,

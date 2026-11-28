@@ -18,12 +18,13 @@ export function createSocialFixtures() {
   ];
   const comments = new Map([['10', [{ id: '1', autor: me, texto: 'Quero conhecer os testes de movimento!', criado_em: new Date().toISOString() }]]]);
   let failNext = '';
+  let failMethod = null;
   const jsonBody = async req => { let body = ''; for await (const chunk of req) body += chunk; return body ? JSON.parse(body) : {}; };
   return async (req, res, url, send) => {
     const p = url.pathname.replace(/^\/api/, '');
     const q = url.searchParams;
-    if (p === '/__qa/fail-next') { failNext = q.get('path'); send(res, 200, { ready: true }); return true; }
-    if (failNext === p && req.method !== 'GET') { failNext = ''; send(res, 500, { mensagem: 'Falha simulada. Tente novamente; seu texto foi mantido.' }); return true; }
+    if (p === '/__qa/fail-next') { failNext = q.get('path'); failMethod = q.get('method'); send(res, 200, { ready: true }); return true; }
+    if (failNext === p && (failMethod ? req.method === failMethod : req.method !== 'GET')) { failNext = ''; send(res, 500, { mensagem: 'Falha simulada. Tente novamente; seu texto foi mantido.' }); return true; }
     if (p === '/me/perfil') {
       if (req.method === 'PUT') Object.assign(me, await jsonBody(req));
       send(res, 200, { usuario: me }); return true;

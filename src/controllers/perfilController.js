@@ -3,6 +3,9 @@ const sequelize = require("../config/database");
 const Usuario = require("../models/Usuario");
 const logErro = require("../utils/logErro");
 
+const profileMetadataSql = require('../utils/profileMetadataSql');
+const userMetadata = profileMetadataSql('u');
+const ownMetadata = profileMetadataSql('usuarios');
 const { AREAS, validarCompetencias } = require("../utils/socialMetadata");
 
 const CAMPOS_PRIVACIDADE = [
@@ -54,7 +57,7 @@ async function obterAmizade(usuarioId, outroId) {
 
 async function lerPerfil(usuarioId, viewerId, proprio) {
   const [usuario] = await sequelize.query(`
-    SELECT id, nome_usuario, nome_exibicao, biografia, avatar_url, capa_url, area, habilidades, portfolio_url,
+    SELECT id, nome_usuario, nome_exibicao, biografia, avatar_url, capa_url, ${ownMetadata.area} AS area, ${ownMetadata.habilidades} AS habilidades, ${ownMetadata.portfolio} AS portfolio_url,
       email, pontos, criado_em, perfil_publico, mostrar_biografia,
       mostrar_pontos, mostrar_amigos, mostrar_conquistas, mostrar_progresso
     FROM usuarios
@@ -430,8 +433,8 @@ async function listarAmizades(req, res) {
         u.nome_usuario,
         u.nome_exibicao,
         CASE WHEN u.perfil_publico OR a.status = 'aceita' THEN u.avatar_url ELSE NULL END AS avatar_url,
-        CASE WHEN u.perfil_publico OR a.status = 'aceita' THEN u.area ELSE NULL END AS area,
-        CASE WHEN u.perfil_publico OR a.status = 'aceita' THEN u.habilidades ELSE ARRAY[]::text[] END AS habilidades,
+        CASE WHEN u.perfil_publico OR a.status = 'aceita' THEN ${userMetadata.area} ELSE NULL END AS area,
+        CASE WHEN u.perfil_publico OR a.status = 'aceita' THEN ${userMetadata.habilidades} ELSE '[]'::jsonb END AS habilidades,
         a.status AS status_relacao,
         CASE
           WHEN a.status = 'aceita' THEN 'amigos'
@@ -476,8 +479,8 @@ async function buscarUsuarios(req, res) {
         u.nome_usuario,
         u.nome_exibicao,
         CASE WHEN u.perfil_publico OR a.status = 'aceita' THEN u.avatar_url ELSE NULL END AS avatar_url,
-        CASE WHEN u.perfil_publico OR a.status = 'aceita' THEN u.area ELSE NULL END AS area,
-        CASE WHEN u.perfil_publico OR a.status = 'aceita' THEN u.habilidades ELSE ARRAY[]::text[] END AS habilidades,
+        CASE WHEN u.perfil_publico OR a.status = 'aceita' THEN ${userMetadata.area} ELSE NULL END AS area,
+        CASE WHEN u.perfil_publico OR a.status = 'aceita' THEN ${userMetadata.habilidades} ELSE '[]'::jsonb END AS habilidades,
         CASE
           WHEN a.status = 'aceita' THEN 'amigos'
           WHEN a.status = 'pendente' AND a.solicitante_id = :usuarioId THEN 'enviada'
@@ -489,13 +492,13 @@ async function buscarUsuarios(req, res) {
         ON LEAST(a.solicitante_id, a.destinatario_id) = LEAST(CAST(:usuarioId AS bigint), u.id)
        AND GREATEST(a.solicitante_id, a.destinatario_id) = GREATEST(CAST(:usuarioId AS bigint), u.id)
       WHERE u.id <> :usuarioId
-        AND (:area = '' OR ((u.perfil_publico OR a.status = 'aceita') AND u.area = :area))
+        AND (:area = '' OR ((u.perfil_publico OR a.status = 'aceita') AND ${userMetadata.area} = :area))
         AND (:busca = '' OR (
           u.nome_usuario ILIKE :termo
           OR u.nome_exibicao ILIKE :termo
           OR ((u.perfil_publico OR a.status = 'aceita') AND (
-            u.area ILIKE :termo
-            OR array_to_string(u.habilidades, ' ') ILIKE :termo
+            ${userMetadata.area} ILIKE :termo
+            OR EXISTS (SELECT 1 FROM jsonb_array_elements_text(${userMetadata.habilidades}) skill(value) WHERE skill.value ILIKE :termo)
             OR (u.mostrar_biografia AND u.biografia ILIKE :termo)
           ))
         ))
@@ -517,7 +520,7 @@ async function buscarUsuarios(req, res) {
 async function sugerirUsuarios(req, res) {
   try {
     const usuarios = await sequelize.query(`
-      SELECT u.id::text, u.nome_usuario, u.nome_exibicao, u.avatar_url, u.area, u.habilidades,
+      SELECT u.id::text, u.nome_usuario, u.nome_exibicao, u.avatar_url, ${userMetadata.area} AS area, ${userMetadata.habilidades} AS habilidades,
         'desconhecido' AS relacao
       FROM usuarios u
       WHERE u.id <> :usuarioId

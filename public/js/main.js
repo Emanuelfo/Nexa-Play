@@ -8,6 +8,22 @@ const NQ_LEGACY_CATEGORIES = ['Jogos', 'Arte e design', 'Programação', 'Educa�
 const NQ_STAGES = ['Ideia', 'Em desenvolvimento', 'Em testes', 'Concluído'];
 const areaOptions = () => NQ_AREAS.map(area => `<option>${area}</option>`).join('');
 
+// Both Home and the destination pages use these endpoints and response guards.
+async function socialListRequest(path, key, options) {
+  try {
+    const response = await NP.api(path, options);
+    if (response.ok && !Array.isArray(response.data?.[key])) return { ...response, ok: false, data: { mensagem: 'O servidor retornou uma lista inválida. Tente novamente.' } };
+    if (!response.data || typeof response.data !== 'object') response.data = {};
+    if (response.ok) response.data[key] = response.data[key].filter(item => item && /^\d+$/.test(String(item.id)));
+    return response;
+  } catch {
+    return { ok: false, data: { mensagem: 'Não foi possível conectar. Tente novamente.' } };
+  }
+}
+const suggestedPeople = () => socialListRequest('/usuarios/sugestoes', 'usuarios');
+const publicProjects = (query, options) => socialListRequest(`/projetos?${query}`, 'projetos', options);
+const personSkills = person => Array.isArray(person.habilidades) ? person.habilidades.filter(skill => typeof skill === 'string' && skill.trim()) : [];
+
 function skillList(person, limit = 12) {
   const list = document.createElement('ul');
   list.className = 'nq-skills';
@@ -22,8 +38,8 @@ function skillList(person, limit = 12) {
 }
 
 function projectSummary(project) {
-  if (project.resumo) return project.resumo;
-  const firstParagraph = (project.descricao || '').split(/\n\s*\n/)[0];
+  if (typeof project.resumo === 'string' && project.resumo.trim()) return project.resumo;
+  const firstParagraph = (typeof project.descricao === 'string' ? project.descricao : '').split(/\n\s*\n/)[0];
   // Retain a complete sentence for legacy records, never a CSS-clipped fragment.
   return firstParagraph.match(/^.*?[.!?](?:\s|$)/)?.[0].trim() || firstParagraph;
 }
@@ -258,7 +274,7 @@ function initSearchSuggest(form, root) {
       const name = document.createElement('strong');
       name.textContent = person.nome_exibicao || person.nome_usuario;
       const handle = document.createElement('small');
-      handle.textContent = (person.habilidades || []).slice(0, 2).join(' · ') || person.area || `@${person.nome_usuario}`;
+      handle.textContent = personSkills(person).slice(0, 2).join(' · ') || person.area || `@${person.nome_usuario}`;
       text.append(name, handle);
       row.append(avatarEl(person, 32), text);
       box.append(row);
@@ -394,12 +410,21 @@ async function railRelationAction(person, button) {
 
 function renderRailSuggestions(box) {
   const list = $('[data-rail-people]', box);
-  NP.api('/usuarios/sugestoes').then(response => {
+  list.setAttribute('aria-busy', 'true');
+  list.replaceChildren();
+  const loading = document.createElement('li');
+  loading.className = 'nq-support-empty';
+  loading.textContent = 'Carregando sugestões…';
+  list.append(loading);
+  suggestedPeople().then(response => {
+    list.setAttribute('aria-busy', 'false');
+    list.replaceChildren();
     const users = response.ok && Array.isArray(response.data.usuarios) ? response.data.usuarios.slice(0, 4) : [];
     if (!users.length) {
       const empty = document.createElement('li');
       empty.className = 'nq-support-empty';
-      empty.textContent = response.ok ? 'Busque por uma habilidade para encontrar colaboradores.' : 'Não foi possível carregar as sugestões. Tente pela seção Pessoas.';
+      if (response.ok) empty.textContent = 'Busque por uma habilidade para encontrar colaboradores.';
+      else statusWithRetry(empty, 'Não foi possível carregar as sugestões.', () => renderRailSuggestions(box));
       list.replaceChildren(empty);
       return;
     }
@@ -411,7 +436,7 @@ function renderRailSuggestions(box) {
       const name = document.createElement('strong');
       name.textContent = person.nome_exibicao || person.nome_usuario;
       const handle = document.createElement('span');
-      handle.textContent = (person.habilidades || []).slice(0, 2).join(' · ') || person.area || `@${person.nome_usuario}`;
+      handle.textContent = personSkills(person).slice(0, 2).join(' · ') || person.area || `@${person.nome_usuario}`;
       link.append(name, handle);
       const add = document.createElement('button');
       add.type = 'button';
@@ -627,8 +652,22 @@ function renderSocialShell(host, user) {
     if (input) { event.preventDefault(); input.scrollIntoView({ block: 'center' }); input.focus(); }
   }));
 
-  const ownProfileTask = loadOwnProfile().then(own => {
-    if (!own) return;
+  const greeting = $('[data-home-greeting]');
+  if (greeting && user.nome_usuario) greeting.textContent = `Olá, ${user.nome_usuario}!`;
+  const progressStatus = page === 'inicio' ? document.createElement('p') : null;
+  if (progressStatus) {
+    progressStatus.className = 'nq-support-empty';
+    progressStatus.setAttribute('role', 'status');
+    $('[data-rail-stats]').after(progressStatus);
+  }
+  const updateOwnProfile = async (retry = false) => {
+    if (progressStatus) { progressStatus.hidden = false; progressStatus.textContent = 'Carregando progresso…'; }
+    const response = await loadOwnProfileResponse(retry);
+    const own = response.ok && response.data?.usuario;
+    if (!own) {
+      if (progressStatus) statusWithRetry(progressStatus, 'Não foi possível carregar seu progresso.', () => updateOwnProfile(true));
+      return;
+    }
     accountButton.replaceChildren(avatarEl(own, 34));
     $('[data-menu-name]').textContent = own.nome_exibicao || own.nome_usuario;
     const composerAvatar = $('[data-composer-avatar]');
@@ -639,8 +678,9 @@ function renderSocialShell(host, user) {
       if (greeting && firstName) greeting.textContent = `Olá, ${firstName}!`;
       const stats = $('[data-rail-stats]');
       const values = own.estatisticas || {};
+      stats.replaceChildren();
       [['Amigos', values.amigos], ['Conquistas', values.conquistas], ['Pontos', values.pontos]].forEach(([label, value]) => {
-        if (value === null || value === undefined) return;
+        if (value === null || value === undefined || !Number.isFinite(Number(value))) return;
         const cell = document.createElement('div');
         const strong = document.createElement('b');
         strong.textContent = Number(value).toLocaleString('pt-BR');
@@ -648,8 +688,11 @@ function renderSocialShell(host, user) {
         stats.append(cell);
       });
       stats.hidden = !stats.childElementCount;
+      progressStatus.textContent = stats.hidden ? 'Seu perfil ainda não tem indicadores disponíveis.' : '';
+      progressStatus.hidden = !stats.hidden;
     }
-  });
+  };
+  const ownProfileTask = updateOwnProfile();
   // Saudação, avatar e resumo fazem parte da 1ª renderização: o preloader os aguarda por até 1,5 s (nunca além).
   window.NPLoader?.track(ownProfileTask, 1500);
 }
@@ -658,11 +701,17 @@ function renderSocialShell(host, user) {
 function initHomeProjects() {
   const list = $('#home-projects');
   if (!list) return;
-  NP.api('/projetos?limite=3').then(response => {
+  list.setAttribute('aria-busy', 'true');
+  list.replaceChildren(projectEmpty('Carregando projetos…', ''));
+  publicProjects('limite=3').then(response => {
     list.setAttribute('aria-busy', 'false');
     list.replaceChildren();
     if (!response.ok || !Array.isArray(response.data.projetos)) {
-      list.append(projectEmpty('Não foi possível carregar os projetos.', 'Tente novamente em instantes.'));
+      const error = projectEmpty('Não foi possível carregar os projetos.', '');
+      const status = document.createElement('p');
+      statusWithRetry(status, 'Confira sua conexão e tente novamente.', initHomeProjects);
+      error.append(status);
+      list.append(error);
       return;
     }
     response.data.projetos.slice(0, 3).forEach(project => {
@@ -2700,7 +2749,7 @@ async function carregarSugestoesAmizade() {
   const status = $('#friend-suggestions-status');
   list.setAttribute('aria-busy', 'true');
   status.textContent = 'Carregando sugestões…';
-  const response = await NP.api('/usuarios/sugestoes');
+  const response = await suggestedPeople();
   list.setAttribute('aria-busy', 'false');
   if (!response.ok || !Array.isArray(response.data.usuarios)) {
     status.textContent = response.data.mensagem || 'Não foi possível carregar sugestões.';
@@ -2834,7 +2883,7 @@ function initProjectExplorer() {
     list.setAttribute('aria-busy', 'true');
     more.disabled = true;
     status.textContent = reset ? 'Carregando projetos…' : 'Carregando mais projetos…';
-    const response = await NP.api(`/projetos?${query}`, { signal: controller.signal });
+    const response = await publicProjects(query, { signal: controller.signal });
     if (id !== requestId) return; // resposta antiga: descartada
     controller = null;
     list.setAttribute('aria-busy', 'false');
