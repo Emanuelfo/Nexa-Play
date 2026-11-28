@@ -17,13 +17,13 @@ export function createSocialFixtures() {
     { id: '8', autor: people[2], texto: 'Compartilhando o que aprendi ao testar interfaces por teclado.\n' + 'Uma interface acessível ajuda toda a equipe a colaborar. '.repeat(12) + '\nhttps://example.invalid/' + 'referencia'.repeat(60), curtidas: 3, quantidade_comentarios: 0, criado_em: new Date(Date.now() - 5 * 3600000).toISOString() },
   ];
   const comments = new Map([['10', [{ id: '1', autor: me, texto: 'Quero conhecer os testes de movimento!', criado_em: new Date().toISOString() }]]]);
-  let failNext = ''; let failGet = false;
+  let failNext = '';
   const jsonBody = async req => { let body = ''; for await (const chunk of req) body += chunk; return body ? JSON.parse(body) : {}; };
   return async (req, res, url, send) => {
     const p = url.pathname.replace(/^\/api/, '');
     const q = url.searchParams;
-    if (p === '/__qa/fail-next') { failNext = q.get('path'); failGet = q.get('method') === 'GET'; send(res, 200, { ready: true }); return true; }
-    if (failNext === p && (failGet || req.method !== 'GET')) { failNext = ''; send(res, 500, { mensagem: 'Falha simulada. Tente novamente; seu texto foi mantido.' }); return true; }
+    if (p === '/__qa/fail-next') { failNext = q.get('path'); send(res, 200, { ready: true }); return true; }
+    if (failNext === p && req.method !== 'GET') { failNext = ''; send(res, 500, { mensagem: 'Falha simulada. Tente novamente; seu texto foi mantido.' }); return true; }
     if (p === '/me/perfil') {
       if (req.method === 'PUT') Object.assign(me, await jsonBody(req));
       send(res, 200, { usuario: me }); return true;

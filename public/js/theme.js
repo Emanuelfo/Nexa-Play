@@ -3,8 +3,7 @@
   if (!root.hasAttribute('data-social-theme')) return;
 
   const storageKey = 'np_social_theme';
-  const defaultTheme = 'dark';
-  let theme = defaultTheme;
+  let theme = 'light';
   try {
     const savedTheme = localStorage.getItem(storageKey);
     if (savedTheme === 'light' || savedTheme === 'dark') {
@@ -30,7 +29,7 @@
 
   const applyTheme = persist => {
     root.dataset.theme = theme;
-    // color-scheme is owned by the same CSS selector as the palette.
+    root.style.colorScheme = theme;
     document.querySelectorAll('[data-theme-toggle]').forEach(syncToggle);
     if (persist) {
       try {
@@ -57,7 +56,7 @@
 
   window.addEventListener('storage', event => {
     if (event.key !== storageKey) return;
-    theme = ['light', 'dark'].includes(event.newValue) ? event.newValue : defaultTheme;
+    theme = event.newValue === 'dark' ? 'dark' : 'light';
     applyTheme(false);
   });
 })();

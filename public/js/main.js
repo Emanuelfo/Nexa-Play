@@ -401,10 +401,6 @@ function renderRailSuggestions(box) {
       empty.className = 'nq-support-empty';
       empty.textContent = response.ok ? 'Busque por uma habilidade para encontrar colaboradores.' : 'Não foi possível carregar as sugestões. Tente pela seção Pessoas.';
       list.replaceChildren(empty);
-      if (!response.ok) {
-        const retry = document.createElement('button'); retry.type = 'button'; retry.className = 'btn-soft btn-sm'; retry.textContent = 'Tentar novamente';
-        retry.onclick = () => { list.replaceChildren(); renderRailSuggestions(box); }; empty.append(' ', retry);
-      }
       return;
     }
     users.forEach(person => {
@@ -447,10 +443,10 @@ function renderSocialShell(host, user) {
   const page = document.body.dataset.page;
   const navigation = [
     { key: 'inicio', label: 'Início', href: `${root}paginas/inicio.html`, path: NQ_ICON.home },
-        { key: 'projetos-explorar', label: 'Explorar projetos', short: 'Projetos', href: `${root}paginas/explorar-projetos.html`, path: NQ_ICON.explore },
+    { key: 'jogo', label: 'Jogo', href: `${root}${GAME_PAGE}`, path: NQ_ICON.game },
+    { key: 'projetos-explorar', label: 'Projetos', short: 'Projetos', href: `${root}paginas/explorar-projetos.html`, path: NQ_ICON.explore },
     { key: 'amigos', label: 'Pessoas', href: `${root}paginas/amigos.html`, path: NQ_ICON.people },
     { key: 'meus-projetos', label: 'Meus projetos', href: `${root}paginas/meus-projetos.html`, path: NQ_ICON.projects },
-    { key: 'jogo', label: 'Jogo', href: `${root}${GAME_PAGE}`, path: NQ_ICON.game },
     { key: 'perfil', label: 'Meu perfil', short: 'Perfil', href: profile, path: NQ_ICON.user },
   ];
   const activeMap = { 'perfil-publico': String(new URLSearchParams(location.search).get('id')) === String(user.id) ? 'perfil' : 'amigos', 'estatisticas-jogo': 'estatisticas-jogo', 'projeto-detalhe': 'projetos-explorar', 'projeto-criar': 'projetos-explorar' };
@@ -470,7 +466,6 @@ function renderSocialShell(host, user) {
       <div class="nq-suggest" id="nq-suggest" role="listbox" aria-label="Pessoas encontradas" hidden></div>
     </form>
     <div class="nq-top-actions">
-      <a class="nq-publish" href="${root}paginas/inicio.html?novo=1" data-publish>${nqSvg(NQ_ICON.plus)}<span>Publicar</span></a>
       <button class="nq-search-toggle" type="button" aria-label="Buscar pessoas" aria-expanded="false">${nqSvg(NQ_ICON.search)}</button>
       <button class="theme-toggle" data-theme-toggle type="button" aria-label="Alternar entre modo claro e escuro" title="Ativar modo escuro" aria-pressed="false">
         <svg data-theme-icon="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 15.4A8.5 8.5 0 0 1 8.6 3.8 8.5 8.5 0 1 0 20.2 15.4Z"></path></svg>
@@ -529,10 +524,12 @@ function renderSocialShell(host, user) {
   const sidebar = document.createElement('nav');
   sidebar.className = 'nq-nav';
   sidebar.setAttribute('aria-label', 'Principal');
-  sidebar.innerHTML = `<p class="nq-nav-label">Comunidade</p>
-    <ul>${navigation.slice(0,3).map(item => `<li>${link(item)}</li>`).join('')}</ul>
-    <ul class="nq-nav-group">${navigation.slice(3).map(item => `<li>${link(item)}</li>${item.key === 'meus-projetos' ? `<li class="nq-create-row"><a class="nq-create" href="${createHref}">${nqSvg(NQ_ICON.plus)}<span>Criar projeto</span></a></li>` : ''}`).join('')}</ul>
-    <ul class="nq-nav-secondary"><li>${link(statsItem)}</li></ul>`;
+  sidebar.innerHTML = `<a class="nq-brand" href="${root}paginas/inicio.html" aria-label="Nexa Quest — início"><img src="${root}assets/imagens/logo-branca-quest.svg" alt="Nexa Quest" width="96" height="74"></a>
+    <a class="nq-create" href="${createHref}"${page === 'projeto-criar' ? ' aria-current="page"' : ''}>${nqSvg(NQ_ICON.plus)}<span>Criar projeto</span></a>
+    <ul>${navigation.map(item => `<li>${link(item)}</li>`).join('')}</ul>
+    <ul class="nq-nav-secondary">
+      <li>${link(statsItem)}</li>
+    </ul>`;
 
   const tabbar = document.createElement('nav');
   tabbar.className = 'nq-tabbar';
@@ -551,9 +548,9 @@ function renderSocialShell(host, user) {
   const body = document.createElement('div');
   body.className = 'nq-body';
   host.after(shell);
-  stage.append(body);
+  stage.append(host, body);
   body.append(main);
-  shell.append(host, sidebar, stage);
+  shell.append(sidebar, stage);
 
   if (page === 'inicio') {
     const side = document.createElement('aside');
@@ -2633,6 +2630,7 @@ function renderFriendList(target, users, emptyMessage) {
 
 let friendActionInProgress = false;
 let friendsTabs = null;
+let friendsTabsOpened = false;
 let friendSearchHasResults = false;
 
 async function executarAcaoAmizade(user, action) {
@@ -2658,10 +2656,7 @@ async function executarAcaoAmizade(user, action) {
   if (friendSearchHasResults) await pesquisarAmigos($('#friends-search-input').value);
 }
 
-let connectionsLoadId = 0;
-let suggestionsLoadId = 0;
 async function carregarPainelAmizades() {
-  const loadId = ++connectionsLoadId;
   const targets = [
     ['#friends-list-content', '#friends-list-status'],
     ['#friend-requests-received-list', '#friend-requests-received-status'],
@@ -2669,15 +2664,15 @@ async function carregarPainelAmizades() {
   ];
   targets.forEach(([listSelector, statusSelector]) => {
     $(listSelector).setAttribute('aria-busy', 'true');
-    connectionStatus($(statusSelector), 'Buscando conexões…');
+    $(statusSelector).textContent = 'Carregando…';
   });
   const response = await NP.api('/me/amizades');
-  if (loadId !== connectionsLoadId) return;
   targets.forEach(([listSelector]) => $(listSelector).setAttribute('aria-busy', 'false'));
-  if (!response.ok || !['amigos', 'recebidas', 'enviadas'].every(key => Array.isArray(response.data[key]))) {
+  if (!response.ok) {
     targets.forEach(([, statusSelector]) => {
-      connectionStatus($(statusSelector), response.data.mensagem || 'Não foi possível carregar suas conexões.', carregarPainelAmizades);
+      $(statusSelector).textContent = response.data.mensagem || 'Não foi possível carregar esta seção.';
     });
+    $('#friends-count').textContent = '—';
     return;
   }
   const friends = Array.isArray(response.data.amigos) ? response.data.amigos : [];
@@ -2694,34 +2689,25 @@ async function carregarPainelAmizades() {
   $('#friend-requests-sent-count').textContent = String(sent.length);
   $('#friend-requests-received-count').classList.toggle('is-alert', received.length > 0);
   setFriendsBadge(received.length);
+  if (!friendsTabsOpened) {
+    friendsTabsOpened = true;
+    if (received.length > 0 && !new URLSearchParams(location.search).get('q')) friendsTabs?.select('friend-requests-received');
+  }
 }
 
 async function carregarSugestoesAmizade() {
-  const loadId = ++suggestionsLoadId;
   const list = $('#friend-suggestions');
   const status = $('#friend-suggestions-status');
   list.setAttribute('aria-busy', 'true');
-  connectionStatus(status, 'Buscando sugestões…');
+  status.textContent = 'Carregando sugestões…';
   const response = await NP.api('/usuarios/sugestoes');
-  if (loadId !== suggestionsLoadId) return;
   list.setAttribute('aria-busy', 'false');
   if (!response.ok || !Array.isArray(response.data.usuarios)) {
-    connectionStatus(status, response.data.mensagem || 'Não foi possível carregar sugestões.', carregarSugestoesAmizade);
+    status.textContent = response.data.mensagem || 'Não foi possível carregar sugestões.';
     return;
   }
   renderFriendList(list, response.data.usuarios, 'Sem sugestões por enquanto. Use a busca para encontrar alguém.');
   status.textContent = '';
-}
-
-function connectionStatus(host, message, retry) {
-  host.replaceChildren(document.createTextNode(message));
-  host.className = `friends-status${retry ? ' is-error' : ''}`;
-  if (retry) {
-    const button = document.createElement('button');
-    button.type = 'button'; button.className = 'btn-soft btn-sm'; button.textContent = 'Tentar novamente';
-    button.onclick = () => { button.disabled = true; retry(); };
-    host.append(button);
-  }
 }
 
 let friendSearchController = null;
@@ -2741,14 +2727,13 @@ async function pesquisarAmigos(term) {
   const searchBlock = $('#friends-search-block');
   if (searchBlock) searchBlock.hidden = !friendSearchHasResults;
   if (!friendSearchHasResults) {
-    results.setAttribute('aria-busy', 'false');
     status.textContent = value ? 'Digite pelo menos 2 caracteres ou escolha uma área.' : '';
     $$('.pf-panel').forEach(panel => panel.hidden = false);
     $('#friends-tabs').hidden = false;
     return;
   }
   results.setAttribute('aria-busy', 'true');
-  connectionStatus(status, 'Pesquisando pessoas…');
+  status.textContent = 'Pesquisando pessoas…';
   // A7: só a pesquisa mais recente pode escrever na tela; as anteriores são canceladas
   $('#friends-tabs').hidden = true;
   $$('.pf-panel').forEach(panel => panel.hidden = true);
@@ -2758,15 +2743,10 @@ async function pesquisarAmigos(term) {
   results.setAttribute('aria-busy', 'false');
   if (!response.ok || !Array.isArray(response.data.usuarios)) {
     results.replaceChildren();
-    connectionStatus(status, response.data.mensagem || 'Não foi possível pesquisar pessoas.', () => pesquisarAmigos($('#friends-search-input').value));
+    status.textContent = response.data.mensagem || 'Não foi possível pesquisar usuários. Tente novamente.';
     return;
   }
   renderFriendList(results, response.data.usuarios, 'Nenhuma pessoa encontrada. Tente outra habilidade, ajuste a área ou limpe os filtros.');
-  if (!response.data.usuarios.length) {
-    const clear = document.createElement('button'); clear.type = 'button'; clear.className = 'btn-soft'; clear.textContent = 'Limpar filtros';
-    clear.onclick = () => $('#friends-clear').click();
-    results.querySelector('.friends-empty').append(document.createElement('br'), clear);
-  }
   status.textContent = `${response.data.usuarios.length} ${response.data.usuarios.length === 1 ? 'pessoa encontrada' : 'pessoas encontradas'}.`;
 }
 

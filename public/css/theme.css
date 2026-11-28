@@ -1,6 +1,4 @@
-/* Paleta histórica: commit 44e956b; navegação integrada ao tema: 735a575.
-   O escuro é o fallback solicitado; a escolha clara permanece explícita e persistida. */
-html[data-social-theme][data-theme="light"] {
+html[data-social-theme] {
   color-scheme: light;
   --nq-navy: #091e5b;
   --nq-heading: #091e5b;
@@ -31,7 +29,7 @@ html[data-social-theme][data-theme="light"] {
   --nq-tone-5-bg: #ffdde4; --nq-tone-5-fg: #a31f3a;
 }
 
-html[data-social-theme]:not([data-theme="light"]) {
+html[data-social-theme][data-theme="dark"] {
   color-scheme: dark;
   --nq-navy: #102143;
   --nq-heading: #e6edf8;
@@ -72,18 +70,19 @@ html[data-social-theme][data-theme="dark"] .btn-line:hover {
   border-color: var(--nq-border);
 }
 
-html[data-social-theme][data-theme="dark"] .btn:not(.btn-soft):not(.btn-line),
-html[data-social-theme][data-theme="dark"] .btn-azul:not(.btn-soft):not(.btn-line) {
+html[data-social-theme][data-theme="dark"] .btn,
+html[data-social-theme][data-theme="dark"] .btn-azul {
   border-bottom-color: #2a4f9f;
 }
 
-html[data-social-theme][data-theme="dark"] .btn:not(.btn-soft):not(.btn-line):hover,
-html[data-social-theme][data-theme="dark"] .btn-azul:not(.btn-soft):not(.btn-line):hover {
+html[data-social-theme][data-theme="dark"] .btn:hover,
+html[data-social-theme][data-theme="dark"] .btn-azul:hover {
   background: #4676e0;
   border-color: #4676e0;
   border-bottom-color: #2a4f9f;
 }
 
+html[data-social-theme][data-theme="dark"] .nq-tabs button[aria-selected="true"],
 html[data-social-theme][data-theme="dark"] .chip[aria-pressed="true"] {
   color: #fff;
 }
@@ -169,33 +168,3 @@ html[data-social-theme][data-theme="dark"] .theme-toggle [data-theme-icon="sun"]
     height: 40px;
   }
 }
-
-/* A navegação compartilha as superfícies do produto nos dois temas. */
-html[data-social-theme] {
-  --nq-nav-bg: var(--nq-surface);
-  --nq-nav-ink: var(--nq-ink);
-  --nq-nav-muted: var(--nq-muted);
-  --nq-nav-hover: var(--nq-soft);
-  --nq-nav-line: var(--nq-border);
-  --nq-nav-active-bg: var(--nq-soft);
-  --nq-nav-active-ink: var(--nq-blue-dark);
-}
-html[data-social-theme][data-theme="dark"] {
-  --nq-nav-bg: var(--nq-surface);
-  --nq-nav-active-bg: var(--nq-soft);
-  --nq-nav-active-ink: var(--nq-blue-dark);
-}
-
-/* Theme roles apply to new and legacy social controls alike. No geometry changes. */
-html[data-social-theme] :is(.btn-soft,.btn-line):hover {
-  background: var(--nq-soft);
-  color: var(--nq-ink);
-  border-color: var(--nq-border);
-}
-html[data-social-theme] :is(input,textarea,select) { color: var(--nq-ink); }
-html[data-social-theme] :is(input,textarea)::placeholder { color: var(--nq-placeholder); opacity: 1; }
-html[data-social-theme] :is(.nq-pagehead h1,.nq-pagehead h2,.nq-box h2) { color: var(--nq-heading); }
-html[data-social-theme] .nq-tabs button[aria-selected=true] { color: var(--nq-blue-dark); }
-html[data-social-theme] .nq-nav .nq-create { color: #fff; background: var(--nq-blue); border-color: var(--nq-blue); }
-html[data-social-theme] .nq-nav .nq-create:hover { color: #fff; background: var(--nq-blue); border-color: var(--nq-cyan); }
-html[data-social-theme] :focus-visible { outline-color: var(--nq-blue-dark); }
